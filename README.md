@@ -15,6 +15,7 @@ Die HTML-Tools sind eigenständige Dateien ohne Abhängigkeiten. Man kann sie di
 | Algorithmen und Programmierung | [IMP 9: Algorithmen](informatik/algorithmen-und-programmierung/imp9-algorithmen/) | Kl. 9 (IMP) | Unterrichtseinheit: Arbeitsblätter + Processing | – |
 | Bildverarbeitung | [IMP 10: Digitale Bildbearbeitung](informatik/bildverarbeitung/imp10-bildbearbeitung/) | Kl. 10 (IMP) | Unterrichtseinheit: Arbeitsblätter + Processing | – |
 | Datenstrukturen | [ADT-Programmierbeispiele](informatik/datenstrukturen/adt-programmierbeispiele/) | Kursstufe | Processing-Vorlagen + Lösungen | – |
+| Netze und Internet | [Internet-Simulator (Palastnetzwerk)](informatik/netze-und-internet/internet-simulator/) | Kl. 7 (IuM) | Client-Server-Rollenspiel im Klassennetz | – (lokaler Node.js-Server) |
 | Technische Informatik | [Mehrbit-Addierer](informatik/technische-informatik/mehrbit-addierer/) | Sek II | Interaktive Visualisierung | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/technische-informatik/mehrbit-addierer/) |
 | Technische Informatik | [RS-Flipflop](informatik/technische-informatik/rs-flipflop/) | Sek II | Interaktive Visualisierung | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/technische-informatik/rs-flipflop/) |
 

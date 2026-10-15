@@ -1,0 +1,9 @@
+{
+  "name": "palastnetzwerk-internetsimulator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client-Server-Simulation des Schlossnetzwerks für den Informatikunterricht",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

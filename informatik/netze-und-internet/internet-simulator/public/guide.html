@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Palastnetzwerk · Schüler-Anleitung</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/extra.css" />
+</head>
+<body class="guide-page">
+  <header class="topbar"><div class="brand"><span class="brand-mark">⌁</span><span>Palastnetzwerk</span></div><span class="eyebrow">SCHÜLER-ANLEITUNG</span></header>
+  <main class="guide-shell">
+    <section class="guide-heading"><div class="eyebrow">SO STARTET IHR</div><h1>Nachrichten ohne Worte.</h1><p>Wählt eure Rollenkarte und schickt Nachrichten ausschließlich über Adressen.</p></section>
+    <section class="guide-link"><span>Öffne diese Adresse im Browser</span><strong id="student-url">wird geladen ...</strong></section>
+    <section class="guide-steps">
+      <article class="guide-card"><b>01</b><h2>Rolle anklicken</h2><p>Klicke auf den Namen deiner Rollenkarte. Raumcode und eigener Name sind nicht nötig.</p></article>
+      <article class="guide-card"><b>02</b><h2>Adresse merken</h2><p>Nach dem Beitritt siehst du deine Adresse, zum Beispiel <code>2.3</code>. In deinem Raum siehst du alle Rollen und Adressen deines Raums.</p></article>
+      <article class="guide-card"><b>03</b><h2>Nachricht senden</h2><p>Frage nach der Zieladresse, trage sie bei „An“ ein und schicke deine Frage als Nachricht.</p></article>
+      <article class="guide-card"><b>04</b><h2>Antwort abwarten</h2><p>Kontrolliere deinen Nachrichtenlog. Die Nachricht läuft nur über das Palastnetzwerk - nicht mündlich.</p></article>
+      <article class="guide-card mediator-guide"><b>SONDERROLLE</b><h2>Namensvermittler</h2><p>Du siehst deinen eigenen Raum und zusätzlich die Namensvermittler der anderen Räume. Sobald sie online sind, siehst du ihre Adressen. Frage dort nach der Adresse der Person, die deine Mitarbeiterin oder dein Mitarbeiter erreichen möchte.</p></article>
+    </section>
+    <a class="button primary guide-button" href="/">Zur Schülerseite</a>
+  </main>
+  <script>fetch('/api/info').then(response => response.json()).then(info => { document.querySelector('#student-url').textContent = info.studentUrl; }).catch(() => {});</script>
+</body>
+</html>
