@@ -1,0 +1,21 @@
+// Deklaration der Variablen...
+int[] zahlen={45, 23, 145, 87, 98, 2, 1, 23, 23, 24, 56};
+
+
+// setup-Methode
+void setup() {
+  size(1000, 700);  // Fenstergröße
+  background(255);  // Hintergrundfarbe weiß
+
+  zeichneBalken();
+}
+
+// eigene Methoden
+
+void zeichneBalken() {
+  fill(0, 0, 255);
+  for (int i=0; i < zahlen.length; i++) {
+    text("i="+i+"  zahlen["+i+"]="+zahlen[i], 20, 25+15*i+15);
+    rect(150, 25+15*i, zahlen[i], 13);
+  }
+}

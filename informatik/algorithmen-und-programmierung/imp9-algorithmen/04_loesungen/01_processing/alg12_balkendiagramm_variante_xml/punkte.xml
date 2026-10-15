@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CSV-Data>
+  <Header>
+    <Column name="Name" type="String" />
+    <Column name="Punkte" type="Integer" />
+  </Header>
+  <Row>
+    <Name>Nikolaus</Name>
+    <Punkte>216</Punkte>
+  </Row>
+  <Row>
+    <Name>Nikolaus</Name>
+    <Punkte>591</Punkte>
+  </Row>
+  <Row>
+    <Name>Nikolaus</Name>
+    <Punkte>1057</Punkte>
+  </Row>
+  <Row>
+    <Name>Nikolaus</Name>
+    <Punkte>180</Punkte>
+  </Row>
+  <Row>
+    <Name>Winfried</Name>
+    <Punkte>168</Punkte>
+  </Row>
+</CSV-Data>
+
