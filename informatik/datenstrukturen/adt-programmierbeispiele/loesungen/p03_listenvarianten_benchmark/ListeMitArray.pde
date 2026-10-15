@@ -1,0 +1,161 @@
+/**
+ * Eine ArrayList-artige Listenimplementation (mit Benchmark-Zählern)
+ * 
+ * @author Rainer Helfrich (Original) / Antigravity (Processing-Konvertierung)
+ * @version September 2026
+ */
+class ListeMitArray<T> extends Liste<T>
+{
+    /**
+     * Das Array, das die Nutzdaten speichert
+     */
+    private Object[] daten;
+    
+    /**
+     * Zähler, der angibt, wie viele der Werte im Array gültig sind
+     */
+    private int anzahl;
+
+    /**
+     * Erzeugt eine neue Liste
+     */
+    ListeMitArray()
+    {
+        daten = new Object[10];
+        anzahl = 0;
+    }
+    
+    Liste<T> neueInstanz()
+    {
+        return new ListeMitArray<T>();
+    }
+    
+    /**
+     * Gibt die Anzahl der Elemente der Liste zurück
+     */
+    int laenge()
+    {
+        // Ein Lesezugriff auf das Größenfeld
+        leseZugriffe++;
+        return anzahl;
+    }
+    
+    /**
+     * Gibt die Listenelemente hintereinander auf der Konsole aus.
+     */
+    void ausgeben()
+    {
+        for (int i = 0; i < anzahl; i++)
+        {   
+            print(daten[i] + " ");
+        } 
+        println();
+    }
+    
+    /**
+     * Fügt einen neuen Wert an einer gewünschten Stelle in der Liste ein.
+     */
+    void einfuegenBei(int index, T val)
+    {
+        if (index >= 0 && index <= anzahl)
+        {
+            groessePruefen();
+            
+            // Verschiebe Elemente nach rechts
+            for (int i = anzahl; i > index; i--)
+            {
+                daten[i] = daten[i-1];
+                // Jede Verschiebung ist ein Lesen und ein Schreiben
+                leseZugriffe++;
+                schreibZugriffe++;
+            }
+            
+            daten[index] = val;
+            schreibZugriffe++;
+            anzahl++;
+        }
+    }
+    
+    /**
+     * Hängt einen neuen Wert hinten an die Liste an.
+     */
+    void anhaengen(T val)
+    {
+        einfuegenBei(anzahl, val);
+    }
+    
+    /**
+     * Gibt den n-ten Wert (0-basierte Zählweise) der Liste zurück.
+     */
+    T getNtenWert(int n)
+    {
+        if (n >= 0 && n < anzahl)
+        {
+            leseZugriffe++; // Array-Zellzugriff
+            return (T)daten[n];
+        }
+        return null;
+    }
+    
+    /**
+     * Prüft die Array-Größe und verdoppelt sie bei Bedarf.
+     */
+    private void groessePruefen()
+    {
+        if (anzahl >= daten.length)
+        {
+            Object[] tmp = new Object[daten.length * 2];
+            System.arraycopy(daten, 0, tmp, 0, anzahl);
+            
+            // Kopierkosten für Benchmark erfassen
+            leseZugriffe += anzahl;
+            schreibZugriffe += anzahl;
+            
+            daten = tmp;
+        }
+    }
+    
+    /**
+     * Entfernt das Element, das am gegebenen Index steht, aus der Liste.
+     */
+    void entferneBei(int index)
+    {
+        if (index >= 0 && index < anzahl)
+        {
+            // Verschiebe Elemente nach links
+            for (int i = index; i < anzahl - 1; i++)
+            {
+                daten[i] = daten[i+1];
+                leseZugriffe++;
+                schreibZugriffe++;
+            }
+            anzahl--;
+            daten[anzahl] = null; // Speicher freigeben
+            schreibZugriffe++;
+        }
+    }
+        
+    /**
+     * Gibt zurück, ob ein Wert sich in der Liste befindet
+     */
+    boolean enthaelt(T val)
+    {
+        for (int i = 0; i < anzahl; i++)
+        {
+            leseZugriffe++;
+            if (daten[i] != null && daten[i].equals(val))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Gibt zurück, ob die Liste leer ist.
+     */
+    boolean istLeer()
+    {
+        return anzahl == 0;
+    }
+}

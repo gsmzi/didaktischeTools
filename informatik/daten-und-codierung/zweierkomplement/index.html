@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zweierkomplement – Interaktive Visualisierung</title>
+  <meta name="description" content="Interaktives didaktisches Tool zum Verständnis des Zweierkomplements: Schritt-für-Schritt-Negation, Zahlenkreis, Probe und Übungsaufgaben.">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5b6572;
+      --line: #d9dee7;
+      --soft: #eef2f7;
+      --accent: #1267b1;
+      --accent-strong: #084f8f;
+      --good: #1b7f49;
+      --warn: #b54708;
+      --bad: #b42318;
+      --bit-0: #ecf0f4;
+      --bit-1: #d7edff;
+      --pos-light: #e0f0ff;
+      --pos: #2b8fd9;
+      --pos-strong: #0b5fa3;
+      --neg-light: #fde8e8;
+      --neg: #d64545;
+      --neg-strong: #a32020;
+      --zero-bg: #f0f2f5;
+      --shadow: 0 16px 38px rgba(31, 42, 55, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(246,247,249,0.94)),
+        repeating-linear-gradient(90deg, transparent 0 38px, rgba(18,103,177,0.05) 39px 40px),
+        repeating-linear-gradient(0deg, transparent 0 38px, rgba(18,103,177,0.04) 39px 40px);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .app { width: min(1920px, 100%); margin: 0 auto; padding: 24px; }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 8px 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 { margin: 0 0 5px; font-size: clamp(1.55rem, 2.6vw, 2.25rem); line-height: 1.08; }
+    .subtitle { max-width: 980px; margin: 0; color: var(--muted); font-size: 0.98rem; line-height: 1.45; }
+    .subtitle span { display: block; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+      gap: 22px;
+      padding-top: 18px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls { align-self: start; padding: 18px; position: sticky; top: 12px; }
+    .main { display: grid; gap: 18px; }
+    .section { padding: 18px; }
+    .section + .section { border-top: 1px solid var(--line); }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2, h3 { margin: 0; font-size: 1rem; }
+    .hint, .small { color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 4px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .segmented button, .ghost {
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink);
+      padding: 7px 10px;
+      font-weight: 650;
+      line-height: 1.1;
+    }
+
+    .segmented button.active, .ghost:hover {
+      background: #fff;
+      border-color: var(--line);
+      box-shadow: 0 3px 10px rgba(20, 33, 48, 0.08);
+    }
+
+    .segmented button.active { color: var(--accent-strong); }
+
+    .field-group { display: grid; gap: 14px; margin-top: 16px; }
+    .number-row { display: grid; gap: 8px; }
+
+    label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+    .bits {
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(32px, 1fr));
+      gap: 6px;
+    }
+
+    .bit-button {
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--bit-0);
+      color: var(--ink);
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    .bit-button[data-on="1"] { background: var(--bit-1); border-color: #8fc8f3; color: #053b66; }
+    .bit-button:hover { transform: translateY(-1px); }
+
+    .bit-index {
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(32px, 1fr));
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* --- Interpretation cards --- */
+    .interp-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 90px;
+      display: grid;
+      align-content: space-between;
+      gap: 8px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(1.35rem, 2.2vw, 2.1rem);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .metric.pos-box { border-left: 5px solid var(--pos); background: var(--pos-light); }
+    .metric.neg-box { border-left: 5px solid var(--neg); background: var(--neg-light); }
+    .metric.zero-box { border-left: 5px solid #768395; background: var(--zero-bg); }
+
+    /* --- Step-by-step negation --- */
+    .steps-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0;
+      align-items: stretch;
+    }
+
+    .step-arrow {
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      color: var(--accent);
+      padding: 0 6px;
+      font-weight: 900;
+    }
+
+    .step-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .step-card.hidden-step {
+      opacity: 0.15;
+      transform: scale(0.96);
+    }
+
+    .step-card.active-step {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(18, 103, 177, 0.15);
+    }
+
+    .step-header {
+      font-weight: 800;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+      letter-spacing: 0.03em;
+    }
+
+    .step-desc {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.3;
+    }
+
+    .step-bits {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin: 6px 0;
+    }
+
+    .step-bit {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      font-weight: 850;
+      font-size: 1.1rem;
+      border: 2px solid var(--line);
+      background: #fff;
+      transition: all 0.3s ease;
+    }
+
+    .step-bit.flipped {
+      background: #fff3cd;
+      border-color: #d4a017;
+      animation: flipBit 0.4s ease;
+    }
+
+    .step-bit.carry-active {
+      background: #d1ecf1;
+      border-color: #0c7aa0;
+    }
+
+    .step-bit.sign-bit {
+      outline: 2.5px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @keyframes flipBit {
+      0% { transform: rotateX(0); }
+      50% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0); }
+    }
+
+    .step-decimal {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .step-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* --- Proof section --- */
+    .proof-equation {
+      display: grid;
+      gap: 6px;
+      padding: 14px;
+      background: #17202a;
+      color: #fff;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: "Cascadia Mono", Consolas, monospace;
+    }
+
+    .proof-line {
+      display: grid;
+      grid-template-columns: 130px 1.35rem max-content;
+      gap: 10px;
+      align-items: center;
+      font-size: clamp(0.88rem, 1.6vw, 1.05rem);
+      white-space: nowrap;
+    }
+
+    .proof-line .proof-bits {
+      display: flex;
+      gap: 4px;
+    }
+
+    .proof-line .proof-bits span {
+      width: 1.55rem;
+      min-width: 1.55rem;
+      text-align: center;
+      padding: 3px 5px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .proof-line .proof-bits span.carry-bit-proof {
+      background: rgba(245, 184, 75, 0.35);
+      outline: 1px solid rgba(245, 184, 75, 0.6);
+    }
+
+    .proof-line .proof-bits span.empty-digit { visibility: hidden; }
+    .proof-line.carry-line { font-size: 0.8rem; color: #c8d2e0; }
+    .proof-line .separator { border-bottom: 2px solid rgba(255,255,255,0.4); grid-column: 1 / -1; }
+
+    .proof-result {
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .proof-result.success { background: #eef8f2; color: var(--good); border: 1px solid #b8dec6; }
+    .proof-result.special { background: #fff8e6; color: var(--warn); border: 1px solid #e8c96a; }
+
+    /* --- Number circle --- */
+    .circle-container {
+      display: grid;
+      place-items: center;
+      padding: 8px;
+    }
+
+    .number-circle { max-width: 480px; width: 100%; height: auto; }
+
+    .circle-segment {
+      transition: opacity 0.2s ease;
+      cursor: pointer;
+    }
+
+    .circle-segment:hover { opacity: 0.8; }
+    .circle-label { font-size: 11px; font-weight: 700; fill: var(--ink); pointer-events: none; }
+    .circle-label-secondary { font-size: 8.5px; fill: var(--muted); pointer-events: none; }
+    .circle-marker { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)); pointer-events: none; }
+    .circle-legend { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 10px; }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.15);
+    }
+
+    /* --- Value table --- */
+    .value-table-wrap { overflow-x: auto; }
+
+    .value-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .value-table th, .value-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 7px 10px;
+      text-align: center;
+    }
+
+    .value-table th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+    }
+
+    .value-table code {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.94em;
+    }
+
+    .value-table tr.active-row { background: var(--pos-light); }
+    .value-table tr.complement-row { background: var(--neg-light); }
+    .value-table tr.boundary-row td { border-bottom: 3px solid var(--accent); }
+    .value-table tr:hover { background: var(--soft); }
+
+    /* --- Task mode --- */
+    .task-layout { display: grid; gap: 14px; }
+
+    .task-prompt-text { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+
+    .task-answer { display: grid; gap: 12px; margin-top: 10px; }
+
+    .prediction-bits {
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(34px, 42px));
+      gap: 6px;
+    }
+
+    .prediction-bits button {
+      aspect-ratio: 1 / 1;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--bit-0);
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .prediction-bits button[data-on="1"] { background: var(--bit-1); border-color: #8fc8f3; color: #053b66; }
+
+    .task-feedback { min-height: 24px; font-weight: 750; }
+    .task-feedback.good { color: var(--good); }
+    .task-feedback.bad { color: var(--bad); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .badge.pos { background: var(--pos-light); color: var(--pos-strong); border: 1px solid #a8d3f0; }
+    .badge.neg { background: var(--neg-light); color: var(--neg-strong); border: 1px solid #f4b8b2; }
+    .badge.zero { background: var(--zero-bg); color: var(--muted); border: 1px solid var(--line); }
+
+    .score-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .score-bar .score-count { color: var(--good); font-weight: 800; }
+
+    /* --- Info box --- */
+    .info-box {
+      border: 1px solid #b9d8f1;
+      border-radius: 8px;
+      background: #f1f8ff;
+      padding: 12px 14px;
+      margin-top: 10px;
+    }
+
+    .info-box h3 { color: var(--accent-strong); margin-bottom: 6px; font-size: 0.92rem; }
+    .info-box p { margin: 0 0 4px; font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
+    .info-box ul { margin: 4px 0 0; padding-left: 18px; font-size: 0.86rem; line-height: 1.5; }
+
+    .edge-case-box {
+      border-color: #e8c96a;
+      background: #fffbe6;
+    }
+
+    .edge-case-box h3 { color: var(--warn); }
+
+    /* --- Responsive --- */
+    @media (min-width: 1600px) {
+      .app { padding: 28px 32px; }
+      .shell { grid-template-columns: 400px minmax(0, 1fr); gap: 24px; }
+      .controls, .section { padding: 20px; }
+    }
+
+    @media (max-width: 960px) {
+      .topbar, .shell { grid-template-columns: 1fr; }
+      .toolbar { justify-content: stretch; }
+      .toolbar > * { flex: 1 1 180px; }
+      .controls { position: static; }
+      .interp-grid { grid-template-columns: 1fr 1fr; }
+      .steps-flow { grid-template-columns: 1fr; gap: 10px; }
+      .step-arrow { transform: rotate(90deg); justify-self: center; }
+    }
+
+    @media (max-width: 620px) {
+      .app { padding: 12px; }
+      .interp-grid { grid-template-columns: 1fr; }
+      .step-bit { width: 34px; height: 34px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>Zweierkomplement – Interaktive Visualisierung</h1>
+        <p class="subtitle">
+          <span>Wie werden negative Zahlen im Computer dargestellt? Stelle eine Zahl ein und beobachte die drei Schritte der Negation: Bits invertieren, dann eins addieren.</span>
+          <span>Der Zahlenkreis zeigt, warum das Zweierkomplement funktioniert und wo die Grenzen des Wertebereichs liegen.</span>
+        </p>
+      </div>
+      <div class="toolbar">
+        <div class="segmented" aria-label="Bitbreite">
+          <button type="button" class="active" data-width="4">4 Bit</button>
+          <button type="button" data-width="8">8 Bit</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="panel controls">
+        <div class="section-title">
+          <h2>Eingabe</h2>
+          <span class="tag" id="rangeTag">-8 bis 7</span>
+        </div>
+
+        <div class="field-group">
+          <div class="number-row">
+            <label for="numInput">Dezimalzahl <span id="bitsLabel" class="small">0110</span></label>
+            <input id="numInput" type="number" min="-8" max="7" value="6">
+            <input id="numRange" type="range" min="-8" max="7" value="6" aria-label="Zahl als Regler">
+            <div class="bit-index" id="bitIndex"></div>
+            <div class="bits" id="bitButtons" aria-label="Bits der Zahl"></div>
+          </div>
+        </div>
+
+        <div class="info-box" style="margin-top: 16px;">
+          <h3>Vorzeichenbit</h3>
+          <p>Das linkeste Bit (MSB) bestimmt das Vorzeichen: <strong>0</strong> = positiv, <strong>1</strong> = negativ. Der Rest kodiert den Betrag – aber nicht direkt, sondern im Zweierkomplement.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <!-- Interpretation -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Darstellung &amp; Interpretation</h2>
+            <span class="badge pos" id="signBadge">positiv</span>
+          </div>
+          <div class="interp-grid" id="interpGrid"></div>
+        </section>
+
+        <!-- Step-by-step negation -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Negation: Schritt für Schritt</h2>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="ghost" id="animBtn">▶ Animation</button>
+            </div>
+          </div>
+          <p class="hint">So wird aus <strong id="negSourceText">+6</strong> die Gegenzahl <strong id="negTargetText">-6</strong>:</p>
+          <div class="steps-flow" id="stepsFlow"></div>
+          <div id="edgeCaseBox"></div>
+        </section>
+
+        <!-- Proof -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Probe: Zahl + Gegenzahl = 0</h2>
+          </div>
+          <p class="hint">Die Addition von Zahl und ihrem Zweierkomplement muss Null ergeben – der Übertrag (Carry) aus dem höchsten Bit wird verworfen.</p>
+          <div class="proof-equation" id="proofEquation"></div>
+          <div id="proofResult"></div>
+        </section>
+
+        <!-- Number circle -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Zahlenkreis</h2>
+          </div>
+          <p class="hint">Der Kreis zeigt alle darstellbaren Werte. Klicke auf ein Segment, um die Zahl auszuwählen. Beachte den Übergang von positiv zu negativ an der Unterseite.</p>
+          <div class="circle-container" id="circleContainer"></div>
+          <div class="circle-legend" id="circleLegend"></div>
+        </section>
+
+        <!-- Value table -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Wertetabelle</h2>
+            <button type="button" class="ghost" id="tableToggle">Tabelle einblenden</button>
+          </div>
+          <div class="value-table-wrap" id="tableWrap" hidden></div>
+        </section>
+
+        <!-- Task mode -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Aufgabenmodus</h2>
+            <button type="button" class="ghost" id="taskToggleBtn">Aufgabenmodus aktivieren</button>
+          </div>
+          <div id="taskPanel" hidden>
+            <p class="hint" id="taskPrompt">Starte eine Aufgabe über den Button rechts.</p>
+            <div class="task-answer" id="taskAnswer" hidden>
+              <div>
+                <label>Dein Ergebnis in Binär (Zweierkomplement)</label>
+                <div class="prediction-bits" id="predictionBits" aria-label="Vorhergesagte Ergebnisbits"></div>
+              </div>
+              <div class="task-feedback" id="taskFeedback"></div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+              <button type="button" class="ghost" id="newTaskBtn">Aufgabe stellen</button>
+              <button type="button" class="ghost" id="checkTaskBtn" disabled>Prüfen</button>
+              <button type="button" class="ghost" id="hintBtn" hidden>Tipp anzeigen</button>
+            </div>
+            <div class="score-bar" id="scoreBar" hidden>
+              Richtig: <span class="score-count" id="scoreCount">0</span> / <span id="scoreTotal">0</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    /* ====== STATE ====== */
+    const state = {
+      width: 4,
+      value: 6,       // raw unsigned bits
+      animStep: null,  // null = all visible, 0/1/2 = current step
+      tableVisible: false,
+      task: {
+        enabled: false,
+        active: false,
+        mode: null,        // 'toComplement' | 'toDecimal'
+        targetSigned: 0,
+        guess: [],
+        feedback: "",
+        hintShown: false,
+        correct: 0,
+        total: 0
+      }
+    };
+
+    /* ====== ELEMENT REFS ====== */
+    const els = {
+      widthBtns: Array.from(document.querySelectorAll("[data-width]")),
+      numInput: document.getElementById("numInput"),
+      numRange: document.getElementById("numRange"),
+      bitButtons: document.getElementById("bitButtons"),
+      bitIndex: document.getElementById("bitIndex"),
+      bitsLabel: document.getElementById("bitsLabel"),
+      rangeTag: document.getElementById("rangeTag"),
+      signBadge: document.getElementById("signBadge"),
+      interpGrid: document.getElementById("interpGrid"),
+      stepsFlow: document.getElementById("stepsFlow"),
+      negSourceText: document.getElementById("negSourceText"),
+      negTargetText: document.getElementById("negTargetText"),
+      edgeCaseBox: document.getElementById("edgeCaseBox"),
+      animBtn: document.getElementById("animBtn"),
+      proofEquation: document.getElementById("proofEquation"),
+      proofResult: document.getElementById("proofResult"),
+      circleContainer: document.getElementById("circleContainer"),
+      circleLegend: document.getElementById("circleLegend"),
+      tableToggle: document.getElementById("tableToggle"),
+      tableWrap: document.getElementById("tableWrap"),
+      taskToggleBtn: document.getElementById("taskToggleBtn"),
+      taskPanel: document.getElementById("taskPanel"),
+      taskPrompt: document.getElementById("taskPrompt"),
+      taskAnswer: document.getElementById("taskAnswer"),
+      predictionBits: document.getElementById("predictionBits"),
+      taskFeedback: document.getElementById("taskFeedback"),
+      newTaskBtn: document.getElementById("newTaskBtn"),
+      checkTaskBtn: document.getElementById("checkTaskBtn"),
+      hintBtn: document.getElementById("hintBtn"),
+      scoreBar: document.getElementById("scoreBar"),
+      scoreCount: document.getElementById("scoreCount"),
+      scoreTotal: document.getElementById("scoreTotal")
+    };
+
+    /* ====== HELPERS ====== */
+    function mask() { return (1 << state.width) - 1; }
+    function signLimit() { return 1 << (state.width - 1); }
+    function toBits(v) { return (v & mask()).toString(2).padStart(state.width, "0"); }
+    function toSigned(raw) { const l = signLimit(); return raw >= l ? raw - (l << 1) : raw; }
+    function toUnsigned(signed) { return signed < 0 ? signed + (1 << state.width) : signed; }
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+    function negate(raw) {
+      return ((~raw & mask()) + 1) & mask();
+    }
+
+    function invert(raw) {
+      return ~raw & mask();
+    }
+
+    function fromSigned(v) {
+      const n = parseInt(v, 10);
+      if (isNaN(n)) return 0;
+      const lo = -signLimit();
+      const hi = signLimit() - 1;
+      return toUnsigned(clamp(n, lo, hi));
+    }
+
+    function signedDisplay(raw) { return toSigned(raw); }
+
+    /* ====== CSS BIT COUNT ====== */
+    function setCssBits() {
+      document.documentElement.style.setProperty("--bit-count", state.width);
+    }
+
+    /* ====== RENDER: INPUT CONTROLS ====== */
+    function renderInputs() {
+      const lo = -signLimit();
+      const hi = signLimit() - 1;
+      const sv = toSigned(state.value);
+      els.numInput.min = lo;
+      els.numInput.max = hi;
+      els.numInput.value = sv;
+      els.numRange.min = lo;
+      els.numRange.max = hi;
+      els.numRange.value = sv;
+      els.bitsLabel.textContent = toBits(state.value);
+      els.rangeTag.textContent = `${lo} bis ${hi}`;
+
+      els.bitIndex.innerHTML = "";
+      els.bitButtons.innerHTML = "";
+      for (let bit = state.width - 1; bit >= 0; bit--) {
+        const idx = document.createElement("span");
+        idx.textContent = bit === state.width - 1 ? `Bit ${bit}` : bit;
+        els.bitIndex.appendChild(idx);
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "bit-button";
+        const on = (state.value >> bit) & 1;
+        btn.dataset.on = on;
+        btn.textContent = on;
+        btn.title = `Bit ${bit} umschalten`;
+        btn.addEventListener("click", () => {
+          state.value ^= (1 << bit);
+          state.value &= mask();
+          clearTaskFeedback();
+          render();
+        });
+        els.bitButtons.appendChild(btn);
+      }
+    }
+
+    /* ====== RENDER: INTERPRETATION ====== */
+    function renderInterpretation() {
+      const sv = toSigned(state.value);
+      const isNeg = sv < 0;
+      const isZero = sv === 0;
+
+      els.signBadge.className = `badge ${isZero ? "zero" : (isNeg ? "neg" : "pos")}`;
+      els.signBadge.textContent = isZero ? "Null" : (isNeg ? "negativ" : "positiv");
+
+      els.interpGrid.innerHTML = `
+        <div class="metric ${isZero ? "zero-box" : (isNeg ? "neg-box" : "pos-box")}">
+          <span class="label">Vorzeichenbehaftet (Signed)</span>
+          <strong>${sv}</strong>
+          <span class="small">Binär: ${toBits(state.value)} · MSB = ${(state.value >> (state.width - 1)) & 1}</span>
+        </div>
+        <div class="metric">
+          <span class="label">Vorzeichenlos (Unsigned)</span>
+          <strong>${state.value}</strong>
+          <span class="small">Dieselben Bits, andere Deutung</span>
+        </div>
+      `;
+    }
+
+    /* ====== RENDER: NEGATION STEPS ====== */
+    function renderSteps() {
+      const raw = state.value;
+      const inv = invert(raw);
+      const neg = negate(raw);
+      const sv = toSigned(raw);
+      const nv = toSigned(neg);
+
+      els.negSourceText.textContent = sv >= 0 ? `+${sv}` : `${sv}`;
+      els.negTargetText.textContent = nv >= 0 ? `+${nv}` : `${nv}`;
+
+      const origBits = toBits(raw);
+      const invBits = toBits(inv);
+      const negBits = toBits(neg);
+
+      const step = state.animStep;
+      const showStep = (n) => step === null || step >= n;
+      const activeStep = (n) => step === n;
+
+      const makeBitCells = (bits, extraClass = "", markSign = true) => {
+        return bits.split("").map((b, i) => {
+          const cls = [extraClass, (markSign && i === 0) ? "sign-bit" : ""].filter(Boolean).join(" ");
+          return `<div class="step-bit ${cls}">${b}</div>`;
+        }).join("");
+      };
+
+      // Find which bits flipped from inv to neg (carry propagation in +1)
+      const carryBits = [];
+      {
+        let c = 1;
+        for (let i = state.width - 1; i >= 0; i--) {
+          const bitIdx = state.width - 1 - i;
+          const ib = (inv >> bitIdx) & 1;
+          if (c === 1 && ib === 1) {
+            carryBits.push(i);
+            c = 1;
+          } else if (c === 1) {
+            carryBits.push(i);
+            c = 0;
+          }
+        }
+      }
+
+      const makeCarryBitCells = (bits) => {
+        return bits.split("").map((b, i) => {
+          const isCarry = carryBits.includes(i);
+          return `<div class="step-bit ${isCarry ? "carry-active" : ""} ${i === 0 ? "sign-bit" : ""}">${b}</div>`;
+        }).join("");
+      };
+
+      els.stepsFlow.innerHTML = `
+        <div class="step-card ${activeStep(0) ? "active-step" : ""}">
+          <div class="step-header">Schritt 1</div>
+          <div class="step-desc">Ausgangszahl</div>
+          <div class="step-bits">${makeBitCells(origBits)}</div>
+          <div class="step-decimal">${sv >= 0 ? "+" : ""}${sv}</div>
+          <div class="step-label">Dezimal (signed)</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card ${!showStep(1) ? "hidden-step" : ""} ${activeStep(1) ? "active-step" : ""}">
+          <div class="step-header">Schritt 2</div>
+          <div class="step-desc">Alle Bits invertieren</div>
+          <div class="step-bits">${makeBitCells(invBits, "flipped")}</div>
+          <div class="step-decimal">${showStep(1) ? toSigned(inv) : "?"}</div>
+          <div class="step-label">= Einerkomplement</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card ${!showStep(2) ? "hidden-step" : ""} ${activeStep(2) ? "active-step" : ""}">
+          <div class="step-header">Schritt 3</div>
+          <div class="step-desc">+1 addieren</div>
+          <div class="step-bits">${showStep(2) ? makeCarryBitCells(negBits) : makeBitCells("?".repeat(state.width), "", false)}</div>
+          <div class="step-decimal">${showStep(2) ? (nv >= 0 ? "+" : "") + nv : "?"}</div>
+          <div class="step-label">= Zweierkomplement</div>
+        </div>
+      `;
+
+      // Edge case info
+      els.edgeCaseBox.innerHTML = "";
+      if (raw === 0) {
+        els.edgeCaseBox.innerHTML = `
+          <div class="info-box edge-case-box" style="margin-top: 12px;">
+            <h3>Sonderfall: Null negieren</h3>
+            <p>0 invertiert ergibt ${toBits(inv)} (= ${mask()}). Plus 1 ergibt ${mask() + 1} – aber das ${state.width + 1}. Bit (Carry) wird verworfen, übrig bleibt <strong>0</strong>. Die Negation von Null ist also wieder Null. ✓</p>
+          </div>
+        `;
+      } else if (raw === signLimit()) {
+        els.edgeCaseBox.innerHTML = `
+          <div class="info-box edge-case-box" style="margin-top: 12px;">
+            <h3>Sonderfall: Minimum negieren</h3>
+            <p>${toSigned(raw)} ist der kleinste darstellbare Wert bei ${state.width} Bit. Das Zweierkomplement ergibt wieder ${toBits(neg)} = ${toSigned(neg)}. Die positive Gegenzahl +${signLimit()} liegt <strong>außerhalb</strong> des Wertebereichs [-${signLimit()}, ${signLimit() - 1}] – ein Überlauf!</p>
+          </div>
+        `;
+      }
+    }
+
+    /* ====== RENDER: PROOF ====== */
+    function renderProof() {
+      const raw = state.value;
+      const neg = negate(raw);
+      const bits_a = toBits(raw);
+      const bits_b = toBits(neg);
+
+      // Ripple carry
+      let carry = 0;
+      const carries = [0];
+      const sumBits = [];
+      for (let i = 0; i < state.width; i++) {
+        const ai = (raw >> i) & 1;
+        const bi = (neg >> i) & 1;
+        const s = ai ^ bi ^ carry;
+        carry = (ai & bi) | (ai & carry) | (bi & carry);
+        sumBits.push(s);
+        carries.push(carry);
+      }
+      const finalCarry = carry;
+      const sumRaw = sumBits.reduce((acc, b, i) => acc | (b << i), 0) & mask();
+
+      const carryBitsStr = carries.slice(1).reverse();
+      const makeBitSpans = (bits) => bits.split("").map(b => `<span>${b}</span>`).join("");
+      const makeCarrySpans = (arr) =>
+        `<span class="carry-bit-proof">${finalCarry}</span>` +
+        arr.map(b => `<span class="carry-bit-proof">${b}</span>`).join("");
+
+      els.proofEquation.innerHTML = `
+        <div class="proof-line">
+          <span>Zahl</span><span></span>
+          <div class="proof-bits"><span class="empty-digit"> </span>${makeBitSpans(bits_a)}</div>
+        </div>
+        <div class="proof-line">
+          <span>+ Gegenzahl</span><span>+</span>
+          <div class="proof-bits"><span class="empty-digit"> </span>${makeBitSpans(bits_b)}</div>
+        </div>
+        <div class="proof-line carry-line">
+          <span>Überträge</span><span></span>
+          <div class="proof-bits">${makeCarrySpans(carryBitsStr)}</div>
+        </div>
+        <div style="border-bottom: 2px solid rgba(255,255,255,0.35); margin: 2px 0;"></div>
+        <div class="proof-line">
+          <span>Ergebnis</span><span>=</span>
+          <div class="proof-bits"><span class="carry-bit-proof">${finalCarry}</span>${makeBitSpans(toBits(sumRaw))}</div>
+        </div>
+      `;
+
+      const isZeroResult = sumRaw === 0 && (raw !== 0 || neg === 0);
+      if (raw === 0) {
+        els.proofResult.innerHTML = `<div class="proof-result success">0 + 0 = 0 – trivial korrekt. ✓</div>`;
+      } else if (raw === signLimit()) {
+        els.proofResult.innerHTML = `<div class="proof-result special">⚠ ${toSigned(raw)} + ${toSigned(neg)} = ${toSigned(raw)} + ${toSigned(neg)} = ${toSigned((raw + neg) & mask())} – Sonderfall: die Negation von ${toSigned(raw)} ist nicht darstellbar.</div>`;
+      } else {
+        els.proofResult.innerHTML = `<div class="proof-result success">Carry (${finalCarry}) verworfen → Ergebnis im ${state.width}-Bit-Register: ${toBits(sumRaw)} = <strong>0</strong> ✓</div>`;
+      }
+    }
+
+    /* ====== RENDER: NUMBER CIRCLE ====== */
+    function renderCircle() {
+      const N = 1 << state.width;
+      const cx = 200, cy = 200;
+      const r = N <= 16 ? 140 : 155;
+      const labelR = r + 28;
+      const innerLabelR = r - 20;
+
+      let svg = `<svg viewBox="0 0 400 400" class="number-circle" role="img" aria-label="Zahlenkreis">`;
+
+      // Background
+      svg += `<circle cx="${cx}" cy="${cy}" r="${r + 2}" fill="none" stroke="var(--line)" stroke-width="1" />`;
+
+      const neg_val = negate(state.value);
+
+      for (let i = 0; i < N; i++) {
+        const a1 = (i / N) * 2 * Math.PI - Math.PI / 2;
+        const a2 = ((i + 1) / N) * 2 * Math.PI - Math.PI / 2;
+        const amid = (a1 + a2) / 2;
+
+        const x1 = cx + r * Math.cos(a1);
+        const y1 = cy + r * Math.sin(a1);
+        const x2 = cx + r * Math.cos(a2);
+        const y2 = cy + r * Math.sin(a2);
+
+        const sv = toSigned(i);
+        const isActive = i === state.value;
+        const isComp = i === neg_val && state.value !== 0 && state.value !== signLimit();
+
+        // Segment color
+        let fill;
+        if (sv === 0) fill = "#d4dbe5";
+        else if (sv > 0) fill = `hsl(210, ${40 + (sv / (signLimit() - 1)) * 40}%, ${75 - (sv / (signLimit() - 1)) * 25}%)`;
+        else fill = `hsl(0, ${40 + (Math.abs(sv) / signLimit()) * 35}%, ${78 - (Math.abs(sv) / signLimit()) * 22}%)`;
+
+        if (isActive) fill = "var(--accent)";
+        if (isComp) fill = "var(--neg)";
+
+        const largeArc = (a2 - a1) > Math.PI ? 1 : 0;
+        svg += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z"
+                      fill="${fill}" stroke="#fff" stroke-width="1.5"
+                      class="circle-segment" data-circle-value="${i}" />`;
+
+        // Labels (always for 4-bit; selective for 8-bit)
+        const showLabel = N <= 16 || i % 16 === 0 || isActive || isComp || i === 0 || i === signLimit() || i === signLimit() - 1 || i === N - 1;
+        if (showLabel) {
+          const lx = cx + labelR * Math.cos(amid);
+          const ly = cy + labelR * Math.sin(amid);
+          const textColor = isActive ? "var(--accent-strong)" : (isComp ? "var(--neg-strong)" : "var(--ink)");
+          const fw = (isActive || isComp) ? "900" : "700";
+          svg += `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" text-anchor="middle" dominant-baseline="central"
+                        class="circle-label" fill="${textColor}" font-weight="${fw}">${sv}</text>`;
+
+          // Secondary label (unsigned) for 4-bit
+          if (N <= 16 && sv !== i) {
+            const slx = cx + (labelR + 14) * Math.cos(amid);
+            const sly = cy + (labelR + 14) * Math.sin(amid);
+            svg += `<text x="${slx.toFixed(2)}" y="${sly.toFixed(2)}" text-anchor="middle" dominant-baseline="central"
+                          class="circle-label-secondary">(${i})</text>`;
+          }
+        }
+      }
+
+      // Boundary markers
+      const boundaryAngle = (signLimit() / N) * 2 * Math.PI - Math.PI / 2;
+      const bx = cx + (r + 8) * Math.cos(boundaryAngle);
+      const by = cy + (r + 8) * Math.sin(boundaryAngle);
+      svg += `<line x1="${cx}" y1="${cy}" x2="${bx.toFixed(2)}" y2="${by.toFixed(2)}"
+                    stroke="var(--bad)" stroke-width="2.5" stroke-dasharray="4,3" opacity="0.6" />`;
+
+      // Center text
+      const sv = toSigned(state.value);
+      svg += `<text x="${cx}" y="${cy - 10}" text-anchor="middle" font-size="22" font-weight="900" fill="var(--ink)">${sv >= 0 ? "+" : ""}${sv}</text>`;
+      svg += `<text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="11" fill="var(--muted)">${toBits(state.value)}</text>`;
+
+      if (state.value !== 0 && state.value !== signLimit()) {
+        const nv = toSigned(neg_val);
+        svg += `<text x="${cx}" y="${cy + 30}" text-anchor="middle" font-size="11" fill="var(--neg)">Gegenzahl: ${nv >= 0 ? "+" : ""}${nv}</text>`;
+      }
+
+      svg += `</svg>`;
+      els.circleContainer.innerHTML = svg;
+
+      // Click handlers
+      els.circleContainer.querySelectorAll("[data-circle-value]").forEach(seg => {
+        seg.addEventListener("click", () => {
+          state.value = parseInt(seg.dataset.circleValue, 10);
+          clearTaskFeedback();
+          render();
+        });
+      });
+
+      // Legend
+      els.circleLegend.innerHTML = `
+        <div class="legend-item"><div class="legend-dot" style="background: var(--accent);"></div> Aktuelle Zahl</div>
+        ${state.value !== 0 && state.value !== signLimit() ? `<div class="legend-item"><div class="legend-dot" style="background: var(--neg);"></div> Gegenzahl</div>` : ""}
+        <div class="legend-item"><div class="legend-dot" style="background: hsl(210, 60%, 65%);"></div> Positive Werte</div>
+        <div class="legend-item"><div class="legend-dot" style="background: hsl(0, 55%, 70%);"></div> Negative Werte</div>
+      `;
+    }
+
+    /* ====== RENDER: VALUE TABLE ====== */
+    function renderTable() {
+      els.tableToggle.textContent = state.tableVisible ? "Tabelle ausblenden" : "Tabelle einblenden";
+      els.tableWrap.hidden = !state.tableVisible;
+      if (!state.tableVisible) return;
+
+      const N = 1 << state.width;
+      const neg_val = negate(state.value);
+      let html = `<table class="value-table">
+        <thead><tr>
+          <th>Binär</th><th>Unsigned</th><th>Signed (ZK)</th><th>Vorzeichen</th>
+        </tr></thead><tbody>`;
+
+      for (let i = 0; i < N; i++) {
+        const sv = toSigned(i);
+        const isActive = i === state.value;
+        const isComp = i === neg_val && state.value !== 0 && state.value !== signLimit();
+        const isBoundary = i === signLimit() - 1;
+        let cls = "";
+        if (isActive) cls = "active-row";
+        else if (isComp) cls = "complement-row";
+        if (isBoundary) cls += " boundary-row";
+
+        html += `<tr class="${cls}">
+          <td><code>${toBits(i)}</code></td>
+          <td>${i}</td>
+          <td><strong>${sv}</strong></td>
+          <td>${sv > 0 ? "➕" : (sv < 0 ? "➖" : "⚬")}</td>
+        </tr>`;
+      }
+
+      html += `</tbody></table>`;
+      els.tableWrap.innerHTML = html;
+    }
+
+    /* ====== RENDER: TASK MODE ====== */
+    function renderTask() {
+      els.taskPanel.hidden = !state.task.enabled;
+      els.taskToggleBtn.textContent = state.task.enabled ? "Aufgabenmodus deaktivieren" : "Aufgabenmodus aktivieren";
+
+      if (!state.task.enabled) return;
+
+      els.taskAnswer.hidden = !state.task.active;
+      els.checkTaskBtn.disabled = !state.task.active;
+      els.hintBtn.hidden = !state.task.active || state.task.hintShown || !!state.task.feedback;
+
+      if (state.task.active) {
+        if (state.task.mode === "toComplement") {
+          const sv = state.task.targetSigned;
+          els.taskPrompt.innerHTML = `<span class="task-prompt-text">Aufgabe: Stelle die Zahl <strong>${sv >= 0 ? "+" : ""}${sv}</strong> im ${state.width}-Bit-Zweierkomplement dar.</span><br><span class="hint">Setze die Bits so, dass sie den Wert ${sv} im Zweierkomplement kodieren.</span>`;
+        } else {
+          const bits = toBits(toUnsigned(state.task.targetSigned));
+          els.taskPrompt.innerHTML = `<span class="task-prompt-text">Aufgabe: Welche Dezimalzahl (signed) stellt <strong>${bits}</strong> im Zweierkomplement dar?</span><br><span class="hint">Lese die Binärzahl als Zweierkomplement ab und gib den Dezimalwert ein.</span>`;
+        }
+      } else {
+        els.taskPrompt.textContent = "Starte eine Aufgabe über den Button.";
+      }
+
+      // Prediction bits
+      els.predictionBits.innerHTML = "";
+      if (state.task.active && state.task.mode === "toComplement") {
+        for (let bit = state.width - 1; bit >= 0; bit--) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          const on = state.task.guess[bit] ?? 0;
+          btn.dataset.on = on;
+          btn.textContent = on;
+          btn.title = `Bit ${bit} umschalten`;
+          btn.addEventListener("click", () => {
+            state.task.guess[bit] = state.task.guess[bit] ? 0 : 1;
+            state.task.feedback = "";
+            render();
+          });
+          els.predictionBits.appendChild(btn);
+        }
+      }
+
+      // Score
+      els.scoreBar.hidden = state.task.total === 0;
+      els.scoreCount.textContent = state.task.correct;
+      els.scoreTotal.textContent = state.task.total;
+
+      // Feedback
+      els.taskFeedback.className = "task-feedback";
+      if (state.task.feedback) {
+        els.taskFeedback.classList.add(state.task.feedback.startsWith("Richtig") ? "good" : "bad");
+      }
+      els.taskFeedback.textContent = state.task.feedback;
+    }
+
+    /* ====== MAIN RENDER ====== */
+    function render() {
+      setCssBits();
+      state.value &= mask();
+
+      for (const btn of els.widthBtns) {
+        btn.classList.toggle("active", Number(btn.dataset.width) === state.width);
+      }
+
+      renderInputs();
+      renderInterpretation();
+      renderSteps();
+      renderProof();
+      renderCircle();
+      renderTable();
+      renderTask();
+    }
+
+    /* ====== EVENT HANDLERS ====== */
+    els.widthBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.width = Number(btn.dataset.width);
+        state.value &= mask();
+        state.task.guess = Array(state.width).fill(0);
+        state.task.feedback = "";
+        state.animStep = null;
+        render();
+      });
+    });
+
+    els.numInput.addEventListener("input", e => {
+      state.value = fromSigned(e.target.value);
+      clearTaskFeedback();
+      render();
+    });
+
+    els.numRange.addEventListener("input", e => {
+      state.value = fromSigned(e.target.value);
+      clearTaskFeedback();
+      render();
+    });
+
+    els.tableToggle.addEventListener("click", () => {
+      state.tableVisible = !state.tableVisible;
+      render();
+    });
+
+    /* --- Animation --- */
+    let animTimer = null;
+    els.animBtn.addEventListener("click", () => {
+      if (animTimer) {
+        clearTimeout(animTimer);
+        animTimer = null;
+        state.animStep = null;
+        els.animBtn.textContent = "▶ Animation";
+        render();
+      } else {
+        state.animStep = 0;
+        els.animBtn.textContent = "⏹ Stopp";
+        render();
+        let step = 0;
+        const advance = () => {
+          step++;
+          if (step > 2) {
+            state.animStep = null;
+            els.animBtn.textContent = "▶ Animation";
+            animTimer = null;
+            render();
+            return;
+          }
+          state.animStep = step;
+          render();
+          animTimer = setTimeout(advance, 1200);
+        };
+        animTimer = setTimeout(advance, 1200);
+      }
+    });
+
+    /* --- Task mode --- */
+    els.taskToggleBtn.addEventListener("click", () => {
+      state.task.enabled = !state.task.enabled;
+      state.task.active = false;
+      state.task.feedback = "";
+      state.task.guess = Array(state.width).fill(0);
+      render();
+    });
+
+    els.newTaskBtn.addEventListener("click", () => {
+      const lo = -signLimit();
+      const hi = signLimit() - 1;
+      // Random task type
+      state.task.mode = Math.random() < 0.5 ? "toComplement" : "toDecimal";
+      // Avoid 0 and min (too trivial / edge case)
+      let target;
+      do {
+        target = Math.floor(Math.random() * (hi - lo + 1)) + lo;
+      } while (target === 0);
+      state.task.targetSigned = target;
+      state.task.active = true;
+      state.task.guess = Array(state.width).fill(0);
+      state.task.feedback = "";
+      state.task.hintShown = false;
+      render();
+    });
+
+    els.checkTaskBtn.addEventListener("click", () => {
+      state.task.total++;
+      if (state.task.mode === "toComplement") {
+        const expected = toUnsigned(state.task.targetSigned);
+        const guessed = state.task.guess.reduce((acc, b, i) => acc | (b << i), 0);
+        if (guessed === expected) {
+          state.task.correct++;
+          state.task.feedback = `Richtig! ${state.task.targetSigned} = ${toBits(expected)} im Zweierkomplement.`;
+        } else {
+          state.task.feedback = `Noch nicht richtig. Erwartet: ${toBits(expected)}.`;
+        }
+      } else {
+        // toDecimal – check the number input against target
+        const current = toSigned(state.value);
+        if (current === state.task.targetSigned) {
+          state.task.correct++;
+          state.task.feedback = `Richtig! ${toBits(toUnsigned(state.task.targetSigned))} = ${state.task.targetSigned} (signed).`;
+        } else {
+          state.task.feedback = `Noch nicht richtig. ${toBits(toUnsigned(state.task.targetSigned))} entspricht ${state.task.targetSigned} (signed).`;
+        }
+      }
+      render();
+    });
+
+    els.hintBtn.addEventListener("click", () => {
+      state.task.hintShown = true;
+      if (state.task.mode === "toComplement") {
+        const sv = state.task.targetSigned;
+        if (sv > 0) {
+          state.task.feedback = `Tipp: Positive Zahlen werden direkt binär dargestellt. Wandle ${sv} in Binär um.`;
+        } else {
+          state.task.feedback = `Tipp: Stelle zuerst ${Math.abs(sv)} binär dar, invertiere alle Bits, dann addiere 1.`;
+        }
+      } else {
+        const raw = toUnsigned(state.task.targetSigned);
+        const msb = (raw >> (state.width - 1)) & 1;
+        if (msb === 0) {
+          state.task.feedback = `Tipp: Das MSB ist 0 – die Zahl ist positiv. Lies den Binärwert direkt ab.`;
+        } else {
+          state.task.feedback = `Tipp: Das MSB ist 1 – die Zahl ist negativ. Invertiere alle Bits, addiere 1, und setze ein Minus davor.`;
+        }
+      }
+      render();
+    });
+
+    function clearTaskFeedback() {
+      state.task.feedback = "";
+    }
+
+    /* ====== INIT ====== */
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mehrbit-Addierer (Ripple-Carry-Addierer)</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5b6572;
+      --line: #d9dee7;
+      --soft: #eef2f7;
+      --accent: #1267b1;
+      --accent-strong: #084f8f;
+      --good: #1b7f49;
+      --warn: #b54708;
+      --bad: #b42318;
+      --bit-0: #ecf0f4;
+      --bit-1: #d7edff;
+      --carry: #f5b84b;
+      --sum: #9fd6b3;
+      --shadow: 0 16px 38px rgba(31, 42, 55, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(246,247,249,0.94)),
+        repeating-linear-gradient(90deg, transparent 0 38px, rgba(18,103,177,0.05) 39px 40px),
+        repeating-linear-gradient(0deg, transparent 0 38px, rgba(18,103,177,0.04) 39px 40px);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .app {
+      width: min(1920px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 8px 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0 0 5px;
+      font-size: clamp(1.55rem, 2.6vw, 2.25rem);
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+
+    .subtitle span {
+      display: block;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+      gap: 22px;
+      padding-top: 18px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      align-self: start;
+      padding: 18px;
+      position: sticky;
+      top: 12px;
+    }
+
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .section {
+      padding: 18px;
+    }
+
+    .section + .section {
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .hint,
+    .small {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 4px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .segmented.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .segmented button,
+    .ghost {
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink);
+      padding: 7px 10px;
+      font-weight: 650;
+      line-height: 1.1;
+    }
+
+    .segmented button.active,
+    .ghost:hover {
+      background: #fff;
+      border-color: var(--line);
+      box-shadow: 0 3px 10px rgba(20, 33, 48, 0.08);
+    }
+
+    .segmented button.active {
+      color: var(--accent-strong);
+    }
+
+    .signed-extra {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #b9d8f1;
+      border-radius: 8px;
+      background: #f1f8ff;
+    }
+
+    .signed-extra h3 {
+      margin-bottom: 6px;
+      color: var(--accent-strong);
+    }
+
+    .field-group {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .number-row {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .bits {
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(32px, 1fr));
+      gap: 6px;
+    }
+
+    .bit-button {
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--bit-0);
+      color: var(--ink);
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    .bit-button[data-on="1"] {
+      background: var(--bit-1);
+      border-color: #8fc8f3;
+      color: #053b66;
+    }
+
+    .bit-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .bit-index {
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(32px, 1fr));
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .task-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .task-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .task-answer {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .prediction-bits {
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(34px, 42px));
+      gap: 6px;
+    }
+
+    .prediction-bits button {
+      aspect-ratio: 1 / 1;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--bit-0);
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .prediction-bits button[data-on="1"] {
+      background: var(--bit-1);
+      border-color: #8fc8f3;
+      color: #053b66;
+    }
+
+    .task-feedback {
+      min-height: 24px;
+      font-weight: 750;
+    }
+
+    .task-feedback.good {
+      color: var(--good);
+    }
+
+    .task-feedback.bad {
+      color: var(--bad);
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 104px;
+      display: grid;
+      align-content: space-between;
+      gap: 8px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(1.35rem, 2.2vw, 2.1rem);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .overflow-box {
+      border-left: 5px solid var(--good);
+      background: #eef8f2;
+    }
+
+    .overflow-box.warn {
+      border-left-color: var(--bad);
+      background: #fff0ef;
+    }
+
+    .equation {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      background: #17202a;
+      color: #fff;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    .equation-line {
+      display: grid;
+      grid-template-columns: 112px 1.35rem max-content;
+      gap: 10px;
+      align-items: center;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: clamp(0.9rem, 1.7vw, 1.08rem);
+      white-space: nowrap;
+    }
+
+    .operation-hint {
+      margin: 10px 0 0;
+    }
+
+    .equation-line.carry-equation-line {
+      font-size: clamp(0.72rem, 1.1vw, 0.82rem);
+      color: #d8e0ea;
+    }
+
+    .binary-string {
+      display: grid;
+      grid-template-columns: repeat(var(--equation-columns), 1.55rem);
+      gap: 4px;
+    }
+
+    .binary-string span {
+      width: 1.55rem;
+      min-width: 1.55rem;
+      text-align: center;
+      padding: 3px 5px;
+      border-radius: 5px;
+      background: var(--digit-bg, rgba(255,255,255,0.12));
+      outline: 1px solid var(--digit-border, transparent);
+    }
+
+    .binary-string .empty-digit {
+      visibility: hidden;
+    }
+
+    .binary-string .sign-bit {
+      outline: 2px solid rgba(255,255,255,0.46);
+    }
+
+    .binary-string span.highlight {
+      box-shadow: 0 0 0 2px var(--accent) inset;
+      background: rgba(18, 103, 177, 0.2);
+    }
+
+    .adder-zone {
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .adder-grid {
+      min-width: min(980px, 100%);
+      display: grid;
+      grid-template-columns: repeat(var(--bit-count), minmax(150px, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    @media (min-width: 1600px) {
+      .app {
+        padding: 28px 32px;
+      }
+
+      .topbar {
+        gap: 24px;
+      }
+
+      .shell {
+        grid-template-columns: 400px minmax(0, 1fr);
+        gap: 24px;
+      }
+
+      .controls,
+      .section {
+        padding: 20px;
+      }
+
+      .result-grid {
+        grid-template-columns: repeat(4, minmax(190px, 1fr));
+      }
+
+      .adder-grid {
+        grid-template-columns: repeat(var(--bit-count), minmax(158px, 1fr));
+      }
+    }
+
+    .stage {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 224px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 9px;
+    }
+
+    .carry-connector {
+      position: absolute;
+      right: -19px;
+      top: 50%;
+      z-index: 2;
+      transform: translateY(-50%);
+      min-width: 38px;
+      border: 1px solid var(--carry-border, #edca81);
+      border-radius: 999px;
+      background: var(--carry-bg, #fff7e6);
+      color: #17202a;
+      padding: 3px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 850;
+      box-shadow: 0 2px 8px rgba(23, 32, 42, 0.12);
+      pointer-events: none;
+    }
+
+    .stage.sign-stage {
+      border-color: #7aa9d6;
+      box-shadow: inset 0 0 0 2px rgba(18, 103, 177, 0.12);
+    }
+
+    .stage.highlight {
+      box-shadow: 0 0 0 3px var(--accent) inset;
+      border-color: var(--accent);
+    }
+
+    .stage-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .stage-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .full-adder {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 68px;
+      border: 2px solid #768395;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #ffffff, #f4f7fb);
+      font-weight: 900;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .half-stage .inputs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .signal {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 7px;
+      min-height: 42px;
+      padding: 7px;
+      display: grid;
+      place-items: center;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .signal b {
+      font-size: 1.15rem;
+    }
+
+    .signal small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.67rem;
+      line-height: 1;
+    }
+
+    .output-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 6px;
+    }
+
+    .carry {
+      background: var(--carry-bg, #fff7e6);
+      border-color: var(--carry-border, #edca81);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.42);
+    }
+
+    .carry small {
+      color: #2d3440;
+    }
+
+    .carry-bit {
+      --digit-bg: var(--carry-bg);
+      --digit-border: var(--carry-border);
+      color: #17202a;
+      font-weight: 850;
+    }
+
+    .sum {
+      background: #eff9f2;
+      border-color: #a9d8b8;
+    }
+
+    .rule-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .rule {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .rule strong {
+      color: var(--accent-strong);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      background: #eef8f2;
+      color: var(--good);
+      border: 1px solid #b8dec6;
+      white-space: nowrap;
+    }
+
+    .badge.bad {
+      background: #fff0ef;
+      color: var(--bad);
+      border-color: #f4b8b2;
+    }
+
+    .truth {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .truth th,
+    .truth td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+    }
+
+    .truth th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .truth code {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.94em;
+    }
+
+    @media (max-width: 960px) {
+      .topbar,
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: stretch;
+      }
+
+      .toolbar > * {
+        flex: 1 1 180px;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .result-grid,
+      .rule-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .task-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .task-controls {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        padding: 12px;
+      }
+
+      .result-grid,
+      .rule-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .equation-line {
+        grid-template-columns: 90px 1.35rem max-content;
+      }
+
+      .adder-grid {
+        grid-template-columns: repeat(var(--bit-count), minmax(140px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>Mehrbit-Addierer (Ripple-Carry-Addierer)</h1>
+        <p class="subtitle">
+          <span>Stelle zwei Zahlen ein und beobachte: Bit 0 nutzt einen Halbaddierer aus a<sub>0</sub> und b<sub>0</sub>; die weiteren Bits nutzen Volladdierer aus a<sub>x</sub>, b<sub>x</sub> und ü<sub>x-1</sub>.</span>
+          <span>Was hat es mit dem Überlauf auf sich?</span>
+          <span>Zusatzaufgabe: Experimentiere mit der Eingabe "Mit Vorzeichen". Wie werden negative Zahlen dargestellt? Welche Auswirkungen hat das auf den Überlauf?</span>
+        </p>
+      </div>
+      <div class="toolbar">
+        <div class="segmented" aria-label="Operation">
+          <button type="button" class="active" data-op="add">Addition (+)</button>
+          <button type="button" data-op="sub">Subtraktion (-)</button>
+        </div>
+        <div class="segmented" aria-label="Bitbreite">
+          <button type="button" class="active" data-width="4">4 Bit</button>
+          <button type="button" data-width="8">8 Bit</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="panel controls">
+        <div class="section-title">
+          <h2>Eingaben</h2>
+          <span class="tag" id="rangeTag">0 bis 15</span>
+        </div>
+
+        <div class="segmented" aria-label="Interpretation">
+          <button type="button" class="active" data-mode="unsigned">Ohne Vorzeichen</button>
+          <button type="button" data-mode="signed">Mit Vorzeichen</button>
+        </div>
+        <p class="hint">Die Hauptansicht rechnet ohne Vorzeichen. Die Schaltung addiert immer Bits.</p>
+        <div class="signed-extra" id="signedExtra" hidden>
+          <h3>Zusatz: Mit Vorzeichen</h3>
+          <p class="hint">Dieselben Bits werden jetzt im Zweierkomplement gedeutet. Das linke Bit ist das Vorzeichenbit; dadurch ändern sich Zahlenwert und Überlaufregel.</p>
+        </div>
+
+        <div class="field-group">
+          <div class="number-row">
+            <label for="aNumber">Zahl A <span id="aBitsLabel" class="small">0000</span></label>
+            <input id="aNumber" type="number" min="0" max="15" value="6">
+            <input id="aRange" type="range" min="0" max="15" value="6" aria-label="Zahl A als Regler">
+            <div class="bit-index" id="aBitIndex"></div>
+            <div class="bits" id="aBits" aria-label="Bits von A"></div>
+          </div>
+
+          <div class="number-row">
+            <label for="bNumber">Zahl B <span id="bBitsLabel" class="small">0000</span></label>
+            <input id="bNumber" type="number" min="0" max="15" value="3">
+            <input id="bRange" type="range" min="0" max="15" value="3" aria-label="Zahl B als Regler">
+            <div class="bit-index" id="bBitIndex"></div>
+            <div class="bits" id="bBits" aria-label="Bits von B"></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Ergebnis</h2>
+            <span class="badge" id="activeOverflow">kein Überlauf</span>
+          </div>
+
+          <div class="result-grid">
+            <div class="metric">
+              <span class="label">A</span>
+              <strong id="aValue">6</strong>
+              <span class="small" id="aMeaning">00000110</span>
+            </div>
+            <div class="metric">
+              <span class="label">B</span>
+              <strong id="bValue">3</strong>
+              <span class="small" id="bMeaning">00000011</span>
+            </div>
+            <div class="metric">
+              <span class="label">Ergebnis im Register</span>
+              <strong id="sumValue">9</strong>
+              <span class="small" id="sumMeaning">1001</span>
+            </div>
+            <div class="metric overflow-box" id="overflowBox">
+              <span class="label" id="overflowLabel">Überlauf</span>
+              <strong id="overflowValue">nein</strong>
+              <span class="small" id="overflowText">Übertrag ü<sub>x</sub> ist 0.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Schriftliche Bitrechnung</h2>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="ghost" id="playBtn">▶ Animation</button>
+              <button type="button" class="ghost" id="randomBtn">Neue Aufgabe</button>
+            </div>
+          </div>
+          <div class="equation" aria-label="Schriftliche Addition">
+            <div class="equation-line">
+              <span>A</span>
+              <span></span>
+              <span class="binary-string" id="aLine"></span>
+            </div>
+            <div class="equation-line">
+              <span id="bLineLabel">B</span>
+              <span id="bOperator">+</span>
+              <span class="binary-string" id="bLine"></span>
+            </div>
+            <div class="equation-line carry-equation-line">
+              <span>Übertrag</span>
+              <span></span>
+              <span class="binary-string" id="carryLine"></span>
+            </div>
+            <div class="equation-line">
+              <span>Summe</span>
+              <span>=</span>
+              <span class="binary-string" id="sumLine"></span>
+            </div>
+          </div>
+          <p class="hint operation-hint" id="operationHint"></p>
+        </section>
+
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Addierer-Kette</h2>
+            <span class="hint">Bit 0 liegt ganz rechts in der Schaltung, genau wie in der schriftlichen Addition oben.</span>
+          </div>
+          <div class="adder-zone">
+            <div class="adder-grid" id="adderGrid"></div>
+          </div>
+        </section>
+
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Aufgabenmodus</h2>
+            <button type="button" class="ghost" id="taskToggleBtn">Aufgabenmodus aktivieren</button>
+          </div>
+          <div class="task-layout" id="taskPanel" hidden>
+            <div>
+              <p class="hint" id="taskPrompt">Starte eine Aufgabe. Stelle danach die Ergebnisbits ein und entscheide, ob Überlauf beziehungsweise Borrow entsteht.</p>
+              <div class="task-answer" id="taskAnswer" hidden>
+                <div>
+                  <label>Deine Ergebnisbits</label>
+                  <div class="prediction-bits" id="predictionBits" aria-label="Vorhergesagte Ergebnisbits"></div>
+                </div>
+                <div>
+                  <label id="taskOverflowLabel">Überlauf?</label>
+                  <div class="segmented" aria-label="Antwort Überlauf">
+                    <button type="button" data-task-overflow="no">Nein</button>
+                    <button type="button" data-task-overflow="yes">Ja</button>
+                  </div>
+                </div>
+                <div class="task-feedback" id="taskFeedback"></div>
+              </div>
+            </div>
+            <div class="task-controls">
+              <button type="button" class="ghost" id="newTaskBtn">Aufgabe stellen</button>
+              <button type="button" class="ghost" id="checkTaskBtn" disabled>Prüfen</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      width: 4,
+      mode: "unsigned",
+      op: "add",
+      a: 6,
+      b: 3,
+      animStep: null,
+      task: {
+        enabled: false,
+        active: false,
+        guess: [],
+        overflowGuess: null,
+        feedback: ""
+      }
+    };
+
+    const carryColors = [
+      { bg: "#ffe3a3", border: "#c88400" },
+      { bg: "#cbe7ff", border: "#2f7fbd" },
+      { bg: "#d8f0cf", border: "#4f9843" },
+      { bg: "#ffd6df", border: "#c6526d" },
+      { bg: "#ded8ff", border: "#765ac8" },
+      { bg: "#c9f0ee", border: "#2d928b" },
+      { bg: "#f4d0ff", border: "#a34cb7" },
+      { bg: "#ffe0c4", border: "#c86d28" }
+    ];
+
+    const els = {
+      widthButtons: Array.from(document.querySelectorAll("[data-width]")),
+      modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
+      opButtons: Array.from(document.querySelectorAll("[data-op]")),
+      taskOverflowButtons: Array.from(document.querySelectorAll("[data-task-overflow]")),
+      aNumber: document.getElementById("aNumber"),
+      bNumber: document.getElementById("bNumber"),
+      aRange: document.getElementById("aRange"),
+      bRange: document.getElementById("bRange"),
+      aBits: document.getElementById("aBits"),
+      bBits: document.getElementById("bBits"),
+      aBitIndex: document.getElementById("aBitIndex"),
+      bBitIndex: document.getElementById("bBitIndex"),
+      aBitsLabel: document.getElementById("aBitsLabel"),
+      bBitsLabel: document.getElementById("bBitsLabel"),
+      rangeTag: document.getElementById("rangeTag"),
+      signedExtra: document.getElementById("signedExtra"),
+      aValue: document.getElementById("aValue"),
+      bValue: document.getElementById("bValue"),
+      sumValue: document.getElementById("sumValue"),
+      aMeaning: document.getElementById("aMeaning"),
+      bMeaning: document.getElementById("bMeaning"),
+      sumMeaning: document.getElementById("sumMeaning"),
+      overflowBox: document.getElementById("overflowBox"),
+      overflowLabel: document.getElementById("overflowLabel"),
+      overflowValue: document.getElementById("overflowValue"),
+      overflowText: document.getElementById("overflowText"),
+      activeOverflow: document.getElementById("activeOverflow"),
+      carryLine: document.getElementById("carryLine"),
+      aLine: document.getElementById("aLine"),
+      bLineLabel: document.getElementById("bLineLabel"),
+      bOperator: document.getElementById("bOperator"),
+      bLine: document.getElementById("bLine"),
+      sumLine: document.getElementById("sumLine"),
+      operationHint: document.getElementById("operationHint"),
+      adderGrid: document.getElementById("adderGrid"),
+      taskPrompt: document.getElementById("taskPrompt"),
+      taskPanel: document.getElementById("taskPanel"),
+      taskToggleBtn: document.getElementById("taskToggleBtn"),
+      taskAnswer: document.getElementById("taskAnswer"),
+      predictionBits: document.getElementById("predictionBits"),
+      taskOverflowLabel: document.getElementById("taskOverflowLabel"),
+      taskFeedback: document.getElementById("taskFeedback"),
+      newTaskBtn: document.getElementById("newTaskBtn"),
+      checkTaskBtn: document.getElementById("checkTaskBtn"),
+      playBtn: document.getElementById("playBtn"),
+      randomBtn: document.getElementById("randomBtn")
+    };
+
+    function mask() {
+      return (1 << state.width) - 1;
+    }
+
+    function signLimit() {
+      return 1 << (state.width - 1);
+    }
+
+    function toBits(value) {
+      return (value & mask()).toString(2).padStart(state.width, "0");
+    }
+
+    function toSigned(raw) {
+      const limit = signLimit();
+      return raw >= limit ? raw - (limit << 1) : raw;
+    }
+
+    function fromDisplayed(value) {
+      const n = Number.parseInt(value, 10);
+      if (Number.isNaN(n)) return 0;
+      if (state.mode === "signed") {
+        const min = -signLimit();
+        const max = signLimit() - 1;
+        return clamp(n, min, max) & mask();
+      }
+      return clamp(n, 0, mask());
+    }
+
+    function displayValue(raw) {
+      return state.mode === "signed" ? toSigned(raw) : raw;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function ripple() {
+      const stages = [];
+      let carry = state.op === "sub" ? 1 : 0;
+      for (let bit = 0; bit < state.width; bit += 1) {
+        const ai = (state.a >> bit) & 1;
+        let bi = (state.b >> bit) & 1;
+        if (state.op === "sub") {
+          bi = bi ^ 1;
+        }
+        const carryIn = carry;
+        const sum = ai ^ bi ^ carryIn;
+        const carryOut = (ai & bi) | (ai & carryIn) | (bi & carryIn);
+        stages.push({ bit, ai, bi, carryIn, sum, carryOut });
+        carry = carryOut;
+      }
+      return stages;
+    }
+
+    function computeState() {
+      const stages = ripple();
+      const rawB = state.op === "sub" ? (~state.b & mask()) : state.b;
+      const resultRaw = (state.a + rawB + (state.op === "sub" ? 1 : 0)) & mask();
+      const finalCarry = stages[stages.length - 1].carryOut;
+      const signCarryIn = stages[stages.length - 1].carryIn;
+      const unsignedOverflow = state.op === "sub" ? finalCarry === 0 : finalCarry === 1;
+      const signedOverflow = (signCarryIn ^ finalCarry) === 1;
+      const activeOverflow = state.mode === "signed" ? signedOverflow : unsignedOverflow;
+      return { stages, rawB, resultRaw, finalCarry, signCarryIn, unsignedOverflow, signedOverflow, activeOverflow };
+    }
+
+    function answersHidden() {
+      return state.task.enabled && state.task.active && !state.task.feedback;
+    }
+
+    function setCssBitCount() {
+      document.documentElement.style.setProperty("--bit-count", state.width);
+      document.documentElement.style.setProperty("--equation-columns", state.width + 1);
+    }
+
+    function setBit(valueName, bit) {
+      state[valueName] = state[valueName] ^ (1 << bit);
+      state.task.feedback = "";
+      render();
+    }
+
+    function renderBitControls(container, indexContainer, valueName) {
+      container.innerHTML = "";
+      indexContainer.innerHTML = "";
+      for (let bit = state.width - 1; bit >= 0; bit -= 1) {
+        const index = document.createElement("span");
+        index.textContent = bit === state.width - 1 ? `Bit ${bit}` : bit;
+        indexContainer.appendChild(index);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "bit-button";
+        button.dataset.on = String((state[valueName] >> bit) & 1);
+        button.textContent = button.dataset.on;
+        button.title = `Bit ${bit} umschalten`;
+        button.addEventListener("click", () => setBit(valueName, bit));
+        container.appendChild(button);
+      }
+    }
+
+    function renderBinaryLine(container, bits, highlightSignBit, isSumOrCarry = false) {
+      container.innerHTML = "";
+      const spacer = document.createElement("span");
+      spacer.className = "empty-digit";
+      spacer.setAttribute("aria-hidden", "true");
+      container.appendChild(spacer);
+      bits.split("").forEach((bit, index) => {
+        const bitIndex = state.width - 1 - index;
+        const span = document.createElement("span");
+        if (isSumOrCarry && (answersHidden() || (state.animStep !== null && bitIndex > state.animStep))) {
+          span.textContent = "?";
+        } else {
+          span.textContent = bit;
+        }
+        span.dataset.hoverBit = bitIndex;
+        if (highlightSignBit && index === 0) span.className = "sign-bit";
+        container.appendChild(span);
+      });
+    }
+
+    function carryStyle(carryIndex) {
+      if (carryIndex < 0) {
+        return "--carry-bg: #eef2f7; --carry-border: #98a2b3;";
+      }
+      const color = carryColors[carryIndex % carryColors.length];
+      return `--carry-bg: ${color.bg}; --carry-border: ${color.border};`;
+    }
+
+    function renderCarryLine(container, stages) {
+      container.innerHTML = "";
+      const finalStage = stages[stages.length - 1];
+      const overflowSpan = document.createElement("span");
+      overflowSpan.className = "carry-bit";
+      overflowSpan.textContent = (answersHidden() || (state.animStep !== null && state.animStep < state.width)) ? "?" : finalStage.carryOut;
+      overflowSpan.title = `ü_${finalStage.bit} aus dem höchsten Bit`;
+      overflowSpan.setAttribute("style", carryStyle(finalStage.bit));
+      overflowSpan.dataset.hoverBit = finalStage.bit;
+      container.appendChild(overflowSpan);
+
+      stages.slice(1).reverse().forEach(stage => {
+        const span = document.createElement("span");
+        span.className = "carry-bit";
+        span.textContent = (answersHidden() || (state.animStep !== null && stage.bit - 1 > state.animStep)) ? "?" : stage.carryIn;
+        span.title = `ü_${stage.bit - 1}`;
+        span.setAttribute("style", carryStyle(stage.bit - 1));
+        span.dataset.hoverBit = stage.bit - 1;
+        container.appendChild(span);
+      });
+
+      if (state.op === "sub") {
+        const startCarry = document.createElement("span");
+        startCarry.className = "carry-bit";
+        startCarry.textContent = "1";
+        startCarry.title = "ü_-1 = 1 für das +1 des Zweierkomplements";
+        startCarry.setAttribute("style", carryStyle(-1));
+        startCarry.dataset.hoverBit = "-1";
+        container.appendChild(startCarry);
+      } else {
+        const spacer = document.createElement("span");
+        spacer.className = "empty-digit";
+        spacer.setAttribute("aria-hidden", "true");
+        container.appendChild(spacer);
+      }
+    }
+
+    function renderTask(computed) {
+      const overflowName = state.op === "sub" && state.mode === "unsigned" ? "Borrow/Unterlauf" : "Überlauf";
+      const opText = state.op === "sub" ? "-" : "+";
+      els.taskPanel.hidden = !state.task.enabled;
+      els.taskToggleBtn.textContent = state.task.enabled ? "Aufgabenmodus deaktivieren" : "Aufgabenmodus aktivieren";
+      els.taskToggleBtn.classList.toggle("active", state.task.enabled);
+      els.taskAnswer.hidden = !state.task.enabled || !state.task.active;
+      els.checkTaskBtn.disabled = !state.task.enabled || !state.task.active || state.task.overflowGuess === null;
+      els.taskOverflowLabel.textContent = `${overflowName}?`;
+      els.taskPrompt.textContent = state.task.enabled && state.task.active
+        ? `Aufgabe: ${displayValue(state.a)} ${opText} ${displayValue(state.b)} (${state.width} Bit, ${state.mode === "signed" ? "mit Vorzeichen" : "ohne Vorzeichen"})`
+        : "Starte eine Aufgabe. Stelle danach die Ergebnisbits ein und entscheide, ob Überlauf beziehungsweise Borrow entsteht.";
+
+      els.predictionBits.innerHTML = "";
+      if (state.task.enabled && state.task.active) {
+        for (let bit = state.width - 1; bit >= 0; bit -= 1) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.taskBit = bit;
+          button.dataset.on = String(state.task.guess[bit] ?? 0);
+          button.textContent = button.dataset.on;
+          button.title = `Ergebnisbit ${bit} umschalten`;
+          button.addEventListener("click", () => {
+            state.task.guess[bit] = state.task.guess[bit] ? 0 : 1;
+            state.task.feedback = "";
+            render();
+          });
+          els.predictionBits.appendChild(button);
+        }
+      }
+
+      for (const button of els.taskOverflowButtons) {
+        button.classList.toggle("active", button.dataset.taskOverflow === state.task.overflowGuess);
+      }
+
+      els.taskFeedback.classList.remove("good", "bad");
+      if (state.task.feedback) {
+        const isGood = state.task.feedback.startsWith("Richtig");
+        els.taskFeedback.classList.add(isGood ? "good" : "bad");
+      }
+      els.taskFeedback.textContent = state.task.feedback;
+    }
+
+    function render() {
+      setCssBitCount();
+      state.a &= mask();
+      state.b &= mask();
+
+      const { stages, rawB, resultRaw, finalCarry, signCarryIn, activeOverflow } = computeState();
+      const signedRangeText = `${-signLimit()} bis ${signLimit() - 1}`;
+      const unsignedRangeText = `0 bis ${mask()}`;
+      els.rangeTag.textContent = state.mode === "signed" ? signedRangeText : unsignedRangeText;
+      els.signedExtra.hidden = state.mode !== "signed";
+
+      for (const button of els.widthButtons) {
+        button.classList.toggle("active", Number(button.dataset.width) === state.width);
+      }
+      for (const button of els.modeButtons) {
+        button.classList.toggle("active", button.dataset.mode === state.mode);
+      }
+      for (const button of els.opButtons) {
+        button.classList.toggle("active", button.dataset.op === state.op);
+      }
+
+      updateInputs("a", els.aNumber, els.aRange, els.aBitsLabel);
+      updateInputs("b", els.bNumber, els.bRange, els.bBitsLabel);
+      renderBitControls(els.aBits, els.aBitIndex, "a");
+      renderBitControls(els.bBits, els.bBitIndex, "b");
+
+      const hideAnswers = answersHidden();
+      els.aValue.textContent = displayValue(state.a);
+      els.bValue.textContent = displayValue(state.b);
+      els.sumValue.textContent = hideAnswers ? "?" : displayValue(resultRaw);
+      els.aMeaning.textContent = toBits(state.a);
+      els.bMeaning.textContent = toBits(state.b);
+      els.sumMeaning.textContent = hideAnswers ? "?".repeat(state.width) : toBits(resultRaw);
+
+      const overflowName = state.op === "sub" && state.mode === "unsigned" ? "Borrow/Unterlauf" : "Überlauf";
+      els.overflowBox.classList.toggle("warn", !hideAnswers && activeOverflow);
+      els.overflowLabel.textContent = overflowName;
+      els.overflowValue.textContent = hideAnswers ? "?" : (activeOverflow ? "ja" : "nein");
+      els.activeOverflow.classList.toggle("bad", !hideAnswers && activeOverflow);
+      els.activeOverflow.textContent = hideAnswers ? "Antwort offen" : (activeOverflow ? overflowName : `kein ${overflowName}`);
+      if (hideAnswers) {
+        els.overflowText.textContent = "Prüfe zuerst deine Antwort im Aufgabenmodus.";
+      } else if (state.mode === "signed") {
+        els.overflowText.innerHTML = `Am Vorzeichenbit gilt: ü<sub>x-1</sub> = ${signCarryIn} (Carry in), ü<sub>x</sub> = ${finalCarry} (Carry out).`;
+      } else if (state.op === "sub") {
+        els.overflowText.innerHTML = finalCarry === 0
+          ? `ü<sub>x</sub> = 0: Bei der Subtraktion entsteht ein Borrow/Unterlauf.`
+          : `ü<sub>x</sub> = 1: Die Subtraktion passt ohne Borrow in das Register.`;
+      } else {
+        els.overflowText.innerHTML = `Der Übertrag ü<sub>x</sub> aus dem höchsten Bit ist ${finalCarry} (Carry out).`;
+      }
+
+      els.bLineLabel.textContent = state.op === "sub" ? "B invertiert" : "B";
+      els.bOperator.textContent = "+";
+      els.operationHint.hidden = state.op !== "sub";
+      els.operationHint.innerHTML = state.op === "sub"
+        ? `Subtraktion wird hier als <strong>A + invertiertes B + 1</strong> gerechnet. Der rechte Startübertrag ü<sub>-1</sub> = 1 ist dieses +1 des Zweierkomplements.`
+        : "";
+
+      renderCarryLine(els.carryLine, stages);
+      renderBinaryLine(els.aLine, toBits(state.a), state.mode === "signed");
+      renderBinaryLine(els.bLine, toBits(rawB), state.mode === "signed");
+      renderBinaryLine(els.sumLine, toBits(resultRaw), state.mode === "signed", true);
+
+      renderTask({ resultRaw, activeOverflow });
+      renderStages(stages);
+    }
+
+    function updateInputs(valueName, numberInput, rangeInput, label) {
+      const min = state.mode === "signed" ? -signLimit() : 0;
+      const max = state.mode === "signed" ? signLimit() - 1 : mask();
+      numberInput.min = min;
+      numberInput.max = max;
+      numberInput.value = displayValue(state[valueName]);
+      rangeInput.min = min;
+      rangeInput.max = max;
+      rangeInput.value = displayValue(state[valueName]);
+      label.textContent = toBits(state[valueName]);
+    }
+
+    function renderStages(stages) {
+      els.adderGrid.innerHTML = "";
+      for (const stage of [...stages].reverse()) {
+        const isHalfAdder = stage.bit === 0 && state.op === "add";
+        const isSignStage = stage.bit === state.width - 1;
+        const stageType = isHalfAdder ? "Halbaddierer" : "Volladdierer";
+        const inputCarry = isHalfAdder ? "" : `
+            <div class="signal carry" style="${carryStyle(stage.bit - 1)}" title="Dieselbe Farbe wie ü_${stage.bit - 1} an der vorherigen Stufe"><small>ü<sub>${stage.bit - 1}</sub><br>Carry in</small><b>${stage.carryIn}</b></div>`;
+        const article = document.createElement("article");
+        article.className = `stage${isSignStage ? " sign-stage" : ""}${isHalfAdder ? " half-stage" : ""}`;
+        article.dataset.hoverBit = stage.bit;
+
+        const showResult = !answersHidden() && (state.animStep === null || stage.bit <= state.animStep);
+        const dispSum = showResult ? stage.sum : "?";
+        const dispCarryOut = showResult ? stage.carryOut : "?";
+        const connector = stage.bit > 0 ? `
+          <div class="carry-connector" style="${carryStyle(stage.bit - 1)}" title="Übertrag ü_${stage.bit - 1} läuft von Bit ${stage.bit - 1} zu Bit ${stage.bit}">← ü<sub>${stage.bit - 1}</sub></div>` : "";
+
+        article.innerHTML = `
+${connector}
+          <div class="stage-head">
+            <span class="stage-title">Bit ${stage.bit}</span>
+            <span class="tag">${isHalfAdder ? "Halbaddierer" : (isSignStage ? "höchstes Bit" : "Volladdierer")}</span>
+          </div>
+          <div class="inputs">
+            <div class="signal"><small>a<sub>${stage.bit}</sub></small><b>${stage.ai}</b></div>
+            <div class="signal"><small>b<sub>${stage.bit}</sub></small><b>${stage.bi}</b></div>
+${inputCarry}
+          </div>
+          <div class="full-adder">${stageType}</div>
+          <div class="output-row">
+            <div class="signal sum"><small>s<sub>${stage.bit}</sub><br>Summe</small><b>${dispSum}</b></div>
+            <div class="signal carry" style="${carryStyle(stage.bit)}" title="Dieselbe Farbe wie ü_${stage.bit} am Eingang der nächsten Stufe"><small>ü<sub>${stage.bit}</sub><br>Carry out</small><b>${dispCarryOut}</b></div>
+          </div>
+        `;
+        els.adderGrid.appendChild(article);
+      }
+    }
+
+    function setWidth(width) {
+      state.width = width;
+      state.a &= mask();
+      state.b &= mask();
+      state.task.guess = Array(state.width).fill(0);
+      state.task.feedback = "";
+      render();
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      state.task.overflowGuess = null;
+      state.task.feedback = "";
+      render();
+    }
+
+    function setOp(op) {
+      state.op = op;
+      state.task.overflowGuess = null;
+      state.task.feedback = "";
+      render();
+    }
+
+    function setTaskEnabled(enabled) {
+      state.task.enabled = enabled;
+      state.task.active = false;
+      state.task.guess = Array(state.width).fill(0);
+      state.task.overflowGuess = null;
+      state.task.feedback = "";
+      state.animStep = null;
+      render();
+    }
+
+    function startTask() {
+      state.task.enabled = true;
+      state.a = Math.floor(Math.random() * (mask() + 1));
+      state.b = Math.floor(Math.random() * (mask() + 1));
+      state.animStep = null;
+      state.task.active = true;
+      state.task.guess = Array(state.width).fill(0);
+      state.task.overflowGuess = null;
+      state.task.feedback = "";
+      render();
+    }
+
+    function guessToRaw() {
+      return state.task.guess.reduce((value, bit, index) => value | ((bit ? 1 : 0) << index), 0);
+    }
+
+    function checkTask() {
+      const { resultRaw, activeOverflow } = computeState();
+      const guessedResult = guessToRaw();
+      const guessedOverflow = state.task.overflowGuess === "yes";
+      const bitsOk = guessedResult === resultRaw;
+      const overflowOk = guessedOverflow === activeOverflow;
+      const expectedBits = toBits(resultRaw);
+      const expectedOverflow = activeOverflow ? "ja" : "nein";
+
+      state.task.feedback = bitsOk && overflowOk
+        ? "Richtig: Ergebnisbits und Überlauf/Borrow passen."
+        : `Noch nicht: Erwartet werden ${expectedBits} und ${expectedOverflow}.`;
+      render();
+    }
+
+    els.widthButtons.forEach(button => {
+      button.addEventListener("click", () => setWidth(Number(button.dataset.width)));
+    });
+
+    els.modeButtons.forEach(button => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+
+    els.opButtons.forEach(button => {
+      button.addEventListener("click", () => setOp(button.dataset.op));
+    });
+
+    els.aNumber.addEventListener("input", event => {
+      state.a = fromDisplayed(event.target.value);
+      state.task.feedback = "";
+      render();
+    });
+
+    els.bNumber.addEventListener("input", event => {
+      state.b = fromDisplayed(event.target.value);
+      state.task.feedback = "";
+      render();
+    });
+
+    els.aRange.addEventListener("input", event => {
+      state.a = fromDisplayed(event.target.value);
+      state.task.feedback = "";
+      render();
+    });
+
+    els.bRange.addEventListener("input", event => {
+      state.b = fromDisplayed(event.target.value);
+      state.task.feedback = "";
+      render();
+    });
+
+    els.randomBtn.addEventListener("click", () => {
+      state.a = Math.floor(Math.random() * (mask() + 1));
+      state.b = Math.floor(Math.random() * (mask() + 1));
+      state.task.feedback = "";
+      render();
+    });
+
+    els.newTaskBtn.addEventListener("click", startTask);
+    els.checkTaskBtn.addEventListener("click", checkTask);
+    els.taskToggleBtn.addEventListener("click", () => setTaskEnabled(!state.task.enabled));
+
+    els.taskOverflowButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        state.task.overflowGuess = button.dataset.taskOverflow;
+        state.task.feedback = "";
+        render();
+      });
+    });
+
+    document.addEventListener("mouseover", (e) => {
+      const target = e.target.closest("[data-hover-bit]");
+      if (target) {
+        const bit = target.dataset.hoverBit;
+        document.querySelectorAll(`[data-hover-bit="${bit}"]`).forEach(el => el.classList.add("highlight"));
+      }
+    });
+
+    document.addEventListener("mouseout", (e) => {
+      const target = e.target.closest("[data-hover-bit]");
+      if (target) {
+        const bit = target.dataset.hoverBit;
+        document.querySelectorAll(`[data-hover-bit="${bit}"]`).forEach(el => el.classList.remove("highlight"));
+      }
+    });
+
+    let animInterval = null;
+    els.playBtn.addEventListener("click", () => {
+      if (animInterval) {
+        clearInterval(animInterval);
+        animInterval = null;
+        state.animStep = null;
+        els.playBtn.textContent = "▶ Animation";
+        render();
+      } else {
+        state.animStep = -1;
+        els.playBtn.textContent = "⏹ Stopp";
+        render();
+        animInterval = setInterval(() => {
+          state.animStep++;
+          if (state.animStep >= state.width) {
+            clearInterval(animInterval);
+            animInterval = null;
+            state.animStep = null;
+            els.playBtn.textContent = "▶ Animation";
+          }
+          render();
+        }, 800);
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

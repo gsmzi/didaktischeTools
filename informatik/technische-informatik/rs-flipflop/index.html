@@ -1,0 +1,2369 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flipflop-Visualisierung – Interaktives Lernportal</title>
+  <meta name="description" content="Interaktives didaktisches Tool zum Verständnis verschiedener Flipflop-Arten: RS, Gated RS, D-Latch, JK und T. Mit interaktivem Taktgeber und Quizmodus.">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5b6572;
+      --line: #d9dee7;
+      --soft: #eef2f7;
+      --accent: #1267b1;
+      --accent-strong: #084f8f;
+      --good: #1b7f49;
+      --warn: #b54708;
+      --bad: #b42318;
+      --bit-0: #ecf0f4;
+      --bit-1: #d7edff;
+      --shadow: 0 16px 38px rgba(31, 42, 55, 0.12);
+      
+      /* LogicSim colors matching the user screenshot */
+      --wire-low: #000000;
+      --wire-high: #ff0000;
+      --wire-invalid: #ff0000;
+      --wire-high-glow: rgba(255, 0, 0, 0.4);
+      --wire-invalid-glow: rgba(255, 0, 0, 0.4);
+      --led-off: #cbd5e1;
+      --led-q-on: #22c55e;
+      --led-p-on: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.72), rgba(246,247,249,0.94)),
+        repeating-linear-gradient(90deg, transparent 0 38px, rgba(18,103,177,0.05) 39px 40px),
+        repeating-linear-gradient(0deg, transparent 0 38px, rgba(18,103,177,0.04) 39px 40px);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .app {
+      width: min(1920px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 8px 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0 0 5px;
+      font-size: clamp(1.55rem, 2.6vw, 2.25rem);
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+
+    .subtitle span {
+      display: block;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+      gap: 22px;
+      padding-top: 18px;
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      align-self: start;
+      padding: 18px;
+      position: sticky;
+      top: 12px;
+    }
+
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .section {
+      padding: 18px;
+    }
+
+    .section + .section {
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .hint,
+    .small {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 4px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .segmented button,
+    .ghost {
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink);
+      padding: 7px 10px;
+      font-weight: 650;
+      line-height: 1.1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .segmented button.active,
+    .ghost:hover {
+      background: #fff;
+      border-color: var(--line);
+      box-shadow: 0 3px 10px rgba(20, 33, 48, 0.08);
+    }
+
+    .segmented button.active {
+      color: var(--accent-strong);
+    }
+
+    /* Flipflop Controls Styling */
+    .switch-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .switch-card {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .switch-card span {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .toggle-btn {
+      width: 60px;
+      height: 34px;
+      background-color: #cbd5e1;
+      border-radius: 99px;
+      position: relative;
+      border: none;
+      transition: background-color 200ms ease;
+    }
+
+    .toggle-btn::after {
+      content: '';
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background-color: white;
+      top: 4px;
+      left: 4px;
+      transition: transform 200ms ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-btn.active {
+      background-color: var(--wire-high);
+    }
+
+    .toggle-btn.active::after {
+      transform: translateX(26px);
+    }
+
+    /* Clock toggle small */
+    .toggle-btn.small-toggle {
+      width: 48px;
+      height: 26px;
+    }
+
+    .toggle-btn.small-toggle::after {
+      width: 18px;
+      height: 18px;
+      top: 4px;
+      left: 4px;
+    }
+
+    .toggle-btn.small-toggle.active::after {
+      transform: translateX(22px);
+    }
+
+    .led-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .led-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .led-card span {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .led-indicator {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: var(--led-off);
+      border: 2px solid rgba(0,0,0,0.1);
+      transition: background-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .led-q.on {
+      background-color: var(--led-q-on);
+      box-shadow: 0 0 12px var(--led-q-on);
+    }
+
+    .led-p.on {
+      background-color: var(--led-p-on);
+      box-shadow: 0 0 12px var(--led-p-on);
+    }
+
+    .led-indicator.blink {
+      animation: blinkRed 500ms infinite alternate;
+    }
+
+    @keyframes blinkRed {
+      from { background-color: var(--led-off); box-shadow: none; }
+      to { background-color: var(--wire-invalid); box-shadow: 0 0 12px var(--wire-invalid); }
+    }
+
+    .btn-reset {
+      width: 100%;
+      min-height: 42px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      margin-top: 16px;
+      transition: background 120ms ease;
+    }
+
+    .btn-reset:hover {
+      background: #2c3e50;
+    }
+
+    .info-box {
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid #b9d8f1;
+      border-radius: 8px;
+      background: #f1f8ff;
+    }
+
+    .info-box h3 {
+      margin-bottom: 6px;
+      color: var(--accent-strong);
+    }
+
+    .info-box.warn {
+      border-color: #f5b84b;
+      background: #fff9ed;
+    }
+
+    .info-box.warn h3 {
+      color: var(--warn);
+    }
+
+    .info-box.error {
+      border-color: #f4b8b2;
+      background: #fff0ef;
+    }
+
+    .info-box.error h3 {
+      color: var(--bad);
+    }
+
+    /* SVG Gate view */
+    .circuit-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .circuit-svg {
+      max-width: 600px;
+      width: 100%;
+      height: auto;
+    }
+
+    .gate-body {
+      fill: #f8fafc;
+      stroke: #000000;
+      stroke-width: 2;
+      transition: fill 200ms ease, stroke 200ms ease;
+    }
+
+    .gate-body.highlight-gate {
+      fill: #fff3f3;
+      stroke: var(--accent);
+      stroke-width: 2.5;
+    }
+
+    .gate-text {
+      font-family: inherit;
+      font-weight: 800;
+      fill: #000000;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .wire {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 150ms ease, stroke-width 150ms ease, filter 150ms ease;
+    }
+
+    .wire.low {
+      stroke: var(--wire-low);
+      stroke-width: 2.5;
+    }
+
+    .wire.high {
+      stroke: var(--wire-high);
+      stroke-width: 4;
+      filter: drop-shadow(0 0 3px var(--wire-high-glow));
+    }
+
+    .wire.invalid {
+      stroke: var(--wire-invalid);
+      stroke-width: 4;
+      filter: drop-shadow(0 0 3px var(--wire-invalid-glow));
+    }
+
+    .wire-label {
+      font-size: 12px;
+      font-weight: bold;
+      fill: var(--ink);
+    }
+
+    .wire-label.sub {
+      font-size: 9px;
+      fill: var(--muted);
+    }
+
+    .conn-dot {
+      fill: var(--wire-low);
+      transition: fill 150ms;
+    }
+
+    .conn-dot.high {
+      fill: var(--wire-high);
+    }
+
+    .conn-dot.invalid {
+      fill: var(--wire-invalid);
+    }
+
+    /* Waveform diagram styling */
+    .wave-container {
+      background: #17202a;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+    }
+
+    .wave-svg {
+      min-width: 600px;
+      width: 100%;
+      height: 165px;
+    }
+
+    /* Table styling */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .truth-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .truth-table th,
+    .truth-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .truth-table th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .truth-table tbody tr {
+      cursor: pointer;
+      transition: background-color 100ms ease;
+    }
+
+    .truth-table tbody tr:hover {
+      background-color: var(--soft);
+    }
+
+    .truth-table tbody tr.active-step {
+      background-color: var(--bit-1);
+    }
+
+    .truth-table tbody tr.active-step td {
+      font-weight: 700;
+    }
+
+    .input-val-box {
+      width: 45px;
+      height: 28px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .input-val-box:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    .input-val-box.correct {
+      border-color: var(--good);
+      background-color: #eef8f2;
+      color: var(--good);
+    }
+
+    .input-val-box.incorrect {
+      border-color: var(--bad);
+      background-color: #fff0ef;
+      color: var(--bad);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      background: #eef8f2;
+      color: var(--good);
+      border: 1px solid #b8dec6;
+      white-space: nowrap;
+    }
+
+    .badge.bad {
+      background: #fff0ef;
+      color: var(--bad);
+      border-color: #f4b8b2;
+    }
+
+    .badge.warn {
+      background: #fff9ed;
+      color: var(--warn);
+      border-color: #f5b84b;
+    }
+
+    @media (max-width: 960px) {
+      .topbar,
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: stretch;
+      }
+
+      .toolbar > * {
+        flex: 1 1 180px;
+      }
+
+      .controls {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>Flipflop-Visualisierung – Interaktives Lernportal</h1>
+        <p class="subtitle">
+          <span>Ein Flipflop ist ein grundlegendes elektronisches Bauteil zur Speicherung von Information.</span>
+          <span>Wähle oben den Typen aus und erforsche die Funktionsweise, die Gatter-Schaltungen und Signalverläufe.</span>
+        </p>
+      </div>
+      <!-- Mode toggles -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="toolbar" style="margin-top: 4px;">
+          <div class="segmented" aria-label="Gatter-Typ" id="norNandContainer">
+            <button type="button" class="active" id="btnModeNOR">NOR-Gatter (aktiv-high)</button>
+            <button type="button" id="btnModeNAND">NAND-Gatter (aktiv-low)</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flipflop selector -->
+    <div style="margin-top: 12px;">
+      <div class="segmented" id="ffTypeSelector" style="grid-template-columns: repeat(5, 1fr);">
+        <button type="button" class="active" data-ff="RS">RS-Flipflop</button>
+        <button type="button" data-ff="GatedRS">Taktgesteuertes RS</button>
+        <button type="button" data-ff="DLatch">D-Latch</button>
+        <button type="button" data-ff="JK">JK-Flipflop (flankenaktiv)</button>
+        <button type="button" data-ff="T">T-Flipflop (flankenaktiv)</button>
+      </div>
+    </div>
+
+    <div class="shell">
+      <!-- Sidebar Controls -->
+      <aside class="panel controls">
+        <div class="section-title">
+          <h2>Eingänge &amp; Ausgänge</h2>
+          <span class="tag" id="stateTag">Speichern</span>
+        </div>
+
+        <p class="hint" id="modeDesc">Ein NOR-RS-Flipflop reagiert auf positive Signale (1) zum Setzen und Rücksetzen.</p>
+
+        <!-- Dynamic Switches container -->
+        <div class="switch-group" id="switchesContainer">
+          <!-- Set Switch -->
+          <div class="switch-card" id="cardS">
+            <span>Set (S)</span>
+            <button type="button" class="toggle-btn" id="switchS" aria-label="Schalter S umschalten" aria-pressed="false"></button>
+            <span id="valS" class="small">0 (Aus)</span>
+          </div>
+          <!-- Reset Switch -->
+          <div class="switch-card" id="cardR">
+            <span>Reset (R)</span>
+            <button type="button" class="toggle-btn" id="switchR" aria-label="Schalter R umschalten" aria-pressed="false"></button>
+            <span id="valR" class="small">0 (Aus)</span>
+          </div>
+          <!-- D Switch -->
+          <div class="switch-card" id="cardD" style="display: none;">
+            <span>Data (D)</span>
+            <button type="button" class="toggle-btn" id="switchD" aria-label="Schalter D umschalten" aria-pressed="false"></button>
+            <span id="valD" class="small">0 (Aus)</span>
+          </div>
+          <!-- J Switch -->
+          <div class="switch-card" id="cardJ" style="display: none;">
+            <span>Jump (J)</span>
+            <button type="button" class="toggle-btn" id="switchJ" aria-label="Schalter J umschalten" aria-pressed="false"></button>
+            <span id="valJ" class="small">0 (Aus)</span>
+          </div>
+          <!-- K Switch -->
+          <div class="switch-card" id="cardK" style="display: none;">
+            <span>Kill (K)</span>
+            <button type="button" class="toggle-btn" id="switchK" aria-label="Schalter K umschalten" aria-pressed="false"></button>
+            <span id="valK" class="small">0 (Aus)</span>
+          </div>
+          <!-- T Switch -->
+          <div class="switch-card" id="cardT" style="display: none;">
+            <span>Toggle (T)</span>
+            <button type="button" class="toggle-btn" id="switchT" aria-label="Schalter T umschalten" aria-pressed="false"></button>
+            <span id="valT" class="small">0 (Aus)</span>
+          </div>
+        </div>
+
+        <!-- Clock Controls -->
+        <div class="switch-card" id="cardClock" style="display: none; flex-direction: column; align-items: stretch; margin-top: 12px; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700;">Taktgeber (CLK)</span>
+            <span id="valCLK" class="small">0 (Low)</span>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: space-between;">
+            <button type="button" class="toggle-btn small-toggle" id="switchCLK" aria-label="CLK umschalten" aria-pressed="false"></button>
+            <button type="button" class="ghost" id="btnPulseCLK" style="flex: 1; min-height: 26px; padding: 4px; font-size: 0.8rem; border-color: var(--line);">Puls ⎍</button>
+            <button type="button" class="ghost" id="btnAutoClock" style="flex: 1; min-height: 26px; padding: 4px; font-size: 0.8rem; border-color: var(--line);">Auto 🔁</button>
+          </div>
+        </div>
+
+        <!-- LEDs -->
+        <div class="led-group">
+          <div class="led-card">
+            <span>Ausgang Q</span>
+            <div class="led-indicator led-q" id="ledQ"></div>
+            <span id="valQ" class="small">0 (Aus)</span>
+          </div>
+          <div class="led-card">
+            <span>Ausgang P</span>
+            <div class="led-indicator led-p" id="ledP"></div>
+            <span id="valP" class="small">1 (Ein)</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-reset" id="btnReset">
+          ⚡ Simulation zurücksetzen
+        </button>
+
+        <!-- Status Info Box -->
+        <div class="info-box" id="infoBox">
+          <h3 id="infoTitle">Zustand: Speichern</h3>
+          <p id="infoText">Beide Eingänge sind 0. Das Flipflop behält seinen aktuellen Zustand bei.</p>
+        </div>
+      </aside>
+
+      <!-- Main Visualizations -->
+      <main class="main">
+        <!-- Circuit Diagram -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Gatter-Schaltung</h2>
+            <span class="hint">Leitungsfarben: <span style="color:#ff0000; font-weight:700;">Rot = 1</span>, <span style="color:#000000; font-weight:700;">Schwarz = 0</span>.</span>
+          </div>
+          <div class="circuit-container">
+            <svg class="circuit-svg" viewBox="0 0 600 350" xmlns="http://www.w3.org/2000/svg" id="circuitSvg">
+              <defs>
+                <filter id="glow-high" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <filter id="glow-invalid" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- 1. RS-Flipflop Group -->
+              <g id="svgRS">
+                <!-- Input lines -->
+                <path id="wireRS_S" class="wire low" d="M 70,95 L 170,95" />
+                <path id="wireRS_R" class="wire low" d="M 70,255 L 170,255" />
+                <!-- Outputs -->
+                <path id="wireRS_Q" class="wire low" d="M 268,230 L 340,230 L 340,70 L 496,70" />
+                <path id="wireRS_P" class="wire low" d="M 268,110 L 310,110 L 310,290 L 496,290" />
+                <!-- Feedback paths -->
+                <path id="wireRS_FBQ" class="wire low" d="M 340,230 L 340,150 L 140,150 L 140,125 L 170,125" />
+                <path id="wireRS_FBP" class="wire low" d="M 310,110 L 310,190 L 120,190 L 120,215 L 170,215" />
+                <!-- Square dots -->
+                <rect id="dotRS_Q" class="conn-dot" x="337" y="227" width="6" height="6" />
+                <rect id="dotRS_P" class="conn-dot" x="307" y="107" width="6" height="6" />
+                <!-- Gates -->
+                <rect class="gate-body" id="gateRS_Top" x="170" y="65" width="90" height="90" fill="#f8fafc" />
+                <text x="215" y="117" class="gate-text" id="lblRS_Top" font-size="20">≥1</text>
+                <circle id="bubRS_Top" cx="264" cy="110" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+
+                <rect class="gate-body" id="gateRS_Bottom" x="170" y="185" width="90" height="90" fill="#f8fafc" />
+                <text x="215" y="237" class="gate-text" id="lblRS_Bottom" font-size="20">≥1</text>
+                <circle id="bubRS_Bottom" cx="264" cy="230" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Inputs visual switches -->
+                <g cursor="pointer" id="trigRS_S"><rect x="30" y="80" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="99" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtRS_S">S=0</text></g>
+                <g cursor="pointer" id="trigRS_R"><rect x="30" y="240" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="259" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtRS_R">R=0</text></g>
+                <text x="80" y="87" class="wire-label">S</text><text x="80" y="247" class="wire-label">R</text>
+              </g>
+
+              <!-- 2. Gated RS Latch Group -->
+              <g id="svgGatedRS" display="none">
+                <!-- Inputs -->
+                <path id="wireGRS_S" class="wire low" d="M 70,80 L 190,80" />
+                <path id="wireGRS_R" class="wire low" d="M 70,260 L 190,260" />
+                <path id="wireGRS_CLK" class="wire low" d="M 70,170 L 140,170 L 140,120 L 190,120 M 140,170 L 140,220 L 190,220" />
+                <!-- AND outputs to NOR inputs -->
+                <path id="wireGRS_AND1_Out" class="wire low" d="M 255,100 L 290,100 L 290,80 L 320,80" />
+                <path id="wireGRS_AND2_Out" class="wire low" d="M 255,240 L 290,240 L 290,260 L 320,260" />
+                <!-- Outputs -->
+                <path id="wireGRS_Q" class="wire low" d="M 385,230 L 440,230 L 440,70 L 496,70" />
+                <path id="wireGRS_P" class="wire low" d="M 385,110 L 415,110 L 415,290 L 496,290" />
+                <!-- Feedback -->
+                <path id="wireGRS_FBQ" class="wire low" d="M 440,230 L 440,160 L 290,160 L 290,125 L 320,125" />
+                <path id="wireGRS_FBP" class="wire low" d="M 415,110 L 415,180 L 300,180 L 300,215 L 320,215" />
+                <!-- Dots -->
+                <rect id="dotGRS_Q" class="conn-dot" x="437" y="227" width="6" height="6" />
+                <rect id="dotGRS_P" class="conn-dot" x="412" y="107" width="6" height="6" />
+                <circle cx="140" cy="170" r="3" fill="#000" />
+                <!-- Gates -->
+                <!-- AND Gates (DIN style - rect, text "&") -->
+                <rect class="gate-body" id="gateGRS_AND1" x="190" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="107" class="gate-text" font-size="16">&amp;</text>
+                <rect class="gate-body" id="gateGRS_AND2" x="190" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="247" class="gate-text" font-size="16">&amp;</text>
+                <!-- NOR Gates -->
+                <rect class="gate-body" id="gateGRS_Top" x="320" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="107" class="gate-text" id="lblGRS_Top" font-size="16">≥1</text>
+                <circle id="bubGRS_Top" cx="389" cy="110" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <rect class="gate-body" id="gateGRS_Bottom" x="320" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="247" class="gate-text" id="lblGRS_Bottom" font-size="16">≥1</text>
+                <circle id="bubGRS_Bottom" cx="389" cy="230" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Click zones -->
+                <g cursor="pointer" id="trigGRS_S"><rect x="30" y="65" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="84" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtGRS_S">S=0</text></g>
+                <g cursor="pointer" id="trigGRS_CLK"><rect x="30" y="155" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="174" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtGRS_CLK">C=0</text></g>
+                <g cursor="pointer" id="trigGRS_R"><rect x="30" y="245" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="264" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtGRS_R">R=0</text></g>
+                <text x="80" y="72" class="wire-label">S</text><text x="80" y="162" class="wire-label">C</text><text x="80" y="252" class="wire-label">R</text>
+              </g>
+
+              <!-- 3. D-Latch Group -->
+              <g id="svgDLatch" display="none">
+                <!-- Inputs -->
+                <path id="wireD_D" class="wire low" d="M 70,80 L 190,80 M 80,80 L 80,260 L 90,260" />
+                <path id="wireD_NOT_Out" class="wire low" d="M 144,260 L 190,260" />
+                <path id="wireD_CLK" class="wire low" d="M 70,170 L 145,170 L 145,120 L 190,120 M 145,170 L 145,220 L 190,220" />
+                <!-- AND outputs to NOR inputs -->
+                <path id="wireD_AND1_Out" class="wire low" d="M 255,100 L 290,100 L 290,80 L 320,80" />
+                <path id="wireD_AND2_Out" class="wire low" d="M 255,240 L 290,240 L 290,260 L 320,260" />
+                <!-- Outputs -->
+                <path id="wireD_Q" class="wire low" d="M 385,230 L 440,230 L 440,70 L 496,70" />
+                <path id="wireD_P" class="wire low" d="M 385,110 L 415,110 L 415,290 L 496,290" />
+                <!-- Feedback -->
+                <path id="wireD_FBQ" class="wire low" d="M 440,230 L 440,160 L 290,160 L 290,125 L 320,125" />
+                <path id="wireD_FBP" class="wire low" d="M 415,110 L 415,180 L 300,180 L 300,215 L 320,215" />
+                <!-- Dots -->
+                <rect id="dotD_Q" class="conn-dot" x="437" y="227" width="6" height="6" />
+                <rect id="dotD_P" class="conn-dot" x="412" y="107" width="6" height="6" />
+                <circle cx="80" cy="80" r="3" fill="#000" />
+                <circle cx="145" cy="170" r="3" fill="#000" />
+                <!-- NOT Gatter -->
+                <rect class="gate-body" id="gateD_NOT" x="90" y="235" width="50" height="50" fill="#f8fafc" />
+                <text x="115" y="265" class="gate-text" font-size="14">1</text>
+                <circle cx="144" cy="260" r="3" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+                <!-- AND Gates -->
+                <rect class="gate-body" id="gateD_AND1" x="190" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="107" class="gate-text" font-size="16">&amp;</text>
+                <rect class="gate-body" id="gateD_AND2" x="190" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="247" class="gate-text" font-size="16">&amp;</text>
+                <!-- NOR Gates -->
+                <rect class="gate-body" id="gateD_Top" x="320" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="107" class="gate-text" font-size="16">≥1</text>
+                <circle cx="389" cy="110" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <rect class="gate-body" id="gateD_Bottom" x="320" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="247" class="gate-text" font-size="16">≥1</text>
+                <circle cx="389" cy="230" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Click zones -->
+                <g cursor="pointer" id="trigD_D"><rect x="30" y="65" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="84" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtD_D">D=0</text></g>
+                <g cursor="pointer" id="trigD_CLK"><rect x="30" y="155" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="174" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtD_CLK">C=0</text></g>
+                <text x="80" y="72" class="wire-label">D</text><text x="80" y="162" class="wire-label">C</text>
+              </g>
+
+              <!-- 4. JK Flipflop Group -->
+              <g id="svgJK" display="none">
+                <!-- Inputs -->
+                <path id="wireJK_J" class="wire low" d="M 70,75 L 190,75" />
+                <path id="wireJK_K" class="wire low" d="M 70,265 L 190,265" />
+                <path id="wireJK_CLK" class="wire low" d="M 70,170 L 140,170 L 140,95 L 190,95 M 140,170 L 140,245 L 190,245" />
+                <!-- AND outputs to NOR inputs -->
+                <path id="wireJK_AND1_Out" class="wire low" d="M 255,100 L 290,100 L 290,80 L 320,80" />
+                <path id="wireJK_AND2_Out" class="wire low" d="M 255,240 L 290,240 L 290,260 L 320,260" />
+                <!-- Outputs -->
+                <path id="wireJK_Q" class="wire low" d="M 385,230 L 440,230 L 440,70 L 496,70" />
+                <path id="wireJK_P" class="wire low" d="M 385,110 L 415,110 L 415,290 L 496,290" />
+                <!-- Feedback Latch internal -->
+                <path id="wireJK_FBQ_Int" class="wire low" d="M 440,230 L 440,160 L 290,160 L 290,125 L 320,125" />
+                <path id="wireJK_FBP_Int" class="wire low" d="M 415,110 L 415,180 L 300,180 L 300,215 L 320,215" />
+                <!-- Feedback to input ANDs (JK specific feedback) -->
+                <path id="wireJK_FBQ" class="wire low" d="M 440,230 L 440,315 L 120,315 L 120,225 L 190,225" />
+                <path id="wireJK_FBP" class="wire low" d="M 415,110 L 415,35 L 100,35 L 100,115 L 190,115" />
+                
+                <!-- Dots -->
+                <rect id="dotJK_Q" class="conn-dot" x="437" y="227" width="6" height="6" />
+                <rect id="dotJK_P" class="conn-dot" x="412" y="107" width="6" height="6" />
+                <circle cx="140" cy="170" r="3" fill="#000" />
+                <!-- Gates -->
+                <!-- 3-Input ANDs (drawn as rectangles with 3 inputs) -->
+                <rect class="gate-body" id="gateJK_AND1" x="190" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="107" class="gate-text" font-size="16">&amp;</text>
+                <rect class="gate-body" id="gateJK_AND2" x="190" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="247" class="gate-text" font-size="16">&amp;</text>
+                <!-- NOR Gates -->
+                <rect class="gate-body" id="gateJK_Top" x="320" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="107" class="gate-text" font-size="16">≥1</text>
+                <circle cx="389" cy="110" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <rect class="gate-body" id="gateJK_Bottom" x="320" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="247" class="gate-text" font-size="16">≥1</text>
+                <circle cx="389" cy="230" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Click zones -->
+                <g cursor="pointer" id="trigJK_J"><rect x="30" y="60" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="79" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtJK_J">J=0</text></g>
+                <g cursor="pointer" id="trigJK_CLK"><rect x="30" y="155" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="174" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtJK_CLK">C=0</text></g>
+                <g cursor="pointer" id="trigJK_K"><rect x="30" y="250" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="269" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtJK_K">K=0</text></g>
+                <text x="80" y="67" class="wire-label">J</text><text x="80" y="162" class="wire-label">C</text><text x="80" y="257" class="wire-label">K</text>
+              </g>
+
+              <!-- 5. T-Flipflop Group -->
+              <g id="svgT" display="none">
+                <!-- Inputs -->
+                <path id="wireT_T" class="wire low" d="M 70,75 L 190,75 M 80,75 L 80,265 L 190,265" />
+                <path id="wireT_CLK" class="wire low" d="M 70,170 L 140,170 L 140,95 L 190,95 M 140,170 L 140,245 L 190,245" />
+                <!-- AND outputs to NOR inputs -->
+                <path id="wireT_AND1_Out" class="wire low" d="M 255,100 L 290,100 L 290,80 L 320,80" />
+                <path id="wireT_AND2_Out" class="wire low" d="M 255,240 L 290,240 L 290,260 L 320,260" />
+                <!-- Outputs -->
+                <path id="wireT_Q" class="wire low" d="M 385,230 L 440,230 L 440,70 L 496,70" />
+                <path id="wireT_P" class="wire low" d="M 385,110 L 415,110 L 415,290 L 496,290" />
+                <!-- Feedback Latch internal -->
+                <path id="wireT_FBQ_Int" class="wire low" d="M 440,230 L 440,160 L 290,160 L 290,125 L 320,125" />
+                <path id="wireT_FBP_Int" class="wire low" d="M 415,110 L 415,180 L 300,180 L 300,215 L 320,215" />
+                <!-- Feedback to input ANDs -->
+                <path id="wireT_FBQ" class="wire low" d="M 440,230 L 440,315 L 120,315 L 120,225 L 190,225" />
+                <path id="wireT_FBP" class="wire low" d="M 415,110 L 415,35 L 100,35 L 100,115 L 190,115" />
+                
+                <!-- Dots -->
+                <rect id="dotT_Q" class="conn-dot" x="437" y="227" width="6" height="6" />
+                <rect id="dotT_P" class="conn-dot" x="412" y="107" width="6" height="6" />
+                <circle cx="80" cy="75" r="3" fill="#000" />
+                <circle cx="140" cy="170" r="3" fill="#000" />
+                <!-- Gates -->
+                <rect class="gate-body" id="gateT_AND1" x="190" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="107" class="gate-text" font-size="16">&amp;</text>
+                <rect class="gate-body" id="gateT_AND2" x="190" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="222" y="247" class="gate-text" font-size="16">&amp;</text>
+                <!-- NOR Gates -->
+                <rect class="gate-body" id="gateT_Top" x="320" y="65" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="107" class="gate-text" font-size="16">≥1</text>
+                <circle cx="389" cy="110" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <rect class="gate-body" id="gateT_Bottom" x="320" y="205" width="65" height="70" fill="#f8fafc" />
+                <text x="352" y="247" class="gate-text" font-size="16">≥1</text>
+                <circle cx="389" cy="230" r="4" fill="#ffffff" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Click zones -->
+                <g cursor="pointer" id="trigT_T"><rect x="30" y="60" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="79" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtT_T">T=0</text></g>
+                <g cursor="pointer" id="trigT_CLK"><rect x="30" y="155" width="40" height="30" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" /><text x="50" y="174" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle" id="txtT_CLK">C=0</text></g>
+                <text x="80" y="67" class="wire-label">T</text><text x="80" y="162" class="wire-label">C</text>
+              </g>
+
+              <!-- Dynamic Output LEDs in SVG -->
+              <g id="ledVisualQ" transform="translate(10,0)">
+                <circle cx="515" cy="70" r="14" fill="#cbd5e1" stroke="#475569" stroke-width="2" />
+                <text x="515" y="74" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">Q</text>
+              </g>
+              <g id="ledVisualP" transform="translate(10,0)">
+                <circle cx="515" cy="290" r="14" fill="#cbd5e1" stroke="#475569" stroke-width="2" />
+                <text x="515" y="294" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">P</text>
+              </g>
+            </svg>
+          </div>
+        </section>
+
+        <!-- Waveform (Timing Diagram) -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Signal-Verlauf (Timing Diagramm)</h2>
+            <button type="button" class="ghost" id="btnClearWave">Verlauf leeren</button>
+          </div>
+          <p class="hint">Zeigt, wie die Ausgänge den Eingaben zeitlich folgen. Klicke Schalter, um Schritte aufzuzeichnen.</p>
+          <div class="wave-container">
+            <svg class="wave-svg" id="waveSvg" viewBox="0 0 600 165" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid background -->
+              <g stroke="#2c3e50" stroke-width="0.5" stroke-dasharray="2,2" id="waveGridLines"></g>
+              
+              <!-- Y Axis Labels & paths dynamically rendered in JS -->
+              <g id="waveYLabels"></g>
+              <g id="wavePaths"></g>
+              <g id="waveStepMarkers"></g>
+            </svg>
+          </div>
+        </section>
+
+        <!-- Worksheet Table & Tasks -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2 id="tableTitle">Arbeitsblatt-Tabelle: RS-Flipflop</h2>
+            <div class="segmented" aria-label="Tabellen-Modus" style="max-width: 320px;">
+              <button type="button" class="active" id="btnModeSim">Simulation</button>
+              <button type="button" id="btnModeQuiz">Aufgabenmodus</button>
+            </div>
+          </div>
+          <p class="hint" id="tableModeHint">Klicke auf eine Zeile, um diese Eingaben direkt in der Simulation zu testen.</p>
+
+          <div class="table-wrap">
+            <table class="truth-table" id="truthTable">
+              <thead id="tableHeader">
+                <!-- Header columns dynamically generated -->
+              </thead>
+              <tbody id="tableBody">
+                <!-- Steps will be generated here -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 10px;">
+            <div id="quizFeedback" class="badge" hidden>Richtig ausgefüllt!</div>
+            <button type="button" class="ghost" id="btnCheckQuiz" hidden disabled>Eingaben prüfen</button>
+          </div>
+        </section>
+
+        <!-- Lernecke (Didactic Section) -->
+        <section class="panel section">
+          <div class="section-title">
+            <h2>Hintergrund &amp; Flipflop-Typen</h2>
+          </div>
+          <div style="display: grid; gap: 12px;" id="didacticText">
+            <!-- Text dynamically changed based on active flip-flop -->
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    const state = {
+      ffType: "RS", // "RS" | "GatedRS" | "DLatch" | "JK" | "T"
+      isNOR: true,  // true = NOR, false = NAND
+      isQuizMode: false,
+      
+      // Inputs
+      R: 0,
+      S: 0,
+      D: 0,
+      J: 0,
+      K: 0,
+      T: 0,
+      CLK: 0,
+      
+      // Outputs
+      Q: 0,
+      P: 1,
+      isUnstable: false,
+      
+      activeStepIndex: -1,
+      history: [],
+      autoClockInterval: null,
+      
+      // Dynamic Truth Table definitions for Quiz and Sim modes
+      norSteps: [
+        { label: "0 (Start)", R: 0, S: 0, expectedQ: 0, expectedP: 1 },
+        { label: "1", R: 1, S: 0, expectedQ: 0, expectedP: 1 },
+        { label: "2", R: 0, S: 0, expectedQ: 0, expectedP: 1 },
+        { label: "3", R: 0, S: 1, expectedQ: 1, expectedP: 0 },
+        { label: "4", R: 0, S: 0, expectedQ: 1, expectedP: 0 },
+        { label: "5", R: 1, S: 0, expectedQ: 0, expectedP: 1 },
+        { label: "6", R: 0, S: 0, expectedQ: 0, expectedP: 1 }
+      ],
+      nandSteps: [
+        { label: "0 (Start)", R: 1, S: 1, expectedQ: 0, expectedP: 1 },
+        { label: "1", R: 0, S: 1, expectedQ: 0, expectedP: 1 },
+        { label: "2", R: 1, S: 1, expectedQ: 0, expectedP: 1 },
+        { label: "3", R: 1, S: 0, expectedQ: 1, expectedP: 0 },
+        { label: "4", R: 1, S: 1, expectedQ: 1, expectedP: 0 },
+        { label: "5", R: 0, S: 1, expectedQ: 0, expectedP: 1 },
+        { label: "6", R: 1, S: 1, expectedQ: 0, expectedP: 1 }
+      ],
+      gatedRsSteps: [
+        { label: "0 (Start)", CLK: 0, S: 0, R: 0, expectedQ: 0, expectedP: 1 },
+        { label: "1 (Freigabe)", CLK: 1, S: 1, R: 0, expectedQ: 1, expectedP: 0 },
+        { label: "2 (Sperren)", CLK: 0, S: 0, R: 1, expectedQ: 1, expectedP: 0 },
+        { label: "3 (Freigabe)", CLK: 1, S: 0, R: 1, expectedQ: 0, expectedP: 1 },
+        { label: "4", CLK: 1, S: 0, R: 0, expectedQ: 0, expectedP: 1 },
+        { label: "5 (Verboten)", CLK: 1, S: 1, R: 1, expectedQ: 0, expectedP: 0 },
+        { label: "6 (Sperren)", CLK: 0, S: 1, R: 1, expectedQ: 0, expectedP: 0 }
+      ],
+      dLatchSteps: [
+        { label: "0 (Start)", CLK: 0, D: 0, expectedQ: 0, expectedP: 1 },
+        { label: "1 (Freigabe)", CLK: 1, D: 1, expectedQ: 1, expectedP: 0 },
+        { label: "2 (Sperren)", CLK: 0, D: 0, expectedQ: 1, expectedP: 0 },
+        { label: "3 (Freigabe)", CLK: 1, D: 0, expectedQ: 0, expectedP: 1 },
+        { label: "4", CLK: 1, D: 1, expectedQ: 1, expectedP: 0 },
+        { label: "5 (Sperren)", CLK: 0, D: 1, expectedQ: 1, expectedP: 0 }
+      ],
+      jkSteps: [
+        { label: "0 (Start)", CLK: 0, J: 0, K: 0, expectedQ: 0, expectedP: 1 },
+        { label: "1 (Flanke)", CLK: 1, J: 1, K: 0, expectedQ: 1, expectedP: 0 },
+        { label: "2", CLK: 0, J: 0, K: 1, expectedQ: 1, expectedP: 0 },
+        { label: "3 (Flanke)", CLK: 1, J: 0, K: 1, expectedQ: 0, expectedP: 1 },
+        { label: "4 (Flanke)", CLK: 1, J: 1, K: 1, expectedQ: 1, expectedP: 0 },
+        { label: "5 (Flanke)", CLK: 1, J: 1, K: 1, expectedQ: 0, expectedP: 1 },
+        { label: "6", CLK: 0, J: 1, K: 1, expectedQ: 0, expectedP: 1 }
+      ],
+      tSteps: [
+        { label: "0 (Start)", CLK: 0, T: 0, expectedQ: 0, expectedP: 1 },
+        { label: "1 (Flanke)", CLK: 1, T: 1, expectedQ: 1, expectedP: 0 },
+        { label: "2", CLK: 0, T: 1, expectedQ: 1, expectedP: 0 },
+        { label: "3 (Flanke)", CLK: 1, T: 1, expectedQ: 0, expectedP: 1 },
+        { label: "4 (Flanke)", CLK: 1, T: 0, expectedQ: 0, expectedP: 1 },
+        { label: "5", CLK: 0, T: 1, expectedQ: 0, expectedP: 1 }
+      ],
+      quizUserAnswers: []
+    };
+
+    // DOM Elements
+    const els = {
+      norNandContainer: document.getElementById("norNandContainer"),
+      btnModeNOR: document.getElementById("btnModeNOR"),
+      btnModeNAND: document.getElementById("btnModeNAND"),
+      btnModeSim: document.getElementById("btnModeSim"),
+      btnModeQuiz: document.getElementById("btnModeQuiz"),
+      ffTypeSelector: document.getElementById("ffTypeSelector"),
+      modeDesc: document.getElementById("modeDesc"),
+      stateTag: document.getElementById("stateTag"),
+      ledQ: document.getElementById("ledQ"),
+      ledP: document.getElementById("ledP"),
+      valQ: document.getElementById("valQ"),
+      valP: document.getElementById("valP"),
+      btnReset: document.getElementById("btnReset"),
+      infoBox: document.getElementById("infoBox"),
+      infoTitle: document.getElementById("infoTitle"),
+      infoText: document.getElementById("infoText"),
+      
+      // Dynamic inputs
+      cardS: document.getElementById("cardS"),
+      cardR: document.getElementById("cardR"),
+      cardD: document.getElementById("cardD"),
+      cardJ: document.getElementById("cardJ"),
+      cardK: document.getElementById("cardK"),
+      cardT: document.getElementById("cardT"),
+      cardClock: document.getElementById("cardClock"),
+      
+      switchS: document.getElementById("switchS"),
+      switchR: document.getElementById("switchR"),
+      switchD: document.getElementById("switchD"),
+      switchJ: document.getElementById("switchJ"),
+      switchK: document.getElementById("switchK"),
+      switchT: document.getElementById("switchT"),
+      switchCLK: document.getElementById("switchCLK"),
+      btnPulseCLK: document.getElementById("btnPulseCLK"),
+      btnAutoClock: document.getElementById("btnAutoClock"),
+      
+      valS: document.getElementById("valS"),
+      valR: document.getElementById("valR"),
+      valD: document.getElementById("valD"),
+      valJ: document.getElementById("valJ"),
+      valK: document.getElementById("valK"),
+      valT: document.getElementById("valT"),
+      valCLK: document.getElementById("valCLK"),
+
+      // SVG circuit triggers & groups
+      circuitSvg: document.getElementById("circuitSvg"),
+      svgRS: document.getElementById("svgRS"),
+      svgGatedRS: document.getElementById("svgGatedRS"),
+      svgDLatch: document.getElementById("svgDLatch"),
+      svgJK: document.getElementById("svgJK"),
+      svgT: document.getElementById("svgT"),
+      
+      ledVisualQ: document.getElementById("ledVisualQ").querySelector("circle"),
+      ledVisualP: document.getElementById("ledVisualP").querySelector("circle"),
+      
+      // Waveform timing diagram elements
+      waveSvg: document.getElementById("waveSvg"),
+      waveGridLines: document.getElementById("waveGridLines"),
+      waveYLabels: document.getElementById("waveYLabels"),
+      wavePaths: document.getElementById("wavePaths"),
+      waveStepMarkers: document.getElementById("waveStepMarkers"),
+      btnClearWave: document.getElementById("btnClearWave"),
+      
+      // Truth Table & Quiz
+      tableTitle: document.getElementById("tableTitle"),
+      tableModeHint: document.getElementById("tableModeHint"),
+      truthTable: document.getElementById("truthTable"),
+      tableHeader: document.getElementById("tableHeader"),
+      tableBody: document.getElementById("tableBody"),
+      quizFeedback: document.getElementById("quizFeedback"),
+      btnCheckQuiz: document.getElementById("btnCheckQuiz"),
+      
+      didacticText: document.getElementById("didacticText")
+    };
+
+    // Calculate flipflop outputs
+    function evaluateFlipflopLogic(currentQ, currentP, oldCLK, clkEdge = false) {
+      let Q = currentQ;
+      let P = currentP;
+      let isUnstable = false;
+
+      if (state.ffType === "RS") {
+        if (state.isNOR) {
+          // NOR RS-Flipflop
+          if (state.R === 1 && state.S === 0) { Q = 0; P = 1; }
+          else if (state.R === 0 && state.S === 1) { Q = 1; P = 0; }
+          else if (state.R === 1 && state.S === 1) { Q = 0; P = 0; }
+          else if (state.R === 0 && state.S === 0 && currentQ === 0 && currentP === 0) {
+            isUnstable = true; Q = Math.random() > 0.5 ? 1 : 0; P = Q === 1 ? 0 : 1;
+          }
+        } else {
+          // NAND RS-Flipflop
+          if (state.R === 0 && state.S === 1) { Q = 0; P = 1; }
+          else if (state.R === 1 && state.S === 0) { Q = 1; P = 0; }
+          else if (state.R === 0 && state.S === 0) { Q = 1; P = 1; }
+          else if (state.R === 1 && state.S === 1 && currentQ === 1 && currentP === 1) {
+            isUnstable = true; Q = Math.random() > 0.5 ? 1 : 0; P = Q === 1 ? 0 : 1;
+          }
+        }
+      } 
+      else if (state.ffType === "GatedRS") {
+        if (state.CLK === 1) {
+          if (state.isNOR) {
+            if (state.R === 1 && state.S === 0) { Q = 0; P = 1; }
+            else if (state.R === 0 && state.S === 1) { Q = 1; P = 0; }
+            else if (state.R === 1 && state.S === 1) { Q = 0; P = 0; }
+            else if (state.R === 0 && state.S === 0 && currentQ === 0 && currentP === 0) {
+              isUnstable = true; Q = Math.random() > 0.5 ? 1 : 0; P = Q === 1 ? 0 : 1;
+            }
+          } else {
+            // NAND gated RS
+            if (state.R === 0 && state.S === 1) { Q = 0; P = 1; }
+            else if (state.R === 1 && state.S === 0) { Q = 1; P = 0; }
+            else if (state.R === 0 && state.S === 0) { Q = 1; P = 1; }
+            else if (state.R === 1 && state.S === 1 && currentQ === 1 && currentP === 1) {
+              isUnstable = true; Q = Math.random() > 0.5 ? 1 : 0; P = Q === 1 ? 0 : 1;
+            }
+          }
+        }
+      } 
+      else if (state.ffType === "DLatch") {
+        if (state.CLK === 1) {
+          Q = state.D;
+          P = state.D === 1 ? 0 : 1;
+        }
+      } 
+      else if (state.ffType === "JK") {
+        // Edge triggered rising edge
+        if (clkEdge) {
+          if (state.J === 1 && state.K === 0) { Q = 1; P = 0; }
+          else if (state.J === 0 && state.K === 1) { Q = 0; P = 1; }
+          else if (state.J === 1 && state.K === 1) {
+            Q = currentQ === 1 ? 0 : 1;
+            P = Q === 1 ? 0 : 1;
+          }
+        }
+      } 
+      else if (state.ffType === "T") {
+        // Edge triggered rising edge
+        if (clkEdge) {
+          if (state.T === 1) {
+            Q = currentQ === 1 ? 0 : 1;
+            P = Q === 1 ? 0 : 1;
+          }
+        }
+      }
+
+      return { Q, P, isUnstable };
+    }
+
+    // Toggle Flipflop Type selection
+    function setFlipflopType(type) {
+      state.ffType = type;
+      
+      // Stop automatic clock if running
+      stopAutoClock();
+      
+      // Update active segmented tab
+      els.ffTypeSelector.querySelectorAll("button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.ff === type);
+      });
+      
+      // Show/hide NOR/NAND mode container
+      els.norNandContainer.style.display = (type === "RS" || type === "GatedRS") ? "flex" : "none";
+      
+      // Reset logic states
+      state.R = (type === "RS") ? (state.isNOR ? 0 : 1) : 0;
+      state.S = (type === "RS") ? (state.isNOR ? 0 : 1) : 0;
+      state.D = 0;
+      state.J = 0;
+      state.K = 0;
+      state.T = 0;
+      state.CLK = 0;
+      state.Q = 0;
+      state.P = 1;
+      state.isUnstable = false;
+      state.activeStepIndex = -1;
+      state.history = [];
+      
+      // Show/Hide sidebar switches
+      els.cardS.style.display = (type === "RS" || type === "GatedRS") ? "flex" : "none";
+      els.cardR.style.display = (type === "RS" || type === "GatedRS") ? "flex" : "none";
+      els.cardD.style.display = (type === "DLatch") ? "flex" : "none";
+      els.cardJ.style.display = (type === "JK") ? "flex" : "none";
+      els.cardK.style.display = (type === "JK") ? "flex" : "none";
+      els.cardT.style.display = (type === "T") ? "flex" : "none";
+      els.cardClock.style.display = (type !== "RS") ? "flex" : "none";
+      
+      // Toggle SVG Groups in drawing
+      els.svgRS.setAttribute("display", type === "RS" ? "inline" : "none");
+      els.svgGatedRS.setAttribute("display", type === "GatedRS" ? "inline" : "none");
+      els.svgDLatch.setAttribute("display", type === "DLatch" ? "inline" : "none");
+      els.svgJK.setAttribute("display", type === "JK" ? "inline" : "none");
+      els.svgT.setAttribute("display", type === "T" ? "inline" : "none");
+
+      // Set titles and learning notes
+      updateTypeDetails();
+      
+      // Re-build truth table & waveform
+      buildTable();
+      recordStateHistory();
+      render();
+    }
+
+    function updateTypeDetails() {
+      if (state.ffType === "RS") {
+        els.tableTitle.textContent = "Arbeitsblatt-Tabelle: RS-Flipflop";
+        els.modeDesc.textContent = state.isNOR 
+          ? "Ein NOR-RS-Flipflop reagiert auf positive Signale (1) zum Setzen und Rücksetzen."
+          : "Ein NAND-RS-Flipflop reagiert auf negative Signale (0) zum Setzen und Rücksetzen (aktiv-low).";
+        
+        els.didacticText.innerHTML = `
+          <p>Ein RS-Flipflop besteht aus zwei kreuzgekoppelten NOR- oder NAND-Gattern. Die Rückkopplung sorgt für das Speicherverhalten.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 8px;">
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--accent);">💾 Speicherverhalten (R=0, S=0)</span>
+              <p class="small" style="margin: 4px 0 0;">Das Flipflop behält den letzten Zustand bei. Es hat zwei stabile Zustände: Q=1 (gesetzt) oder Q=0 (gelöscht).</p>
+            </div>
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--bad);">⚠️ Verbotener Zustand (R=1, S=1)</span>
+              <p class="small" style="margin: 4px 0 0;">Zwingt beide Ausgänge auf 0 (NOR) oder 1 (NAND). Das widerspricht der Bedingung P = Q̅.</p>
+            </div>
+          </div>
+        `;
+      } 
+      else if (state.ffType === "GatedRS") {
+        els.tableTitle.textContent = "Arbeitsblatt-Tabelle: Taktgesteuertes RS-Flipflop";
+        els.modeDesc.textContent = "Das Flipflop übernimmt Setz- und Rücksetzbefehle nur, wenn der Freigabeeingang C (Clock/CLK) auf 1 steht.";
+        
+        els.didacticText.innerHTML = `
+          <p>Das taktgesteuerte RS-Flipflop (Gated RS Latch) schaltet dem Latch zwei Steuer-Gatter (AND) vor. Der Taktgeber (C) blockiert oder erlaubt die Zustandsänderung.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 8px;">
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--accent);">🔒 Gesperrt (C=0)</span>
+              <p class="small" style="margin: 4px 0 0;">Die Steuergatter blockieren jegliche Änderung der Eingänge S und R. Das Flipflop verbleibt im Zustand "Speichern".</p>
+            </div>
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--good);">🔓 Freigegeben (C=1)</span>
+              <p class="small" style="margin: 4px 0 0;">Die Eingänge S und R werden direkt durchgereicht. Das Verhalten entspricht nun dem einfachen RS-Flipflop.</p>
+            </div>
+          </div>
+        `;
+      } 
+      else if (state.ffType === "DLatch") {
+        els.tableTitle.textContent = "Arbeitsblatt-Tabelle: D-Latch";
+        els.modeDesc.textContent = "Das D-Latch übernimmt den Datenwert D am Eingang, solange der Takt C auf 1 steht. Steht C auf 0, wird der Zustand gespeichert.";
+        
+        els.didacticText.innerHTML = `
+          <p>Das D-Latch (Data Latch) besitzt nur einen Dateneingang D. Durch einen internen Inverter wird der Reset-Pfad komplementär zum Set-Pfad verdrahtet (S = D, R = D̅).</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 8px;">
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--good);">🛡️ Kein verbotener Zustand</span>
+              <p class="small" style="margin: 4px 0 0;">Da die internen Eingänge S und R niemals gleichzeitig 1 sein können, ist ein verbotener Zustand physikalisch ausgeschlossen.</p>
+            </div>
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--accent);">🔍 Transparenz (C=1)</span>
+              <p class="small" style="margin: 4px 0 0;">Solange C=1 ist, ist das Latch transparent: Jede Änderung an D spiegelt sich direkt im Ausgang Q wider.</p>
+            </div>
+          </div>
+        `;
+      } 
+      else if (state.ffType === "JK") {
+        els.tableTitle.textContent = "Arbeitsblatt-Tabelle: JK-Flipflop";
+        els.modeDesc.textContent = "Ein flankenaktives JK-Flipflop reagiert nur beim Wechsel von 0 auf 1 am Taktgeber C (steigende Flanke).";
+        
+        els.didacticText.innerHTML = `
+          <p>Das JK-Flipflop löst den verbotenen Zustand des RS-Flipflops auf. Bei J=1 und K=1 toggelt (wechselt) der Zustand bei jeder steigenden Taktflanke.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 8px;">
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--warn);">🔀 Toggle-Modus (J=1, K=1)</span>
+              <p class="small" style="margin: 4px 0 0;">Der Ausgang Q invertiert sich bei jeder steigenden Taktflanke. Das wird z.B. für Frequenzteiler oder Binärzähler genutzt.</p>
+            </div>
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--accent);">📈 Flankensteuerung</span>
+              <p class="small" style="margin: 4px 0 0;">Die Logik reagiert exakt im Moment des Übergangs von C=0 zu C=1 (steigende Flanke). Statische Pegel werden ignoriert.</p>
+            </div>
+          </div>
+        `;
+      } 
+      else if (state.ffType === "T") {
+        els.tableTitle.textContent = "Arbeitsblatt-Tabelle: T-Flipflop";
+        els.modeDesc.textContent = "Das T-Flipflop (Toggle) invertiert seinen Ausgang bei einer steigenden Taktflanke, wenn T=1 steht.";
+        
+        els.didacticText.innerHTML = `
+          <p>Das T-Flipflop besitzt einen Steuereingang T. Es ist ein vereinfachtes JK-Flipflop, bei dem J und K miteinander verbunden sind (J = T, K = T).</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 8px;">
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--accent);">💾 Speichern (T=0)</span>
+              <p class="small" style="margin: 4px 0 0;">Selbst wenn Taktflanken eintreffen, ändert sich der Ausgang nicht. Der Speicher bleibt unverändert.</p>
+            </div>
+            <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
+              <span style="color: var(--warn);">🔄 Togglen (T=1)</span>
+              <p class="small" style="margin: 4px 0 0;">Der Ausgang wechselt bei jeder ankommenden steigenden Taktflanke seinen Zustand (Frequenzhalbierung).</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Toggle Modes (NOR vs NAND)
+    function setGateMode(isNOR) {
+      state.isNOR = isNOR;
+      els.btnModeNOR.classList.toggle("active", isNOR);
+      els.btnModeNAND.classList.toggle("active", !isNOR);
+      
+      const norLabels = document.querySelectorAll("#lblRS_Top, #lblRS_Bottom, #lblGRS_Top, #lblGRS_Bottom");
+      const norBubbles = document.querySelectorAll("#bubRS_Top, #bubRS_Bottom, #bubGRS_Top, #bubGRS_Bottom");
+      
+      if (isNOR) {
+        norLabels.forEach(el => el.textContent = "≥1");
+        norBubbles.forEach(el => el.style.display = "block");
+        els.modeDesc.textContent = (state.ffType === "RS")
+          ? "Ein NOR-RS-Flipflop reagiert auf positive Signale (1) zum Setzen und Rücksetzen."
+          : "Das Flipflop übernimmt Setz- und Rücksetzbefehle nur, wenn der Freigabeeingang C auf 1 steht.";
+      } else {
+        norLabels.forEach(el => el.textContent = "&");
+        // NAND has inverted inputs or bubbles depending on style. Keep bubble but label as &
+        norLabels.forEach(el => el.textContent = "&");
+        els.modeDesc.textContent = (state.ffType === "RS")
+          ? "Ein NAND-RS-Flipflop reagiert auf negative Signale (0) zum Setzen und Rücksetzen (aktiv-low)."
+          : "Das Flipflop reagiert auf negative Signale (0) zum Setzen und Rücksetzen, wenn C=1.";
+      }
+      
+      resetSimulation();
+      buildTable();
+    }
+
+    function setAppMode(isQuiz) {
+      state.isQuizMode = isQuiz;
+      els.btnModeSim.classList.toggle("active", !isQuiz);
+      els.btnModeQuiz.classList.toggle("active", isQuiz);
+      
+      els.tableModeHint.textContent = isQuiz 
+        ? "Aufgabenmodus aktiv: Fülle die leeren Q- und P-Felder in der Tabelle aus und klicke auf 'Eingaben prüfen'." 
+        : "Simulation aktiv: Klicke auf eine Tabellenzeile, um das Flipflop in diesen Zustand zu versetzen.";
+      
+      els.btnCheckQuiz.hidden = !isQuiz;
+      els.quizFeedback.hidden = true;
+      
+      buildTable();
+      render();
+    }
+
+    function resetSimulation() {
+      state.R = (state.ffType === "RS") ? (state.isNOR ? 0 : 1) : 0;
+      state.S = (state.ffType === "RS") ? (state.isNOR ? 0 : 1) : 0;
+      state.D = 0;
+      state.J = 0;
+      state.K = 0;
+      state.T = 0;
+      state.CLK = 0;
+      state.Q = 0;
+      state.P = 1;
+      state.isUnstable = false;
+      state.activeStepIndex = -1;
+      state.history = [];
+      recordStateHistory();
+      render();
+    }
+
+    function recordStateHistory() {
+      if (state.history.length > 16) {
+        state.history.shift();
+      }
+      
+      const eventState = {
+        Q: state.Q,
+        P: state.P,
+        isUnstable: state.isUnstable
+      };
+      
+      if (state.ffType === "RS") {
+        eventState.S = state.S;
+        eventState.R = state.R;
+      } else if (state.ffType === "GatedRS") {
+        eventState.S = state.S;
+        eventState.R = state.R;
+        eventState.CLK = state.CLK;
+      } else if (state.ffType === "DLatch") {
+        eventState.D = state.D;
+        eventState.CLK = state.CLK;
+      } else if (state.ffType === "JK") {
+        eventState.J = state.J;
+        eventState.K = state.K;
+        eventState.CLK = state.CLK;
+      } else if (state.ffType === "T") {
+        eventState.T = state.T;
+        eventState.CLK = state.CLK;
+      }
+      
+      state.history.push(eventState);
+      drawWaveform();
+    }
+
+    function toggleInput(inputName) {
+      let clkEdge = false;
+      const oldCLK = state.CLK;
+      
+      if (inputName === 'R') state.R = state.R === 1 ? 0 : 1;
+      else if (inputName === 'S') state.S = state.S === 1 ? 0 : 1;
+      else if (inputName === 'D') state.D = state.D === 1 ? 0 : 1;
+      else if (inputName === 'J') state.J = state.J === 1 ? 0 : 1;
+      else if (inputName === 'K') state.K = state.K === 1 ? 0 : 1;
+      else if (inputName === 'T') state.T = state.T === 1 ? 0 : 1;
+      else if (inputName === 'CLK') {
+        state.CLK = state.CLK === 1 ? 0 : 1;
+        if (oldCLK === 0 && state.CLK === 1) {
+          clkEdge = true;
+        }
+      }
+      
+      const evalResult = evaluateFlipflopLogic(state.Q, state.P, oldCLK, clkEdge);
+      state.Q = evalResult.Q;
+      state.P = evalResult.P;
+      state.isUnstable = evalResult.isUnstable;
+      
+      checkTableStepMatch();
+      recordStateHistory();
+      render();
+    }
+
+    function triggerClockPulse() {
+      // Pulse = 0 -> 1 -> 0 transition
+      const oldCLK = state.CLK;
+      state.CLK = 0;
+      let evalResult = evaluateFlipflopLogic(state.Q, state.P, 0, false);
+      state.Q = evalResult.Q;
+      state.P = evalResult.P;
+      
+      // Rising edge (0 -> 1)
+      state.CLK = 1;
+      evalResult = evaluateFlipflopLogic(state.Q, state.P, 0, true);
+      state.Q = evalResult.Q;
+      state.P = evalResult.P;
+      state.isUnstable = evalResult.isUnstable;
+      
+      recordStateHistory();
+      render();
+      
+      // Return to 0 after short delay
+      setTimeout(() => {
+        state.CLK = 0;
+        const finalEval = evaluateFlipflopLogic(state.Q, state.P, 1, false);
+        state.Q = finalEval.Q;
+        state.P = finalEval.P;
+        recordStateHistory();
+        render();
+      }, 150);
+    }
+
+    function toggleAutoClock() {
+      if (state.autoClockInterval) {
+        stopAutoClock();
+      } else {
+        els.btnAutoClock.classList.add("active");
+        let cycle = 0;
+        state.autoClockInterval = setInterval(() => {
+          cycle = cycle === 0 ? 1 : 0;
+          const oldCLK = state.CLK;
+          state.CLK = cycle;
+          const clkEdge = (oldCLK === 0 && state.CLK === 1);
+          
+          const evalResult = evaluateFlipflopLogic(state.Q, state.P, oldCLK, clkEdge);
+          state.Q = evalResult.Q;
+          state.P = evalResult.P;
+          state.isUnstable = evalResult.isUnstable;
+          
+          recordStateHistory();
+          render();
+        }, 800);
+      }
+    }
+
+    function stopAutoClock() {
+      if (state.autoClockInterval) {
+        clearInterval(state.autoClockInterval);
+        state.autoClockInterval = null;
+      }
+      els.btnAutoClock.classList.remove("active");
+      render();
+    }
+
+    function checkTableStepMatch() {
+      let steps = [];
+      if (state.ffType === "RS") steps = state.isNOR ? state.norSteps : state.nandSteps;
+      else if (state.ffType === "GatedRS") steps = state.gatedRsSteps;
+      else if (state.ffType === "DLatch") steps = state.dLatchSteps;
+      else if (state.ffType === "JK") steps = state.jkSteps;
+      else if (state.ffType === "T") steps = state.tSteps;
+      
+      const index = steps.findIndex(step => {
+        if (state.ffType === "RS") return step.R === state.R && step.S === state.S;
+        else if (state.ffType === "GatedRS") return step.CLK === state.CLK && step.S === state.S && step.R === state.R;
+        else if (state.ffType === "DLatch") return step.CLK === state.CLK && step.D === state.D;
+        else if (state.ffType === "JK") return step.CLK === state.CLK && step.J === state.J && step.K === state.K;
+        else if (state.ffType === "T") return step.CLK === state.CLK && step.T === state.T;
+      });
+      state.activeStepIndex = index;
+    }
+
+    function selectStep(index) {
+      if (state.isQuizMode) return;
+      
+      let steps = [];
+      if (state.ffType === "RS") steps = state.isNOR ? state.norSteps : state.nandSteps;
+      else if (state.ffType === "GatedRS") steps = state.gatedRsSteps;
+      else if (state.ffType === "DLatch") steps = state.dLatchSteps;
+      else if (state.ffType === "JK") steps = state.jkSteps;
+      else if (state.ffType === "T") steps = state.tSteps;
+      
+      const step = steps[index];
+      if (!step) return;
+      
+      state.activeStepIndex = index;
+      
+      const oldCLK = state.CLK;
+      
+      if (state.ffType === "RS") {
+        state.R = step.R;
+        state.S = step.S;
+        const evalResult = evaluateFlipflopLogic(state.Q, state.P, 0, false);
+        state.Q = evalResult.Q;
+        state.P = evalResult.P;
+        state.isUnstable = evalResult.isUnstable;
+      } 
+      else if (state.ffType === "GatedRS") {
+        state.CLK = step.CLK;
+        state.S = step.S;
+        state.R = step.R;
+        const evalResult = evaluateFlipflopLogic(state.Q, state.P, oldCLK, false);
+        state.Q = evalResult.Q;
+        state.P = evalResult.P;
+        state.isUnstable = evalResult.isUnstable;
+      } 
+      else if (state.ffType === "DLatch") {
+        state.CLK = step.CLK;
+        state.D = step.D;
+        const evalResult = evaluateFlipflopLogic(state.Q, state.P, oldCLK, false);
+        state.Q = evalResult.Q;
+        state.P = evalResult.P;
+        state.isUnstable = evalResult.isUnstable;
+      } 
+      else if (state.ffType === "JK" || state.ffType === "T") {
+        // Edge triggered simulated by going 0 -> 1 if CLK is 1 in the step
+        if (state.ffType === "JK") {
+          state.J = step.J;
+          state.K = step.K;
+        } else {
+          state.T = step.T;
+        }
+        
+        if (step.CLK === 1) {
+          state.CLK = 0;
+          evaluateFlipflopLogic(state.Q, state.P, 0, false);
+          state.CLK = 1;
+          const evalResult = evaluateFlipflopLogic(state.Q, state.P, 0, true);
+          state.Q = evalResult.Q;
+          state.P = evalResult.P;
+        } else {
+          state.CLK = 0;
+          const evalResult = evaluateFlipflopLogic(state.Q, state.P, 0, false);
+          state.Q = evalResult.Q;
+          state.P = evalResult.P;
+        }
+        state.isUnstable = false;
+      }
+      
+      recordStateHistory();
+      render();
+    }
+
+    // Build dynamically the columns and rows of truth table
+    function buildTable() {
+      els.tableHeader.innerHTML = "";
+      els.tableBody.innerHTML = "";
+      state.quizUserAnswers = [];
+      
+      // Determine columns based on flipflop type
+      const cols = ["Schritt"];
+      if (state.ffType === "RS") {
+        cols.push("R", "S");
+      } else if (state.ffType === "GatedRS") {
+        cols.push("C (Clock)", "S", "R");
+      } else if (state.ffType === "DLatch") {
+        cols.push("C (Clock)", "D");
+      } else if (state.ffType === "JK") {
+        cols.push("C (Clock)", "J", "K");
+      } else if (state.ffType === "T") {
+        cols.push("C (Clock)", "T");
+      }
+      cols.push("Q (Ausgang oben)", "P (Ausgang unten)");
+      
+      // Create Header
+      const trHead = document.createElement("tr");
+      cols.forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        trHead.appendChild(th);
+      });
+      els.tableHeader.appendChild(trHead);
+      
+      // Steps data
+      let steps = [];
+      if (state.ffType === "RS") steps = state.isNOR ? state.norSteps : state.nandSteps;
+      else if (state.ffType === "GatedRS") steps = state.gatedRsSteps;
+      else if (state.ffType === "DLatch") steps = state.dLatchSteps;
+      else if (state.ffType === "JK") steps = state.jkSteps;
+      else if (state.ffType === "T") steps = state.tSteps;
+      
+      steps.forEach((step, idx) => {
+        state.quizUserAnswers.push({ Q: "", P: "" });
+        const tr = document.createElement("tr");
+        tr.dataset.index = idx;
+        tr.addEventListener("click", () => selectStep(idx));
+        
+        // Step label
+        const tdLabel = document.createElement("td");
+        tdLabel.textContent = step.label;
+        tr.appendChild(tdLabel);
+        
+        // Input columns
+        if (state.ffType === "RS") {
+          const tdR = document.createElement("td"); tdR.textContent = step.R; tr.appendChild(tdR);
+          const tdS = document.createElement("td"); tdS.textContent = step.S; tr.appendChild(tdS);
+        } else if (state.ffType === "GatedRS") {
+          const tdC = document.createElement("td"); tdC.textContent = step.CLK; tr.appendChild(tdC);
+          const tdS = document.createElement("td"); tdS.textContent = step.S; tr.appendChild(tdS);
+          const tdR = document.createElement("td"); tdR.textContent = step.R; tr.appendChild(tdR);
+        } else if (state.ffType === "DLatch") {
+          const tdC = document.createElement("td"); tdC.textContent = step.CLK; tr.appendChild(tdC);
+          const tdD = document.createElement("td"); tdD.textContent = step.D; tr.appendChild(tdD);
+        } else if (state.ffType === "JK") {
+          const tdC = document.createElement("td"); tdC.textContent = step.CLK === 1 ? "📈 1" : "0"; tr.appendChild(tdC);
+          const tdJ = document.createElement("td"); tdJ.textContent = step.J; tr.appendChild(tdJ);
+          const tdK = document.createElement("td"); tdK.textContent = step.K; tr.appendChild(tdK);
+        } else if (state.ffType === "T") {
+          const tdC = document.createElement("td"); tdC.textContent = step.CLK === 1 ? "📈 1" : "0"; tr.appendChild(tdC);
+          const tdT = document.createElement("td"); tdT.textContent = step.T; tr.appendChild(tdT);
+        }
+        
+        // Outputs (Q, P)
+        const tdQ = document.createElement("td");
+        if (state.isQuizMode) {
+          const input = document.createElement("input");
+          input.type = "text"; input.className = "input-val-box"; input.maxLength = 1;
+          input.addEventListener("input", (e) => {
+            state.quizUserAnswers[idx].Q = e.target.value.trim();
+            validateQuizButtonState();
+          });
+          tdQ.appendChild(input);
+        } else {
+          tdQ.textContent = "?"; tdQ.id = `table-q-${idx}`;
+        }
+        tr.appendChild(tdQ);
+        
+        const tdP = document.createElement("td");
+        if (state.isQuizMode) {
+          const input = document.createElement("input");
+          input.type = "text"; input.className = "input-val-box"; input.maxLength = 1;
+          input.addEventListener("input", (e) => {
+            state.quizUserAnswers[idx].P = e.target.value.trim();
+            validateQuizButtonState();
+          });
+          tdP.appendChild(input);
+        } else {
+          tdP.textContent = "?"; tdP.id = `table-p-${idx}`;
+        }
+        tr.appendChild(tdP);
+        
+        els.tableBody.appendChild(tr);
+      });
+      
+      updateTableValues();
+    }
+
+    function updateTableValues() {
+      if (state.isQuizMode) return;
+      
+      let steps = [];
+      if (state.ffType === "RS") steps = state.isNOR ? state.norSteps : state.nandSteps;
+      else if (state.ffType === "GatedRS") steps = state.gatedRsSteps;
+      else if (state.ffType === "DLatch") steps = state.dLatchSteps;
+      else if (state.ffType === "JK") steps = state.jkSteps;
+      else if (state.ffType === "T") steps = state.tSteps;
+      
+      let curQ = 0;
+      let curP = 1;
+      
+      steps.forEach((step, idx) => {
+        const oldCLK = 0;
+        let isRising = false;
+        
+        // Emulate input setup and execution
+        if (state.ffType === "RS") {
+          state.R = step.R; state.S = step.S;
+          const ev = evaluateFlipflopLogic(curQ, curP, 0, false);
+          curQ = ev.Q; curP = ev.P;
+        } 
+        else if (state.ffType === "GatedRS") {
+          state.CLK = step.CLK; state.S = step.S; state.R = step.R;
+          const ev = evaluateFlipflopLogic(curQ, curP, 0, false);
+          curQ = ev.Q; curP = ev.P;
+        } 
+        else if (state.ffType === "DLatch") {
+          state.CLK = step.CLK; state.D = step.D;
+          const ev = evaluateFlipflopLogic(curQ, curP, 0, false);
+          curQ = ev.Q; curP = ev.P;
+        } 
+        else if (state.ffType === "JK" || state.ffType === "T") {
+          if (state.ffType === "JK") {
+            state.J = step.J; state.K = step.K;
+          } else {
+            state.T = step.T;
+          }
+          if (step.CLK === 1) {
+            const ev = evaluateFlipflopLogic(curQ, curP, 0, true);
+            curQ = ev.Q; curP = ev.P;
+          }
+        }
+        
+        const qCell = document.getElementById(`table-q-${idx}`);
+        const pCell = document.getElementById(`table-p-${idx}`);
+        if (qCell) qCell.textContent = curQ;
+        if (pCell) pCell.textContent = curP;
+      });
+      
+      // Restore actual simulator states
+      checkTableStepMatch();
+    }
+
+    function validateQuizButtonState() {
+      const allFilled = state.quizUserAnswers.every(ans => ans.Q !== "" && ans.P !== "");
+      els.btnCheckQuiz.disabled = !allFilled;
+      els.btnCheckQuiz.classList.toggle("active", allFilled);
+    }
+
+    function checkQuizAnswers() {
+      let steps = [];
+      if (state.ffType === "RS") steps = state.isNOR ? state.norSteps : state.nandSteps;
+      else if (state.ffType === "GatedRS") steps = state.gatedRsSteps;
+      else if (state.ffType === "DLatch") steps = state.dLatchSteps;
+      else if (state.ffType === "JK") steps = state.jkSteps;
+      else if (state.ffType === "T") steps = state.tSteps;
+
+      let curQ = 0;
+      let curP = 1;
+      let allCorrect = true;
+      const rows = els.tableBody.querySelectorAll("tr");
+      
+      steps.forEach((step, idx) => {
+        if (state.ffType === "RS") {
+          state.R = step.R; state.S = step.S;
+          const ev = evaluateFlipflopLogic(curQ, curP, 0, false); curQ = ev.Q; curP = ev.P;
+        } 
+        else if (state.ffType === "GatedRS") {
+          state.CLK = step.CLK; state.S = step.S; state.R = step.R;
+          const ev = evaluateFlipflopLogic(curQ, curP, 0, false); curQ = ev.Q; curP = ev.P;
+        } 
+        else if (state.ffType === "DLatch") {
+          state.CLK = step.CLK; state.D = step.D;
+          const ev = evaluateFlipflopLogic(curQ, curP, 0, false); curQ = ev.Q; curP = ev.P;
+        } 
+        else if (state.ffType === "JK" || state.ffType === "T") {
+          if (state.ffType === "JK") {
+            state.J = step.J; state.K = step.K;
+          } else {
+            state.T = step.T;
+          }
+          if (step.CLK === 1) {
+            const ev = evaluateFlipflopLogic(curQ, curP, 0, true); curQ = ev.Q; curP = ev.P;
+          }
+        }
+        
+        const userQ = parseInt(state.quizUserAnswers[idx].Q, 10);
+        const userP = parseInt(state.quizUserAnswers[idx].P, 10);
+        
+        const inputs = rows[idx].querySelectorAll("input");
+        const inputQ = inputs[0];
+        const inputP = inputs[1];
+        
+        const isQCorrect = userQ === curQ;
+        const isPCorrect = userP === curP;
+        
+        inputQ.classList.toggle("correct", isQCorrect);
+        inputQ.classList.toggle("incorrect", !isQCorrect);
+        inputQ.classList.toggle("correct", isPCorrect);
+        inputQ.classList.toggle("incorrect", !isPCorrect);
+        
+        if (!isQCorrect || !isPCorrect) allCorrect = false;
+      });
+      
+      els.quizFeedback.hidden = false;
+      if (allCorrect) {
+        els.quizFeedback.className = "badge";
+        els.quizFeedback.textContent = "✓ Hervorragend! Alle Einträge sind korrekt.";
+      } else {
+        els.quizFeedback.className = "badge bad";
+        els.quizFeedback.textContent = "✗ Einige Werte sind noch falsch. Überprüfe die Taktsteuerung!";
+      }
+    }
+
+    // SVG and UI rendering
+    function render() {
+      // Toggle switches active states
+      els.switchS.classList.toggle("active", state.S === 1);
+      els.switchR.classList.toggle("active", state.R === 1);
+      els.switchD.classList.toggle("active", state.D === 1);
+      els.switchJ.classList.toggle("active", state.J === 1);
+      els.switchK.classList.toggle("active", state.K === 1);
+      els.switchT.classList.toggle("active", state.T === 1);
+      els.switchCLK.classList.toggle("active", state.CLK === 1);
+      
+      els.valS.textContent = `${state.S} (${state.S ? "Ein" : "Aus"})`;
+      els.valR.textContent = `${state.R} (${state.R ? "Ein" : "Aus"})`;
+      els.valD.textContent = `${state.D} (${state.D ? "Ein" : "Aus"})`;
+      els.valJ.textContent = `${state.J} (${state.J ? "Ein" : "Aus"})`;
+      els.valK.textContent = `${state.K} (${state.K ? "Ein" : "Aus"})`;
+      els.valT.textContent = `${state.T} (${state.T ? "Ein" : "Aus"})`;
+      els.valCLK.textContent = `${state.CLK} (${state.CLK ? "High" : "Low"})`;
+      
+      // LEDs
+      els.ledQ.classList.toggle("on", state.Q === 1 && !state.isUnstable);
+      els.ledP.classList.toggle("on", state.P === 1 && !state.isUnstable);
+      els.ledQ.classList.toggle("blink", state.isUnstable);
+      els.ledP.classList.toggle("blink", state.isUnstable);
+      
+      els.valQ.textContent = state.isUnstable ? "Instabil (⚡)" : `${state.Q} (${state.Q ? "Ein" : "Aus"})`;
+      els.valP.textContent = state.isUnstable ? "Instabil (⚡)" : `${state.P} (${state.P ? "Ein" : "Aus"})`;
+      
+      // Table active row highlight
+      const rows = els.tableBody.querySelectorAll("tr");
+      rows.forEach((row, idx) => {
+        row.classList.toggle("active-step", idx === state.activeStepIndex);
+      });
+      
+      // Wires in SVG
+      updateSVGWireStates();
+      
+      // Update Info box text
+      updateInfoTexts();
+    }
+
+    function updateSVGWireStates() {
+      const setWireState = (wireEl, val) => {
+        if (!wireEl) return;
+        if (state.isUnstable) {
+          wireEl.className.baseVal = "wire invalid";
+        } else if (val === 1) {
+          wireEl.className.baseVal = "wire high";
+        } else {
+          wireEl.className.baseVal = "wire low";
+        }
+      };
+
+      const setDotState = (dotEl, val) => {
+        if (!dotEl) return;
+        if (state.isUnstable) {
+          dotEl.className.baseVal = "conn-dot invalid";
+        } else if (val === 1) {
+          dotEl.className.baseVal = "conn-dot high";
+        } else {
+          dotEl.className.baseVal = "conn-dot";
+        }
+      };
+
+      const setGateHighlight = (gateEl, isActive) => {
+        if (!gateEl) return;
+        gateEl.classList.toggle("highlight-gate", isActive);
+      };
+
+      if (state.ffType === "RS") {
+        setWireState(document.getElementById("wireRS_S"), state.S);
+        setWireState(document.getElementById("wireRS_R"), state.R);
+        setWireState(document.getElementById("wireRS_Q"), state.Q);
+        setWireState(document.getElementById("wireRS_P"), state.P);
+        setWireState(document.getElementById("wireRS_FBQ"), state.Q);
+        setWireState(document.getElementById("wireRS_FBP"), state.P);
+        setDotState(document.getElementById("dotRS_Q"), state.Q);
+        setDotState(document.getElementById("dotRS_P"), state.P);
+        
+        document.getElementById("txtRS_S").textContent = `S=${state.S}`;
+        document.getElementById("txtRS_R").textContent = `R=${state.R}`;
+        document.getElementById("txtRS_S").parentNode.querySelector("rect").setAttribute("fill", state.S ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtRS_R").parentNode.querySelector("rect").setAttribute("fill", state.R ? "var(--wire-high-glow)" : "#cbd5e1");
+        
+        setGateHighlight(document.getElementById("gateRS_Top"), state.S === 1);
+        setGateHighlight(document.getElementById("gateRS_Bottom"), state.R === 1);
+      } 
+      else if (state.ffType === "GatedRS") {
+        setWireState(document.getElementById("wireGRS_S"), state.S);
+        setWireState(document.getElementById("wireGRS_R"), state.R);
+        setWireState(document.getElementById("wireGRS_CLK"), state.CLK);
+        setWireState(document.getElementById("wireGRS_Q"), state.Q);
+        setWireState(document.getElementById("wireGRS_P"), state.P);
+        setWireState(document.getElementById("wireGRS_FBQ"), state.Q);
+        setWireState(document.getElementById("wireGRS_FBP"), state.P);
+        
+        // AND Gate outputs
+        const and1Out = (state.S && state.CLK) ? 1 : 0;
+        const and2Out = (state.R && state.CLK) ? 1 : 0;
+        setWireState(document.getElementById("wireGRS_AND1_Out"), and1Out);
+        setWireState(document.getElementById("wireGRS_AND2_Out"), and2Out);
+        
+        setDotState(document.getElementById("dotGRS_Q"), state.Q);
+        setDotState(document.getElementById("dotGRS_P"), state.P);
+        
+        document.getElementById("txtGRS_S").textContent = `S=${state.S}`;
+        document.getElementById("txtGRS_R").textContent = `R=${state.R}`;
+        document.getElementById("txtGRS_CLK").textContent = `C=${state.CLK}`;
+        document.getElementById("txtGRS_S").parentNode.querySelector("rect").setAttribute("fill", state.S ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtGRS_R").parentNode.querySelector("rect").setAttribute("fill", state.R ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtGRS_CLK").parentNode.querySelector("rect").setAttribute("fill", state.CLK ? "var(--wire-high-glow)" : "#cbd5e1");
+        
+        setGateHighlight(document.getElementById("gateGRS_AND1"), state.S === 1 && state.CLK === 1);
+        setGateHighlight(document.getElementById("gateGRS_AND2"), state.R === 1 && state.CLK === 1);
+        setGateHighlight(document.getElementById("gateGRS_Top"), and1Out === 1);
+        setGateHighlight(document.getElementById("gateGRS_Bottom"), and2Out === 1);
+      } 
+      else if (state.ffType === "DLatch") {
+        setWireState(document.getElementById("wireD_D"), state.D);
+        setWireState(document.getElementById("wireD_CLK"), state.CLK);
+        setWireState(document.getElementById("wireD_Q"), state.Q);
+        setWireState(document.getElementById("wireD_P"), state.P);
+        setWireState(document.getElementById("wireD_FBQ"), state.Q);
+        setWireState(document.getElementById("wireD_FBP"), state.P);
+        
+        const notOut = state.D === 1 ? 0 : 1;
+        setWireState(document.getElementById("wireD_NOT_Out"), notOut);
+        
+        const and1Out = (state.D && state.CLK) ? 1 : 0;
+        const and2Out = (notOut && state.CLK) ? 1 : 0;
+        setWireState(document.getElementById("wireD_AND1_Out"), and1Out);
+        setWireState(document.getElementById("wireD_AND2_Out"), and2Out);
+        
+        setDotState(document.getElementById("dotD_Q"), state.Q);
+        setDotState(document.getElementById("dotD_P"), state.P);
+        
+        document.getElementById("txtD_D").textContent = `D=${state.D}`;
+        document.getElementById("txtD_CLK").textContent = `C=${state.CLK}`;
+        document.getElementById("txtD_D").parentNode.querySelector("rect").setAttribute("fill", state.D ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtD_CLK").parentNode.querySelector("rect").setAttribute("fill", state.CLK ? "var(--wire-high-glow)" : "#cbd5e1");
+        
+        setGateHighlight(document.getElementById("gateD_NOT"), state.D === 0);
+        setGateHighlight(document.getElementById("gateD_AND1"), state.D === 1 && state.CLK === 1);
+        setGateHighlight(document.getElementById("gateD_AND2"), notOut === 1 && state.CLK === 1);
+      } 
+      else if (state.ffType === "JK") {
+        setWireState(document.getElementById("wireJK_J"), state.J);
+        setWireState(document.getElementById("wireJK_K"), state.K);
+        setWireState(document.getElementById("wireJK_CLK"), state.CLK);
+        setWireState(document.getElementById("wireJK_Q"), state.Q);
+        setWireState(document.getElementById("wireJK_P"), state.P);
+        setWireState(document.getElementById("wireJK_FBQ_Int"), state.Q);
+        setWireState(document.getElementById("wireJK_FBP_Int"), state.P);
+        setWireState(document.getElementById("wireJK_FBQ"), state.Q);
+        setWireState(document.getElementById("wireJK_FBP"), state.P);
+        
+        const and1Out = (state.J && state.CLK && state.P) ? 1 : 0;
+        const and2Out = (state.K && state.CLK && state.Q) ? 1 : 0;
+        setWireState(document.getElementById("wireJK_AND1_Out"), and1Out);
+        setWireState(document.getElementById("wireJK_AND2_Out"), and2Out);
+        
+        setDotState(document.getElementById("dotJK_Q"), state.Q);
+        setDotState(document.getElementById("dotJK_P"), state.P);
+        
+        document.getElementById("txtJK_J").textContent = `J=${state.J}`;
+        document.getElementById("txtJK_K").textContent = `K=${state.K}`;
+        document.getElementById("txtJK_CLK").textContent = `C=${state.CLK}`;
+        document.getElementById("txtJK_J").parentNode.querySelector("rect").setAttribute("fill", state.J ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtJK_K").parentNode.querySelector("rect").setAttribute("fill", state.K ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtJK_CLK").parentNode.querySelector("rect").setAttribute("fill", state.CLK ? "var(--wire-high-glow)" : "#cbd5e1");
+        
+        setGateHighlight(document.getElementById("gateJK_AND1"), and1Out === 1);
+        setGateHighlight(document.getElementById("gateJK_AND2"), and2Out === 1);
+      } 
+      else if (state.ffType === "T") {
+        setWireState(document.getElementById("wireT_T"), state.T);
+        setWireState(document.getElementById("wireT_CLK"), state.CLK);
+        setWireState(document.getElementById("wireT_Q"), state.Q);
+        setWireState(document.getElementById("wireT_P"), state.P);
+        setWireState(document.getElementById("wireT_FBQ_Int"), state.Q);
+        setWireState(document.getElementById("wireT_FBP_Int"), state.P);
+        setWireState(document.getElementById("wireT_FBQ"), state.Q);
+        setWireState(document.getElementById("wireT_FBP"), state.P);
+        
+        const and1Out = (state.T && state.CLK && state.P) ? 1 : 0;
+        const and2Out = (state.T && state.CLK && state.Q) ? 1 : 0;
+        setWireState(document.getElementById("wireT_AND1_Out"), and1Out);
+        setWireState(document.getElementById("wireT_AND2_Out"), and2Out);
+        
+        setDotState(document.getElementById("dotT_Q"), state.Q);
+        setDotState(document.getElementById("dotT_P"), state.P);
+        
+        document.getElementById("txtT_T").textContent = `T=${state.T}`;
+        document.getElementById("txtT_CLK").textContent = `C=${state.CLK}`;
+        document.getElementById("txtT_T").parentNode.querySelector("rect").setAttribute("fill", state.T ? "var(--wire-high-glow)" : "#cbd5e1");
+        document.getElementById("txtT_CLK").parentNode.querySelector("rect").setAttribute("fill", state.CLK ? "var(--wire-high-glow)" : "#cbd5e1");
+        
+        setGateHighlight(document.getElementById("gateT_AND1"), and1Out === 1);
+        setGateHighlight(document.getElementById("gateT_AND2"), and2Out === 1);
+      }
+
+      // LEDs in SVG
+      if (state.isUnstable) {
+        els.ledVisualQ.setAttribute("fill", "var(--wire-invalid)");
+        els.ledVisualP.setAttribute("fill", "var(--wire-invalid)");
+      } else {
+        els.ledVisualQ.setAttribute("fill", state.Q ? "var(--led-q-on)" : "#cbd5e1");
+        els.ledVisualP.setAttribute("fill", state.P ? "var(--led-p-on)" : "#cbd5e1");
+      }
+    }
+
+    function updateInfoTexts() {
+      els.infoBox.className = "info-box";
+      
+      if (state.isUnstable) {
+        els.infoBox.classList.add("error");
+        els.stateTag.textContent = "Instabil";
+        els.infoTitle.textContent = "Instabiler Zustand (Metastabilität!)";
+        els.infoText.innerHTML = "Das Flipflop wurde aus einem unzulässigen Zustand entlassen und gerät physikalisch in Oszillation. Der Zufall entscheidet den stabilen Endzustand.";
+        return;
+      }
+
+      if (state.ffType === "RS") {
+        if (state.isNOR) {
+          if (state.S === 1 && state.R === 1) {
+            els.infoBox.classList.add("error"); els.stateTag.textContent = "Verboten";
+            els.infoTitle.textContent = "Verbotener Zustand (S=1, R=1)";
+            els.infoText.textContent = "Beide Ausgänge Q und P werden auf 0 gezogen. Das widerspricht P = Q̅.";
+          } else if (state.S === 1) {
+            els.stateTag.textContent = "Setzen"; els.infoTitle.textContent = "Setzen aktiv (S=1, R=0)";
+            els.infoText.textContent = "Ausgang Q wechselt auf 1, P (unten) auf 0.";
+          } else if (state.R === 1) {
+            els.stateTag.textContent = "Rücksetzen"; els.infoTitle.textContent = "Rücksetzen aktiv (S=0, R=1)";
+            els.infoText.textContent = "Ausgang Q wechselt auf 0, P (unten) auf 1.";
+          } else {
+            els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern (S=0, R=0)";
+            els.infoText.textContent = `Kein Eingang aktiv. Gespeichert ist: ${state.Q}.`;
+          }
+        } else {
+          // NAND
+          if (state.S === 0 && state.R === 0) {
+            els.infoBox.classList.add("error"); els.stateTag.textContent = "Verboten";
+            els.infoTitle.textContent = "Verbotener Zustand (S=0, R=0)";
+            els.infoText.textContent = "Beide Ausgänge werden auf 1 gezwungen (aktiv-low).";
+          } else if (state.S === 0) {
+            els.stateTag.textContent = "Setzen"; els.infoTitle.textContent = "Setzen aktiv (S=0, R=1)";
+            els.infoText.textContent = "Ausgang Q wechselt auf 1.";
+          } else if (state.R === 0) {
+            els.stateTag.textContent = "Rücksetzen"; els.infoTitle.textContent = "Rücksetzen aktiv (S=1, R=0)";
+            els.infoText.textContent = "Ausgang Q wechselt auf 0.";
+          } else {
+            els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern (S=1, R=1)";
+            els.infoText.textContent = `Kein Eingang aktiv. Gespeichert ist: ${state.Q}.`;
+          }
+        }
+      } 
+      else if (state.ffType === "GatedRS") {
+        if (state.CLK === 0) {
+          els.stateTag.textContent = "Sperren"; els.infoTitle.textContent = "Gesperrt (C=0)";
+          els.infoText.textContent = "CLK ist 0. Keine Eingangsänderung wird übernommen. Der Zustand wird sicher gehalten.";
+        } else {
+          if (state.S === 1 && state.R === 1) {
+            els.infoBox.classList.add("error"); els.stateTag.textContent = "Verboten";
+            els.infoTitle.textContent = "Verboten (CLK=1, S=1, R=1)";
+            els.infoText.textContent = "Verbotener Zustand an den Ausgängen des NOR-Gatters.";
+          } else if (state.S === 1) {
+            els.stateTag.textContent = "Setzen"; els.infoTitle.textContent = "Setzen freigegeben (CLK=1, S=1, R=0)";
+            els.infoText.textContent = "Ausgang Q wird auf 1 gesetzt.";
+          } else if (state.R === 1) {
+            els.stateTag.textContent = "Rücksetzen"; els.infoTitle.textContent = "Rücksetzen freigegeben (CLK=1, S=0, R=1)";
+            els.infoText.textContent = "Ausgang Q wird auf 0 zurückgesetzt.";
+          } else {
+            els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern freigegeben (CLK=1, S=0, R=0)";
+            els.infoText.textContent = "Takt offen, aber keine Signale aktiv.";
+          }
+        }
+      } 
+      else if (state.ffType === "DLatch") {
+        if (state.CLK === 0) {
+          els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern (C=0)";
+          els.infoText.textContent = `CLK ist 0. Der Wert D=${state.D} wird ignoriert. Gespeichert ist Q=${state.Q}.`;
+        } else {
+          els.stateTag.textContent = "Durchreichen"; els.infoTitle.textContent = "Transparent (C=1)";
+          els.infoText.textContent = `Ausgang Q folgt dem Eingang D: Q=${state.D}.`;
+        }
+      } 
+      else if (state.ffType === "JK") {
+        if (state.J === 1 && state.K === 1) {
+          els.stateTag.textContent = "Toggle-Bereit"; els.infoTitle.textContent = "Togglen vorbereitet (J=1, K=1)";
+          els.infoText.textContent = "Bei der nächsten steigenden Taktflanke (📈 C: 0->1) wechselt der Zustand.";
+        } else if (state.J === 1) {
+          els.stateTag.textContent = "Set-Bereit"; els.infoTitle.textContent = "Setzen vorbereitet (J=1, K=0)";
+          els.infoText.textContent = "Wartet auf steigende Taktflanke, um Q auf 1 zu setzen.";
+        } else if (state.K === 1) {
+          els.stateTag.textContent = "Reset-Bereit"; els.infoTitle.textContent = "Reset vorbereitet (J=0, K=1)";
+          els.infoText.textContent = "Wartet auf steigende Taktflanke, um Q auf 0 zu setzen.";
+        } else {
+          els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern (J=0, K=0)";
+          els.infoText.textContent = "Taktflanken bewirken keine Änderung.";
+        }
+      } 
+      else if (state.ffType === "T") {
+        if (state.T === 1) {
+          els.stateTag.textContent = "Toggle-Bereit"; els.infoTitle.textContent = "Togglen aktiv (T=1)";
+          els.infoText.textContent = "Das Flipflop wechselt bei jeder steigenden Taktflanke seinen Zustand.";
+        } else {
+          els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern (T=0)";
+          els.infoText.textContent = "Taktflanken bewirken keine Änderung.";
+        }
+      }
+    }
+
+    // Logic analyzer waveform SVG generation
+    function drawWaveform() {
+      if (state.history.length === 0) return;
+      
+      const width = 520;
+      const stepWidth = width / 16;
+      const startX = 60;
+      
+      // Determine signals to display based on FF type
+      let signals = [];
+      if (state.ffType === "RS") signals = ["S", "R", "Q", "P"];
+      else if (state.ffType === "GatedRS") signals = ["CLK", "S", "R", "Q", "P"];
+      else if (state.ffType === "DLatch") signals = ["CLK", "D", "Q", "P"];
+      else if (state.ffType === "JK") signals = ["CLK", "J", "K", "Q", "P"];
+      else if (state.ffType === "T") signals = ["CLK", "T", "Q", "P"];
+      
+      const sigHeight = 150 / signals.length;
+      
+      // Rebuild Waveform labels and grid lines dynamically
+      els.waveYLabels.innerHTML = "";
+      els.waveGridLines.innerHTML = "";
+      els.wavePaths.innerHTML = "";
+      els.waveStepMarkers.innerHTML = "";
+      
+      // Draw grid lines and labels
+      signals.forEach((sig, idx) => {
+        const yCenter = 15 + idx * sigHeight;
+        const yHigh = yCenter - 7;
+        const yLow = yCenter + 7;
+        
+        // Y Axis text
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", "15");
+        txt.setAttribute("y", (yCenter + 4).toString());
+        txt.setAttribute("fill", "#94a3b8");
+        txt.setAttribute("font-size", "11");
+        txt.setAttribute("font-weight", "bold");
+        txt.textContent = sig === "CLK" ? "C" : sig;
+        els.waveYLabels.appendChild(txt);
+        
+        // Dotted grid line
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", "60");
+        line.setAttribute("y1", yCenter.toString());
+        line.setAttribute("x2", "580");
+        line.setAttribute("y2", yCenter.toString());
+        line.setAttribute("stroke", "#2c3e50");
+        line.setAttribute("stroke-width", "0.5");
+        line.setAttribute("stroke-dasharray", "2,2");
+        els.waveGridLines.appendChild(line);
+      });
+      
+      // Draw paths
+      const visibleHistory = state.history.slice(-16);
+      const pathsData = {};
+      signals.forEach(sig => pathsData[sig] = "");
+      
+      visibleHistory.forEach((ev, idx) => {
+        const x = startX + idx * stepWidth;
+        const nextX = startX + (idx + 1) * stepWidth;
+        
+        // Vertical step marker
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x.toString());
+        line.setAttribute("y1", "5");
+        line.setAttribute("x2", x.toString());
+        line.setAttribute("y2", "155");
+        line.setAttribute("stroke", "#2c3e50");
+        line.setAttribute("stroke-width", "0.5");
+        els.waveStepMarkers.appendChild(line);
+        
+        signals.forEach((sig, sIdx) => {
+          const yCenter = 15 + sIdx * sigHeight;
+          const yHigh = yCenter - 7;
+          const yLow = yCenter + 7;
+          
+          let val = ev[sig];
+          if (sig === "Q" && ev.isUnstable) val = (idx % 2 === 0 ? 1 : 0);
+          if (sig === "P" && ev.isUnstable) val = (idx % 2 === 0 ? 0 : 1);
+          
+          const y = val === 1 ? yHigh : yLow;
+          
+          if (idx === 0) {
+            pathsData[sig] = `M ${x},${y} L ${nextX},${y}`;
+          } else {
+            let prevVal = visibleHistory[idx - 1][sig];
+            if (sig === "Q" && visibleHistory[idx - 1].isUnstable) prevVal = ((idx - 1) % 2 === 0 ? 1 : 0);
+            if (sig === "P" && visibleHistory[idx - 1].isUnstable) prevVal = ((idx - 1) % 2 === 0 ? 0 : 1);
+            
+            const prevY = prevVal === 1 ? yHigh : yLow;
+            if (prevY !== y) {
+              pathsData[sig] += ` L ${x},${y} L ${nextX},${y}`;
+            } else {
+              pathsData[sig] += ` L ${nextX},${y}`;
+            }
+          }
+        });
+      });
+      
+      // Render waveform paths
+      signals.forEach(sig => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", pathsData[sig]);
+        path.setAttribute("fill", "none");
+        
+        // Path colors
+        if (sig === "Q") path.setAttribute("stroke", "#22c55e");
+        else if (sig === "P") path.setAttribute("stroke", "#ef4444");
+        else if (sig === "CLK") path.setAttribute("stroke", "#e2e8f0");
+        else path.setAttribute("stroke", "#2b8fd9");
+        
+        path.setAttribute("stroke-width", "2");
+        els.wavePaths.appendChild(path);
+      });
+    }
+
+    // Attach Event Listeners
+    els.btnModeNOR.addEventListener("click", () => setGateMode(true));
+    els.btnModeNAND.addEventListener("click", () => setGateMode(false));
+    els.btnModeSim.addEventListener("click", () => setAppMode(false));
+    els.btnModeQuiz.addEventListener("click", () => setAppMode(true));
+    els.btnReset.addEventListener("click", resetSimulation);
+    
+    // Select Flipflop Types
+    els.ffTypeSelector.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => setFlipflopType(btn.dataset.ff));
+    });
+    
+    // Switch click handlers
+    els.switchS.addEventListener("click", () => toggleInput('S'));
+    els.switchR.addEventListener("click", () => toggleInput('R'));
+    els.switchD.addEventListener("click", () => toggleInput('D'));
+    els.switchJ.addEventListener("click", () => toggleInput('J'));
+    els.switchK.addEventListener("click", () => toggleInput('K'));
+    els.switchT.addEventListener("click", () => toggleInput('T'));
+    els.switchCLK.addEventListener("click", () => toggleInput('CLK'));
+    
+    els.btnPulseCLK.addEventListener("click", triggerClockPulse);
+    els.btnAutoClock.addEventListener("click", toggleAutoClock);
+    
+    // Interactive SVG triggers
+    document.getElementById("trigRS_S").addEventListener("click", () => toggleInput('S'));
+    document.getElementById("trigRS_R").addEventListener("click", () => toggleInput('R'));
+    document.getElementById("trigGRS_S").addEventListener("click", () => toggleInput('S'));
+    document.getElementById("trigGRS_R").addEventListener("click", () => toggleInput('R'));
+    document.getElementById("trigGRS_CLK").addEventListener("click", () => toggleInput('CLK'));
+    document.getElementById("trigD_D").addEventListener("click", () => toggleInput('D'));
+    document.getElementById("trigD_CLK").addEventListener("click", () => toggleInput('CLK'));
+    document.getElementById("trigJK_J").addEventListener("click", () => toggleInput('J'));
+    document.getElementById("trigJK_K").addEventListener("click", () => toggleInput('K'));
+    document.getElementById("trigJK_CLK").addEventListener("click", () => toggleInput('CLK'));
+    document.getElementById("trigT_T").addEventListener("click", () => toggleInput('T'));
+    document.getElementById("trigT_CLK").addEventListener("click", () => toggleInput('CLK'));
+
+    els.btnClearWave.addEventListener("click", () => {
+      state.history = [];
+      recordStateHistory();
+    });
+
+    els.btnCheckQuiz.addEventListener("click", checkQuizAnswers);
+
+    // Initial setup
+    setGateMode(true);
+    setFlipflopType("RS");
+    setAppMode(false);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1648 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>for-Schleifen-Puzzle</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --ink: #1d2330;
+    --muted: #5b6475;
+    --line: #c3cad6;
+    --accent: #1f6fd1;
+    --accent-soft: #e6f0fc;
+    --ok: #1e8e44;
+    --ok-soft: #e5f5ea;
+    --err: #c62828;
+    --err-soft: #fdecea;
+    --c-for: #1fae35;
+    --c-int: #f07800;
+    --c-fn: #1a7fe8;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 5px 12px;
+  }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #185fb5; }
+  button.toggle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Kopfzeile ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap;
+    padding: 10px 20px;
+    background: linear-gradient(180deg, #4a90dd, #1259a8);
+    color: #fff;
+  }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; }
+  .levels button {
+    background: transparent; color: #fff; border: none; border-radius: 6px; padding: 5px 12px;
+    display: flex; align-items: baseline; gap: 7px;
+  }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #12457f; font-weight: 600; }
+  .levels .lvl-prog { font-size: 12px; opacity: .8; font-weight: 400; }
+  .levels button.complete .lvl-prog::before { content: "✓ "; }
+  .levels button[hidden] { display: none; }
+  .levels-label { font-weight: 600; margin-right: -8px; }
+
+  /* große Stufenauswahl */
+  .level-strip {
+    grid-column: 1 / -1;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px 14px;
+  }
+  .level-strip[hidden] { display: none; }
+  .ls-head { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+  .ls-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+  .ls-card {
+    position: relative; text-align: left;
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 10px 12px 10px; border: 2px solid var(--line); border-radius: 10px; background: #f8fafc;
+  }
+  .ls-card:hover { border-color: var(--accent); background: #fff; }
+  .ls-card.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .ls-top { display: flex; align-items: baseline; gap: 8px; }
+  .ls-stars { color: #e0a800; font-size: 17px; letter-spacing: 1px; }
+  .ls-title { font-size: 18px; font-weight: 700; }
+  .ls-blurb { font-size: 13px; color: var(--muted); line-height: 1.35; }
+  .ls-bar { height: 6px; background: #e3e7ee; border-radius: 3px; overflow: hidden; margin-top: auto; }
+  .ls-bar span { display: block; height: 100%; background: var(--accent); }
+  .ls-card.complete .ls-bar span { background: var(--ok); }
+  .ls-prog { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .ls-card.complete .ls-prog { color: var(--ok); }
+  .ls-here {
+    position: absolute; top: -10px; right: 10px;
+    background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 600;
+    padding: 1px 8px; border-radius: 999px;
+  }
+
+  /* ---------- Layout ---------- */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 410px;
+    gap: 18px;
+    padding: 18px 20px 30px;
+    align-items: start;
+  }
+  .pool {
+    position: sticky; top: 12px;
+    max-height: calc(100vh - 24px); overflow: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px 16px;
+    transition: background .15s, border-color .15s;
+  }
+  .pool.over { background: #fff7e0; border-color: #e0a800; }
+  .pool h2 { margin: 0 0 2px; font-size: 16px; }
+  .pool .sub { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+  .pool h3 { margin: 12px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .stacks { display: flex; flex-wrap: wrap; gap: 12px 12px; }
+
+  .tasks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 600px), 1fr)); gap: 18px; }
+
+  .intro {
+    grid-column: 1 / -1;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .intro h2 { margin: 0 0 4px; font-size: 17px; }
+  .intro p { margin: 4px 0; }
+  .intro ul { margin: 6px 0 2px; padding-left: 20px; }
+  .intro li { margin: 2px 0; }
+  .intro .row { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+  .intro code { font-family: var(--mono); background: #f2f4f8; padding: 0 4px; border-radius: 3px; }
+  .intro-min {
+    grid-column: 1 / -1; display: none;
+    color: var(--muted); font-size: 14px;
+  }
+  kbd {
+    font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 4px; padding: 0 4px; background: #f7f8fa;
+  }
+
+  /* ---------- Puzzleteile ---------- */
+  .tile {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 30px;
+    font-family: var(--mono);
+    font-size: 17px;
+    line-height: 1.2;
+    padding: 6px 9px;
+    background: #fff;
+    color: #111;
+    border: 1.5px solid #2b2b2b;
+    border-radius: 2px;
+    white-space: nowrap;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+  .tile:hover { border-color: var(--accent); }
+  .tile.k-for { color: var(--c-for); }
+  .tile.k-int { color: var(--c-int); }
+  .tile.k-fn  { color: var(--c-fn); }
+  .tile.bold { font-weight: 700; }
+  .tile .gap { color: #8a94a6; padding: 0 2px; }
+  .tile .grip { color: #a3abb9; font-size: 13px; margin-right: 4px; margin-left: -3px; }
+  .tile input.gap-in {
+    font: inherit; color: #111;
+    border: none; border-bottom: 2px dotted #7d8ba3; background: #f1f6ff;
+    padding: 0 3px; margin: 0 1px; min-width: 2.2ch;
+    outline: none; cursor: text;
+  }
+  .tile input.gap-in:focus { border-bottom-color: var(--accent); background: #e2edff; }
+
+  .stacks .tile.stack { box-shadow: 3px 3px 0 -1px #fff, 3px 3px 0 0.5px #2b2b2b; }
+  .stacks .tile.empty {
+    opacity: .28; cursor: default; box-shadow: none; border-style: dashed;
+  }
+  .stacks .tile.empty:hover { border-color: #2b2b2b; }
+  .count {
+    position: absolute; top: -9px; right: -9px;
+    min-width: 20px; height: 20px; padding: 0 5px;
+    border-radius: 999px; background: #33405a; color: #fff;
+    font: 600 11px/20px var(--sans); text-align: center;
+  }
+  .tile.empty .count { background: #9aa3b2; }
+
+  .tile.dragging { display: none; }
+  .tile.bad { background: var(--err-soft); border-color: var(--err); box-shadow: 0 0 0 2px var(--err); }
+  .ghost {
+    position: fixed; z-index: 1000; pointer-events: none; margin: 0;
+    box-shadow: 0 8px 22px rgba(0,0,0,.25) !important;
+    transform: rotate(-2deg);
+    cursor: grabbing;
+  }
+  body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
+
+  /* ---------- Aufgabenkarten ---------- */
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card-h { display: flex; align-items: center; gap: 10px; }
+  .card-h h2 { margin: 0; font-size: 17px; }
+  .status {
+    font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
+    background: #eef0f4; color: var(--muted);
+  }
+  .card.solved .status { background: var(--ok-soft); color: var(--ok); }
+
+  .windows { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .wlabel { font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 3px; text-transform: uppercase; letter-spacing: .05em; }
+  .pwin-wrap { max-width: 100%; }
+  .pwin {
+    display: inline-block; max-width: 100%;
+    border: 1.5px solid #222; background: #fff;
+  }
+  .pbar {
+    display: flex; align-items: center; gap: 7px;
+    width: 0; min-width: 100%;
+    height: 26px; padding: 0 8px;
+    font-size: 13px; color: #222; background: #fff;
+    white-space: nowrap; overflow: hidden;
+  }
+  .pbar .play {
+    width: 15px; height: 15px; border-radius: 50%; background: #111; position: relative; flex: none;
+  }
+  .pbar .play::after {
+    content: ""; position: absolute; left: 5.5px; top: 4px;
+    border-left: 6px solid #fff; border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
+  }
+  .wlabel .coords {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 8px;
+  }
+  .pbar .wctl { margin-left: auto; color: #777; letter-spacing: 10px; font-size: 12px; padding-left: 14px; }
+  .pwin canvas { display: block; max-width: 100%; height: auto; cursor: crosshair; }
+  .result-wrap.hidden { display: none; }
+  .result-wrap.stale .pwin { opacity: .45; }
+  .result-wrap.stale .wlabel::after { content: " (veraltet – neu ausführen)"; text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+  .editor { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 6px 8px; background: #f3f5f8; border-bottom: 1px solid var(--line);
+  }
+  .toolbar .clear-btn { margin-left: auto; }
+  .toolbar .tab {
+    font-family: var(--mono); font-size: 13px; background: #fff; border: 1px solid var(--line);
+    border-bottom: none; border-radius: 5px 5px 0 0; padding: 3px 10px; margin-bottom: -7px;
+  }
+  .run-btn { display: inline-flex; align-items: center; gap: 6px; }
+  .run-btn .play { width: 15px; height: 15px; border-radius: 50%; background: #fff; position: relative; }
+  .run-btn .play::after {
+    content: ""; position: absolute; left: 5.5px; top: 4px;
+    border-left: 6px solid var(--accent); border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent;
+  }
+  .solve-btn { display: none; }
+  body.teacher .solve-btn { display: inline-block; }
+
+  .code { background: #fff; padding: 8px 10px 10px; }
+  .fixed-line {
+    font-family: var(--mono); font-size: 16px; color: #7b8494;
+    padding: 2px 2px 8px;
+  }
+  .fixed-line .k-fn { color: var(--c-fn); opacity: .75; }
+  .zone {
+    position: relative;
+    min-height: 118px;
+    display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center;
+    gap: 7px 6px;
+    padding: 10px;
+    border: 2px dashed var(--line);
+    border-radius: 6px;
+    background: #fbfcfe;
+    transition: border-color .15s, background .15s;
+  }
+  .zone.active { border-color: #8fb4e6; }
+  .zone.over { border-color: var(--accent); background: var(--accent-soft); }
+  .zone .hint { color: #98a1b0; font-size: 14px; pointer-events: none; }
+  .zone .brk { flex-basis: 100%; height: 0; }
+  .zone .ind { flex: none; height: 1px; }
+  .caret {
+    position: absolute; width: 4px; border-radius: 2px; background: var(--accent);
+    pointer-events: none; display: none;
+  }
+
+  .console {
+    background: #1e1e1e; color: #d8d8d8;
+    font-family: var(--mono); font-size: 13.5px;
+    padding: 8px 12px; min-height: 40px;
+    white-space: pre-wrap;
+  }
+  .console.err { color: #ff8a80; }
+  .console.ok { color: #8be59a; }
+  .console.warn { color: #ffd479; }
+
+  /* ---------- Abschluss ---------- */
+  .done-banner {
+    display: none;
+    grid-column: 1 / -1;
+    align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--ok); color: #fff; border-radius: 10px;
+    padding: 12px 18px; font-size: 18px; font-weight: 600;
+  }
+  .done-banner.show { display: flex; }
+  .done-banner button { background: #fff; color: var(--ok); border: none; font-weight: 600; }
+
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    background: #33405a; color: #fff; padding: 9px 16px; border-radius: 8px;
+    font-size: 14px; z-index: 1100; opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 1000px) {
+    .layout { grid-template-columns: 1fr; padding: 12px 12px 24px; }
+    .pool { order: -1; top: 0; max-height: 42vh; z-index: 5; }
+    .tile { font-size: 15px; padding: 5px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>ALGORITHMEN <small>Puzzle zur for-Schleife</small></h1>
+  <span class="levels-label">Stufe:</span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <span class="spacer"></span>
+  <button id="btn-help" type="button">So geht's</button>
+  <button id="btn-solve-all" class="solve-btn" type="button">Alle Lösungen</button>
+  <button id="btn-reset" type="button">Stufe neu anfangen</button>
+</header>
+
+<main class="layout">
+  <section class="tasks" id="tasks">
+    <nav class="level-strip" id="level-strip" aria-label="Schwierigkeitsstufe wählen"></nav>
+    <div class="intro" id="intro">
+      <div class="row">
+        <h2 id="intro-title"></h2>
+        <button id="btn-intro-close" type="button" title="Hinweise ausblenden">Ausblenden</button>
+      </div>
+      <div id="intro-text"></div>
+      <ul>
+        <li><b>Ziehen</b> mit der Maus: Teil aus der Kiste in ein Programmfeld ziehen, dort an die richtige Stelle schieben.</li>
+        <li><b>Klicken</b> auf ein Teil in der Kiste hängt es hinten an das zuletzt angeklickte Programmfeld an.</li>
+        <li><b>Zurücklegen</b>: Teil in die Kiste zurückziehen oder doppelt anklicken.</li>
+        <li><b>▶ Ausführen</b> (oder <kbd>Strg</kbd>+<kbd>Enter</kbd>) startet dein Programm. Du siehst, was es zeichnet – oder eine Fehlermeldung.</li>
+        <li>Fährst du mit der Maus über ein Bild, siehst du oben die Koordinaten x und y.</li>
+      </ul>
+    </div>
+    <div class="done-banner" id="done-banner">
+      <span id="done-text"></span>
+      <button id="btn-next" type="button"></button>
+    </div>
+  </section>
+
+  <aside class="pool" id="pool" aria-label="Teilekiste">
+    <h2>Teilekiste</h2>
+    <p class="sub" id="pool-sub"></p>
+    <div id="pool-groups"></div>
+  </aside>
+</main>
+
+<footer>
+  Stufe „Einfach“ nach der Papiervorlage „Algorithmen – Zählschleife (Puzzle)“ von Eisenmann (September 2018), ZPG IMP,
+  lizenziert unter CC BY-NC-SA. Die Stufen „Mittel“ und „Profi“ sind Erweiterungen. Diese interaktive Fassung steht unter derselben Lizenz.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // =====================================================================
+  //  Puzzleteile
+  //  Ein Teil wird durch seinen Text identifiziert. "#" markiert eine Lücke,
+  //  in die selbst etwas eingetragen wird (nur Stufe Profi).
+  // =====================================================================
+  const SYMBOLS = {
+    'for': ['FOR', 'k-for'], 'int': ['INT', 'k-int'],
+    '(': ['LPAR', 'bold'], ')': ['RPAR', 'bold'], '{': ['LBRACE', 'bold'], '}': ['RBRACE', 'bold'],
+    ';': ['SEMI', 'bold'], ',': ['COMMA', 'bold'],
+  };
+  const COMMANDS = { ellipse: [4], rect: [4], fill: [1, 3] };
+
+  const PIECES = {};
+  function pieceInfo(k) {
+    if (PIECES[k]) return PIECES[k];
+    let kind, cls = '';
+    if (SYMBOLS[k]) [kind, cls] = SYMBOLS[k];
+    else if (COMMANDS[k]) { kind = 'CMD'; cls = 'k-fn'; }
+    else if (/^([ij])(\+\+|--|=\1[+-])/.test(k)) kind = 'INC';
+    else if (/^[ij](<=|>=|<|>)/.test(k)) kind = 'COND';
+    else if (/^[ij]=/.test(k)) kind = 'INIT';
+    else if (/^\(.*\)$/.test(k)) kind = 'ARGS';
+    else kind = 'EXPR';
+    return (PIECES[k] = { key: k, kind, cls });
+  }
+  const fillText = e => e.k.replace('#', e.v && e.v.trim() ? e.v.trim() : '□');
+
+  // ---------- Hilfen zum Beschreiben der Lösungen ----------
+  const G = (k, v) => ({ k, v });
+  const norm = list => list.map(x => (typeof x === 'string' ? { k: x } : x));
+
+  // Einfach: Parameter als ein Streifen
+  const easy = (cond, cmd, args) =>
+    ['for', '(', 'int', 'i=0', ';', cond, ';', 'i++', ')', '{', cmd, args, ';', '}'];
+
+  // Mittel: Parameter einzeln
+  const mid = (cond, cmd, vals) => {
+    const call = [cmd, '('];
+    vals.forEach((v, n) => { if (n) call.push(','); call.push(v); });
+    return ['for', '(', 'int', 'i=0', ';', cond, ';', 'i++', ')', '{', ...call, ')', ';', '}'];
+  };
+
+  // Profi: Lückenteile
+  const pfor = (init, cond, inc, body) => ['for', '(', 'int', init, ';', cond, ';', inc, ')', '{', ...body, '}'];
+  const pcall = (cmd, ...vals) => {
+    const r = [cmd, '('];
+    vals.forEach((v, n) => { if (n) r.push(','); r.push(G('#', v)); });
+    r.push(')', ';');
+    return r;
+  };
+
+  // =====================================================================
+  //  Stufen
+  // =====================================================================
+  const EASY_ARGS = [
+    '(50+i*50,50,50,50)',
+    '(10+i*60,10,50,40)',
+    '(50+i*50,50+i*25,50,50)',
+    '(100,100,110-i*10,110-i*10)',
+    '(100+i*10,100+i*10,200-i*10,200-i*10)',
+    '(10+i*60,10+i*40,50,40)',
+    '(10,10,100-i*10,100-i*10)',
+  ];
+
+  const LEVELS = {
+    einfach: {
+      title: 'Einfach',
+      verbose: true, mark: true, hints: true, showCounts: true, unlimited: false, grid: false,
+      tasks: [
+        { name: 'nummer1', w: 550, h: 100, sol: easy('i<10', 'ellipse', EASY_ARGS[0]) },
+        { name: 'nummer2', w: 550, h: 320, sol: easy('i<10', 'ellipse', EASY_ARGS[2]) },
+        { name: 'nummer3', w: 200, h: 200, sol: easy('i<10', 'ellipse', EASY_ARGS[3]) },
+        { name: 'nummer4', w: 340, h: 320, sol: easy('i<20', 'ellipse', EASY_ARGS[4]) },
+        { name: 'nummer5', w: 320, h: 70,  sol: easy('i<5',  'rect',    EASY_ARGS[1]) },
+        { name: 'nummer6', w: 330, h: 230, sol: easy('i<5',  'rect',    EASY_ARGS[5]) },
+        { name: 'nummer7', w: 130, h: 130, sol: easy('i<10', 'rect',    EASY_ARGS[6]) },
+      ],
+      extra: [],
+      order: ['for', 'int', '(', ')', '{', '}', ';', 'i=0', 'i<5', 'i<10', 'i<20', 'i++', 'ellipse', 'rect', ...EASY_ARGS],
+      intro: '<p>Die sieben Bilder wurden von kurzen Processing-Programmen mit einer <b>for-Schleife</b> gezeichnet. ' +
+        'Setze aus den Puzzleteilen in der Teilekiste für jedes Bild das passende Programm zusammen. ' +
+        'Jedes Teil gibt es nur so oft, wie es in der Kiste angezeigt wird – am Ende sind alle Teile verbaut.</p>',
+      poolSub: 'Die Zahl zeigt, wie viele Teile noch übrig sind.',
+    },
+
+    mittel: {
+      title: 'Mittel',
+      verbose: false, mark: true, hints: false, showCounts: false, unlimited: false, grid: true,
+      tasks: [
+        { name: 'mittel1', w: 100, h: 260, sol: mid('i<6', 'ellipse', ['50', '30+i*40', '40', '40']) },
+        { name: 'mittel2', w: 280, h: 240, sol: mid('i<6', 'ellipse', ['40+i*40', '200-i*30', '40', '40']) },
+        { name: 'mittel3', w: 420, h: 120, sol: mid('i<7', 'ellipse', ['30+i*60', '60', '10+i*8', '10+i*8']) },
+        { name: 'mittel4', w: 310, h: 190, sol: mid('i<7', 'rect',    ['20+i*40', '150-i*20', '30', '20+i*20']) },
+        { name: 'mittel5', w: 300, h: 230, sol: mid('i<7', 'ellipse', ['150', '25+i*30', '30+i*40', '30']) },
+        { name: 'mittel6', w: 200, h: 200, sol: mid('i<9', 'rect',    ['10+i*10', '10+i*10', '180-i*20', '180-i*20']) },
+      ],
+      // überzählige Teile, die nicht gebraucht werden
+      extra: ['i=1', 'i<=6', 'i<8', 'i--', 'rect', '30+i*30', '200+i*30', '40+i*30', '150+i*20', '10-i*8', '180+i*20'],
+      order: ['for', 'int', '(', ')', '{', '}', ';', ',', 'i=0', 'i=1', 'i<6', 'i<=6', 'i<7', 'i<8', 'i<9', 'i++', 'i--', 'ellipse', 'rect'],
+      shuffleValues: true,
+      intro: '<p><b>Neue Bilder.</b> Die Parameter setzt du jetzt selbst aus einzelnen Werten und Kommas zusammen, ' +
+        'z. B. <code>ellipse ( 50 , 30+i*40 , 40 , 40 )</code>.</p>' +
+        '<p>Achtung: Einige Teile sind <b>überzählig</b> und werden nicht gebraucht. Wie viele Teile es gibt, wird nicht verraten. ' +
+        'Fehlermeldungen sind knapper, und Tipps gibt es keine mehr. Mit <b>Raster</b> blendest du Hilfslinien im Bild ein.</p>',
+      poolSub: 'Nicht alle Teile werden gebraucht.',
+    },
+
+    profi: {
+      title: 'Profi',
+      verbose: false, mark: false, hints: false, showCounts: false, unlimited: true, grid: true,
+      tasks: [
+        { name: 'profi1', w: 320, h: 80, sol: pfor(G('i=#', '0'), G('i<#', '6'), 'i++',
+            [...pcall('fill', 'i*50'), ...pcall('rect', '10+i*50', '10', '50', '60')]) },
+        { name: 'profi2', w: 220, h: 220, sol: pfor(G('i=#', '0'), G('i<#', '10'), 'i++',
+            [...pcall('fill', 'i*25'), ...pcall('ellipse', '110', '110', '200-i*20', '200-i*20')]) },
+        { name: 'profi3', w: 360, h: 100, sol: pfor(G('i=#', '9'), G('i>=#', '0'), 'i--',
+            pcall('ellipse', '40+i*30', '50', '50', '50')) },
+        { name: 'profi4', w: 210, h: 210, sol: pfor(G('i=#', '180'), G('i>=#', '20'), G('i=i-#', '20'),
+            pcall('rect', '200-i', '200-i', 'i', 'i')) },
+        { name: 'profi5', w: 260, h: 210, sol: pfor(G('i=#', '0'), G('i<#', '5'), 'i++',
+            pfor(G('j=#', '0'), G('j<#', '4'), 'j++', pcall('ellipse', '30+i*50', '30+j*50', '40', '40'))) },
+        { name: 'profi6', w: 220, h: 220, sol: pfor(G('i=#', '0'), G('i<#', '5'), 'i++',
+            pfor(G('j=#', '0'), G('j<=#', 'i'), 'j++', pcall('ellipse', '30+j*40', '30+i*40', '30', '30'))) },
+      ],
+      extra: [],
+      order: ['for', 'int', '(', ')', '{', '}', ';', ',',
+        'i=#', 'i<#', 'i<=#', 'i>#', 'i>=#', 'i++', 'i--', 'i=i+#', 'i=i-#',
+        'j=#', 'j<#', 'j<=#', 'j++',
+        'ellipse', 'rect', 'fill', '#'],
+      intro: '<p><b>Jedes Teil beliebig oft.</b> In Teile mit Lücke <code>□</code> trägst du selbst Zahlen oder Rechnungen ein, ' +
+        'z. B. <code>30+i*40</code>. Lies die Werte mit Mauszeiger und Raster aus dem Bild ab.</p>' +
+        '<p>Neu: <code>fill(…)</code> für Grautöne (0 = schwarz, 255 = weiß), Rückwärtszählen, andere Schrittweiten und ' +
+        'eine Schleife in der Schleife (Variable <code>j</code>). Es zählt nur, ob dein Bild genau stimmt – oft gibt es mehrere richtige Lösungen.</p>',
+      poolSub: 'Jedes Teil kannst du beliebig oft verwenden.',
+    },
+  };
+  const LEVEL_IDS = ['einfach', 'mittel', 'profi'];
+
+  // Teilekiste je Stufe: Anzahl aus Lösungen + überzähligen Teilen
+  function seededShuffle(arr, seed) {
+    const a = arr.slice();
+    let s = seed;
+    for (let n = a.length - 1; n > 0; n--) {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      const m = s % (n + 1);
+      [a[n], a[m]] = [a[m], a[n]];
+    }
+    return a;
+  }
+  for (const id of LEVEL_IDS) {
+    const L = LEVELS[id];
+    L.tasks.forEach(t => { t.sol = norm(t.sol); });
+    L.counts = {};
+    if (L.unlimited) {
+      L.order.forEach(k => { L.counts[k] = Infinity; });
+    } else {
+      for (const t of L.tasks) for (const e of t.sol) L.counts[e.k] = (L.counts[e.k] || 0) + 1;
+      for (const k of L.extra) L.counts[k] = (L.counts[k] || 0) + 1;
+    }
+    const rest = Object.keys(L.counts).filter(k => !L.order.includes(k));
+    L.poolKeys = [...L.order.filter(k => k in L.counts), ...(L.shuffleValues ? seededShuffle(rest, 7) : rest)];
+    L.poolKeys.forEach(pieceInfo);
+  }
+
+  const POOL_GROUPS = [
+    ['Schlüsselwörter', ['FOR', 'INT']],
+    ['Klammern und Zeichen', ['LPAR', 'RPAR', 'LBRACE', 'RBRACE', 'SEMI', 'COMMA']],
+    ['Schleifenkopf', ['INIT', 'COND', 'INC']],
+    ['Befehle', ['CMD']],
+    ['Parameter', ['ARGS']],
+    ['Werte', ['EXPR']],
+  ];
+
+  // =====================================================================
+  //  Zustand
+  // =====================================================================
+  const STORE_KEY = 'forSchleifenPuzzle.v2';
+  let state = freshState();
+  let lockedLevel = null;
+
+  function freshLevel(id) {
+    return { zones: LEVELS[id].tasks.map(() => []), solved: LEVELS[id].tasks.map(() => false) };
+  }
+  function freshState() {
+    const levels = {};
+    LEVEL_IDS.forEach(id => { levels[id] = freshLevel(id); });
+    return { level: 'einfach', levels, introHidden: {} };
+  }
+  const L = () => LEVELS[state.level];
+  const cur = () => state.levels[state.level];
+
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ohne Speicher weiter */ }
+  }
+  function validLevel(id, d) {
+    const Lv = LEVELS[id];
+    if (!d || !Array.isArray(d.zones) || d.zones.length !== Lv.tasks.length) return false;
+    const used = {};
+    for (const z of d.zones) {
+      if (!Array.isArray(z)) return false;
+      for (const e of z) {
+        if (!e || typeof e.k !== 'string' || !(e.k in Lv.counts)) return false;
+        if (e.v != null && typeof e.v !== 'string') return false;
+        used[e.k] = (used[e.k] || 0) + 1;
+        if (used[e.k] > Lv.counts[e.k]) return false;
+      }
+    }
+    return true;
+  }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!s || !s.levels) return;
+      for (const id of LEVEL_IDS) {
+        const d = s.levels[id];
+        if (validLevel(id, d)) {
+          state.levels[id] = {
+            zones: d.zones.map(z => z.map(e => (e.v != null ? { k: e.k, v: e.v } : { k: e.k }))),
+            solved: LEVELS[id].tasks.map((_, i) => !!(d.solved && d.solved[i])),
+          };
+        }
+      }
+      if (LEVEL_IDS.includes(s.level)) state.level = s.level;
+      if (s.introHidden && typeof s.introHidden === 'object') state.introHidden = s.introHidden;
+    } catch (e) { /* ungültiger Speicherstand -> neu */ }
+  }
+
+  function available(key) {
+    const total = L().counts[key] || 0;
+    if (total === Infinity) return Infinity;
+    let used = 0;
+    for (const z of cur().zones) for (const e of z) if (e.k === key) used++;
+    return total - used;
+  }
+
+  // =====================================================================
+  //  Ausdrücke (sicher, ohne eval): Zahlen, i, j, + - * / %, Klammern
+  //  Ganzzahl-Arithmetik wie in Java
+  // =====================================================================
+  function compileExpr(src, scope) {
+    const s = src.replace(/\s+/g, '');
+    if (!s) throw { type: 'empty' };
+    let p = 0;
+    const bad = () => { throw { type: 'syntax' }; };
+    function primary() {
+      const c = s[p];
+      if (c === '(') {
+        p++;
+        const e = sum();
+        if (s[p] !== ')') bad();
+        p++;
+        return e;
+      }
+      if (c === '-') { p++; const e = primary(); return env => -e(env); }
+      if (c === '+') { p++; return primary(); }
+      if (c && /\d/.test(c)) {
+        const st = p;
+        while (p < s.length && /\d/.test(s[p])) p++;
+        const v = parseInt(s.slice(st, p), 10);
+        return () => v;
+      }
+      if (c && /[a-zA-Z_]/.test(c)) {
+        const st = p;
+        while (p < s.length && /\w/.test(s[p])) p++;
+        const name = s.slice(st, p);
+        if (!scope.includes(name)) throw { type: 'unknown', name };
+        return env => env[name];
+      }
+      bad();
+    }
+    function product() {
+      let l = primary();
+      while (p < s.length && '*/%'.includes(s[p])) {
+        const op = s[p++], L1 = l, r = primary();
+        if (op === '*') l = env => L1(env) * r(env);
+        else l = env => {
+          const d = r(env);
+          if (d === 0) throw { type: 'div0' };
+          return op === '/' ? Math.trunc(L1(env) / d) : L1(env) % d;
+        };
+      }
+      return l;
+    }
+    function sum() {
+      let l = product();
+      while (p < s.length && '+-'.includes(s[p])) {
+        const op = s[p++], L1 = l, r = product();
+        l = op === '+' ? env => L1(env) + r(env) : env => L1(env) - r(env);
+      }
+      return l;
+    }
+    const f = sum();
+    if (p < s.length) bad();
+    return f;
+  }
+
+  // =====================================================================
+  //  Parser für die zusammengesetzten Programme
+  // =====================================================================
+  function parse(entries, Lv) {
+    const toks = entries.map((e, idx) => Object.assign({ idx, text: fillText(e), entry: e }, pieceInfo(e.k)));
+    const lastIdx = toks.length - 1;
+    let p = 0;
+
+    function fail(long, short, idx) {
+      throw { msg: Lv.verbose ? long : short, idx: Lv.mark ? idx : null };
+    }
+
+    function shortFor(kind, t) {
+      if (!t) return 'Syntaxfehler: Das Programm ist unvollständig.';
+      if (kind === 'SEMI') return 'Syntaxfehler bei „' + t.text + '“ – fehlt hier ein Semikolon „;“?';
+      if (['LPAR', 'RPAR', 'LBRACE', 'RBRACE'].includes(kind)) return 'Syntaxfehler bei „' + t.text + '“ – fehlt hier eine Klammer?';
+      return 'Syntaxfehler bei „' + t.text + '“.';
+    }
+
+    function expect(kind, label, why) {
+      const t = toks[p];
+      if (!t) fail('Das Programm hört zu früh auf: Es fehlt noch ' + label + '.' + (why ? '\n' + why : ''), shortFor(kind, null), lastIdx);
+      if (t.kind !== kind) fail('An dieser Stelle wird ' + label + ' erwartet, aber hier steht „' + t.text + '“.' + (why ? '\n' + why : ''), shortFor(kind, t), t.idx);
+      p++;
+      return t;
+    }
+
+    function expr(src, scope, t) {
+      try {
+        return compileExpr(src, scope);
+      } catch (e) {
+        if (e.type === 'empty') fail('In „' + t.text + '“ ist die Lücke noch leer. Trage dort eine Zahl oder Rechnung ein.', 'Lücke in „' + t.text + '“ ist leer.', t.idx);
+        if (e.type === 'unknown') {
+          if (e.name === 'i' || e.name === 'j') {
+            fail('Die Variable ' + e.name + ' ist hier nicht bekannt. Es gibt sie nur innerhalb der Schleife, in der sie mit „int“ deklariert wird.',
+              'Die Variable „' + e.name + '“ existiert hier nicht.', t.idx);
+          }
+          fail('„' + e.name + '“ ist unbekannt. Erlaubt sind Zahlen, i, j und + - * / ( ).', 'Unbekannter Name „' + e.name + '“.', t.idx);
+        }
+        fail('„' + t.text + '“ ist keine gültige Rechnung. Erlaubt sind Zahlen, i, j und + - * / ( ).', 'Ungültiger Ausdruck „' + t.text + '“.', t.idx);
+      }
+    }
+
+    function statement(scope) {
+      const t = toks[p];
+      switch (t.kind) {
+        case 'FOR': return forStmt(scope);
+        case 'CMD': return call(scope);
+        case 'LBRACE': return block(scope);
+        case 'SEMI': p++; return { type: 'empty' };
+        case 'RBRACE':
+          fail('Zu dieser schließenden Klammer „}“ gibt es keine öffnende Klammer „{“.', 'Syntaxfehler: „}“ ohne passende „{“.', t.idx);
+        default:
+          fail('„' + t.text + '“ kann hier nicht stehen.' + (p === 0 ? ' Eine Zählschleife beginnt mit „for“.' : ''),
+            'Syntaxfehler bei „' + t.text + '“.', t.idx);
+      }
+    }
+
+    function forStmt(scope) {
+      const ft = expect('FOR', '„for“');
+      expect('LPAR', 'eine runde Klammer „(“', 'Nach „for“ folgt der Schleifenkopf in runden Klammern.');
+      expect('INT', '„int“', 'Die Zählvariable muss zuerst deklariert werden, z. B. int i=0');
+      const it = expect('INIT', 'ein Startwert wie „i=0“', 'Der Startwert der Zählvariablen fehlt.');
+      const [, v, initSrc] = it.text.match(/^([ij])=(.*)$/);
+      if (scope.includes(v)) {
+        fail('Die Variable ' + v + ' gibt es schon in der äußeren Schleife. Für eine Schleife in der Schleife braucht man eine neue Variable.',
+          'Die Variable „' + v + '“ ist bereits definiert.', it.idx);
+      }
+      const inner = [...scope, v];
+      const init = expr(it.entry.k.includes('#') ? (it.entry.v || '') : initSrc, scope, it);
+      expect('SEMI', 'ein Semikolon „;“', 'Die drei Teile des Schleifenkopfs werden durch Semikolons getrennt.');
+      const ct = expect('COND', 'eine Bedingung wie „i<…“', 'Der zweite Teil des Schleifenkopfs ist die Bedingung.');
+      const [, cv, op, condSrc] = ct.text.match(/^([ij])(<=|>=|<|>)(.*)$/);
+      if (!inner.includes(cv)) fail('Die Variable ' + cv + ' ist hier nicht bekannt.', 'Die Variable „' + cv + '“ existiert hier nicht.', ct.idx);
+      const lim = expr(ct.entry.k.includes('#') ? (ct.entry.v || '') : condSrc, inner, ct);
+      expect('SEMI', 'ein Semikolon „;“', 'Die drei Teile des Schleifenkopfs werden durch Semikolons getrennt.');
+      const st = expect('INC', '„i++“', 'Der dritte Teil des Schleifenkopfs verändert die Zählvariable.');
+      const [, sv, sop, stepSrc] = st.text.match(/^([ij])(\+\+|--|=[ij][+-])(.*)$/);
+      if (!inner.includes(sv)) fail('Die Variable ' + sv + ' ist hier nicht bekannt.', 'Die Variable „' + sv + '“ existiert hier nicht.', st.idx);
+      let step;
+      if (sop === '++') step = () => 1;
+      else if (sop === '--') step = () => -1;
+      else {
+        const f = expr(st.entry.k.includes('#') ? (st.entry.v || '') : stepSrc, inner, st);
+        step = sop.endsWith('+') ? f : env => -f(env);
+      }
+      expect('RPAR', 'eine runde Klammer „)“', 'Sie schließt den Schleifenkopf.');
+      if (p >= toks.length) {
+        fail('Das Programm hört zu früh auf: Nach dem Schleifenkopf fehlt der Schleifenrumpf { … }.', shortFor('LBRACE', null), lastIdx);
+      }
+      const body = statement(inner);
+      return { type: 'for', v, init, cv, op, lim, sv, step, body, idx: ft.idx };
+    }
+
+    function block(scope) {
+      const open = expect('LBRACE', '„{“');
+      const stmts = [];
+      while (p < toks.length && toks[p].kind !== 'RBRACE') stmts.push(statement(scope));
+      if (p >= toks.length) fail('Es fehlt die schließende geschweifte Klammer „}“.', 'Syntaxfehler: „}“ fehlt.', open.idx);
+      p++;
+      return { type: 'block', stmts };
+    }
+
+    function call(scope) {
+      const ct = expect('CMD', 'ein Zeichenbefehl');
+      const cmd = ct.key;
+      const args = [];
+      const nt = toks[p];
+      if (nt && nt.kind === 'ARGS') {
+        p++;
+        const parts = splitArgs(nt.key.slice(1, -1));
+        parts.forEach(src => args.push(expr(src, scope, nt)));
+      } else if (nt && nt.kind === 'LPAR' && Lv.poolKeys.some(k => pieceInfo(k).kind === 'ARGS')) {
+        fail('Nach „' + cmd + '“ folgen direkt die Parameter. Das Parameter-Teil enthält seine Klammern schon.',
+          'Syntaxfehler bei „(“.', nt.idx);
+      } else {
+        expect('LPAR', 'eine runde Klammer „(“', 'Nach „' + cmd + '“ folgen die Werte in runden Klammern.');
+        const first = expect('EXPR', 'ein Wert', '„' + cmd + '“ braucht Werte, die sagen, wo und wie groß gezeichnet wird.');
+        args.push(expr(first.entry.k === '#' ? (first.entry.v || '') : first.key, scope, first));
+        while (toks[p] && toks[p].kind === 'COMMA') {
+          p++;
+          const vt = expect('EXPR', 'ein Wert', 'Nach einem Komma folgt der nächste Wert.');
+          args.push(expr(vt.entry.k === '#' ? (vt.entry.v || '') : vt.key, scope, vt));
+        }
+        expect('RPAR', 'eine runde Klammer „)“ oder ein Komma „,“', 'Die Werte werden durch Kommas getrennt, am Ende steht „)“.');
+      }
+      expect('SEMI', 'ein Semikolon „;“', 'Jede Anweisung endet mit einem Semikolon.');
+      const allowed = COMMANDS[cmd];
+      if (!allowed.includes(args.length)) {
+        fail('„' + cmd + '“ braucht ' + allowed.join(' oder ') + ' Werte, hier ' + (args.length === 1 ? 'ist es 1.' : 'sind es ' + args.length + '.'),
+          cmd + '(): falsche Anzahl Werte.', ct.idx);
+      }
+      return { type: 'call', cmd, args, idx: ct.idx };
+    }
+
+    if (!toks.length) fail('Noch keine Teile im Programm. Ziehe Teile aus der Teilekiste in das Programmfeld.', 'Noch keine Teile im Programm.', null);
+    const program = [];
+    while (p < toks.length) program.push(statement([]));
+    return program;
+  }
+
+  function splitArgs(s) {
+    const out = [];
+    let depth = 0, start = 0;
+    for (let n = 0; n < s.length; n++) {
+      if (s[n] === '(') depth++;
+      else if (s[n] === ')') depth--;
+      else if (s[n] === ',' && depth === 0) { out.push(s.slice(start, n)); start = n + 1; }
+    }
+    out.push(s.slice(start));
+    return out;
+  }
+
+  const CMP = { '<': (a, b) => a < b, '<=': (a, b) => a <= b, '>': (a, b) => a > b, '>=': (a, b) => a >= b };
+
+  function execute(program, Lv) {
+    const out = [];
+    const env = {};
+    const rt = (long, short, idx) => { throw { msg: Lv.verbose ? long : short, idx: Lv.mark ? idx : null }; };
+    function ev(f, idx) {
+      try { return f(env); } catch (e) {
+        if (e && e.type === 'div0') rt('Division durch 0 ist nicht erlaubt.', 'Fehler: Division durch 0.', idx);
+        throw e;
+      }
+    }
+    function run(s) {
+      if (s.type === 'for') {
+        env[s.v] = ev(s.init, s.idx);
+        let n = 0;
+        while (CMP[s.op](env[s.cv], ev(s.lim, s.idx))) {
+          run(s.body);
+          const st = ev(s.step, s.idx);
+          // Läuft die Zählvariable von der Grenze weg (oder gar nicht), endet die Schleife nie.
+          const wrongWay = s.sv !== s.cv || st === 0 || (s.op[0] === '<' ? st < 0 : st > 0);
+          if ((++n > 1000 && wrongWay) || n > 100000) {
+            rt('Endlosschleife: Die Schleife hört nie auf. Prüfe Startwert, Bedingung und Schritt.',
+              'Endlosschleife – das Programm hört nicht auf.', s.idx);
+          }
+          env[s.sv] += st;
+        }
+        delete env[s.v];
+      } else if (s.type === 'block') {
+        s.stmts.forEach(run);
+      } else if (s.type === 'call') {
+        out.push({ shape: s.cmd, v: s.args.map(a => ev(a, s.idx)) });
+        if (out.length > 5000) {
+          rt('Dein Programm zeichnet über 5000 Figuren. Prüfe die Bedingung der Schleife.', 'Zu viele Figuren (über 5000).', s.idx);
+        }
+      }
+    }
+    program.forEach(run);
+    return out;
+  }
+
+  // =====================================================================
+  //  Zeichnen wie Processing
+  // =====================================================================
+  function paint(ctx, w, h, cmds) {
+    ctx.fillStyle = 'rgb(204,204,204)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#000';
+    let fill = '#fff';
+    const clamp = x => Math.max(0, Math.min(255, Math.round(x)));
+    for (const c of cmds) {
+      if (c.shape === 'fill') {
+        const v = c.v.map(clamp);
+        fill = v.length === 1 ? 'rgb(' + v[0] + ',' + v[0] + ',' + v[0] + ')' : 'rgb(' + v.join(',') + ')';
+        continue;
+      }
+      const [x, y, cw, ch] = c.v;
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      if (c.shape === 'ellipse') ctx.ellipse(x, y, Math.abs(cw) / 2, Math.abs(ch) / 2, 0, 0, Math.PI * 2);
+      else ctx.rect(x + 0.5, y + 0.5, cw, ch);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+
+  function paintGrid(ctx, w, h) {
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (let x = 10; x < w; x += 10) {
+      ctx.strokeStyle = x % 50 ? 'rgba(30,90,200,.13)' : 'rgba(30,90,200,.45)';
+      ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); ctx.stroke();
+    }
+    for (let y = 10; y < h; y += 10) {
+      ctx.strokeStyle = y % 50 ? 'rgba(30,90,200,.13)' : 'rgba(30,90,200,.45)';
+      ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(20,70,170,.9)';
+    ctx.font = '9px Consolas, monospace';
+    ctx.textBaseline = 'top';
+    for (let x = 50; x < w; x += 50) ctx.fillText(String(x), x + 2, 1);
+    for (let y = 50; y < h; y += 50) ctx.fillText(String(y), 2, y + 2);
+    ctx.restore();
+  }
+
+  function draw(canvas, task, cmds, grid) {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    canvas.width = Math.round(task.w * dpr);
+    canvas.height = Math.round(task.h * dpr);
+    canvas.style.width = task.w + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paint(ctx, task.w, task.h, cmds);
+    if (grid) paintGrid(ctx, task.w, task.h);
+  }
+
+  // Pixelvergleich: Jede Lösung zählt, die genau dasselbe Bild zeichnet
+  function pixels(task, cmds) {
+    const c = document.createElement('canvas');
+    c.width = task.w;
+    c.height = task.h;
+    const ctx = c.getContext('2d');
+    paint(ctx, task.w, task.h, cmds);
+    return ctx.getImageData(0, 0, task.w, task.h).data;
+  }
+  function samePicture(a, b) {
+    let diff = 0;
+    const allowed = 3 + Math.floor(a.length / 4 / 2000);
+    for (let n = 0; n < a.length; n += 4) {
+      if (Math.abs(a[n] - b[n]) > 12 || Math.abs(a[n + 1] - b[n + 1]) > 12 || Math.abs(a[n + 2] - b[n + 2]) > 12) {
+        if (++diff > allowed) return false;
+      }
+    }
+    return true;
+  }
+
+  // Zielbilder vorberechnen
+  for (const id of LEVEL_IDS) {
+    for (const t of LEVELS[id].tasks) {
+      t.target = execute(parse(t.sol, LEVELS[id]), LEVELS[id]);
+      t.targetPx = null;
+    }
+  }
+
+  // =====================================================================
+  //  DOM
+  // =====================================================================
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const el = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  };
+
+  let cards = [];
+  let activeZone = 0;
+
+  function makeWindow(label, title, task) {
+    const wrap = el('div', 'pwin-wrap');
+    const lab = el('div', 'wlabel', label);
+    const coords = el('span', 'coords');
+    lab.append(coords);
+    const win = el('div', 'pwin');
+    const bar = el('div', 'pbar');
+    bar.append(el('span', 'play'), el('span', '', title), el('span', 'wctl', '—☐'));
+    const canvas = el('canvas');
+    canvas.addEventListener('pointermove', e => {
+      const r = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - r.left) / r.width * task.w);
+      const y = Math.floor((e.clientY - r.top) / r.height * task.h);
+      coords.textContent = 'x: ' + x + '  y: ' + y;
+    });
+    canvas.addEventListener('pointerleave', () => { coords.textContent = ''; });
+    win.append(bar, canvas);
+    wrap.append(lab, win);
+    return { wrap, canvas };
+  }
+
+  function buildCards() {
+    cards.forEach(c => c.card.remove());
+    cards = [];
+    const Lv = L();
+    const tasksEl = $('#tasks');
+    Lv.tasks.forEach((task, ti) => {
+      const card = el('article', 'card');
+      card.dataset.ti = ti;
+
+      const head = el('div', 'card-h');
+      head.append(el('h2', '', 'Bild ' + (ti + 1)), el('span', 'status', 'offen'));
+
+      const wins = el('div', 'windows');
+      const target = makeWindow('Ziel', task.name, task);
+      const result = makeWindow('Dein Programm', task.name, task);
+      const rWrap = result.wrap;
+      rWrap.classList.add('result-wrap', 'hidden');
+      wins.append(target.wrap, rWrap);
+
+      const editor = el('div', 'editor');
+      const bar = el('div', 'toolbar');
+      const run = el('button', 'primary run-btn');
+      run.type = 'button';
+      run.title = 'Programm ausführen (Strg+Enter)';
+      run.append(el('span', 'play'), document.createTextNode('Ausführen'));
+      const clear = el('button', 'clear-btn', 'Leeren');
+      clear.type = 'button';
+      clear.title = 'Alle Teile dieses Programms zurück in die Kiste legen';
+      bar.append(run);
+      let gridBtn = null;
+      if (Lv.grid) {
+        gridBtn = el('button', 'toggle', 'Raster');
+        gridBtn.type = 'button';
+        gridBtn.title = 'Hilfslinien alle 10 Pixel ein- oder ausblenden';
+        bar.append(gridBtn);
+      }
+      const solve = el('button', 'solve-btn', 'Lösung');
+      solve.type = 'button';
+      // „Leeren“ steht bewusst weit rechts, damit man es nicht versehentlich trifft
+      bar.append(solve, clear, el('span', 'tab', task.name));
+
+      const code = el('div', 'code');
+      const fixed = el('div', 'fixed-line');
+      fixed.append(el('span', 'k-fn', 'size'), document.createTextNode('(' + task.w + ', ' + task.h + ');'));
+      const zone = el('div', 'zone');
+      zone.dataset.ti = ti;
+      code.append(fixed, zone);
+
+      const con = el('div', 'console', '');
+      editor.append(bar, code, con);
+
+      card.append(head, wins, editor);
+      tasksEl.append(card);
+
+      const c = {
+        card, zone, con, status: $('.status', card), rWrap,
+        tCanvas: target.canvas, rCanvas: result.canvas, grid: false, lastCmds: null,
+      };
+      cards.push(c);
+      draw(c.tCanvas, task, task.target, false);
+
+      run.addEventListener('click', () => runTask(ti));
+      clear.addEventListener('click', () => {
+        if (!cur().zones[ti].length) return;
+        if (!confirm('Alle Teile von Bild ' + (ti + 1) + ' zurück in die Kiste legen?')) return;
+        cur().zones[ti] = [];
+        changed(ti);
+      });
+      solve.addEventListener('click', () => insertSolution(ti));
+      zone.addEventListener('pointerdown', () => setActive(ti));
+      if (gridBtn) {
+        gridBtn.addEventListener('click', () => {
+          c.grid = !c.grid;
+          gridBtn.classList.toggle('on', c.grid);
+          draw(c.tCanvas, task, task.target, c.grid);
+          if (c.lastCmds) draw(c.rCanvas, task, c.lastCmds, c.grid);
+        });
+      }
+    });
+  }
+
+  function setActive(ti) {
+    activeZone = ti;
+    cards.forEach((c, i) => c.zone.classList.toggle('active', i === ti));
+  }
+
+  // ---------- Teile darstellen ----------
+  function makeTile(k, v, editable) {
+    const P = pieceInfo(k);
+    const t = el('div', 'tile ' + P.cls);
+    t.dataset.key = k;
+    if (k.includes('#')) {
+      const [a, b] = k.split('#');
+      if (editable) t.append(el('span', 'grip', '⠿'));
+      if (a) t.append(document.createTextNode(a));
+      if (editable) {
+        const inp = el('input', 'gap-in');
+        inp.value = v || '';
+        inp.size = Math.max(2, (v || '').length);
+        inp.spellcheck = false;
+        inp.autocomplete = 'off';
+        inp.setAttribute('aria-label', 'Wert eintragen');
+        t.append(inp);
+      } else {
+        t.append(el('span', 'gap', '□'));
+      }
+      if (b) t.append(document.createTextNode(b));
+    } else {
+      t.textContent = k;
+    }
+    return t;
+  }
+
+  function renderPool() {
+    const Lv = L();
+    $('#pool-sub').textContent = Lv.poolSub;
+    const root = $('#pool-groups');
+    root.innerHTML = '';
+    for (const [title, kinds] of POOL_GROUPS) {
+      const keys = Lv.poolKeys.filter(k => kinds.includes(pieceInfo(k).kind));
+      if (!keys.length) continue;
+      root.append(el('h3', '', title));
+      const wrap = el('div', 'stacks');
+      for (const key of keys) {
+        const n = available(key);
+        const t = makeTile(key, '', false);
+        t.dataset.src = 'pool';
+        if (n === 0) t.classList.add('empty');
+        else if (n > 1) t.classList.add('stack');
+        if (Lv.showCounts) t.append(el('span', 'count', String(n)));
+        t.title = n === 0 ? 'Keine Teile mehr übrig' : key === '#' ? 'Wert – Zahl oder Rechnung selbst eintragen' : 'Ziehen oder klicken';
+        wrap.append(t);
+      }
+      root.append(wrap);
+    }
+  }
+
+  function renderZone(ti, badIdx, focusIdx) {
+    const zone = cards[ti].zone;
+    const entries = cur().zones[ti];
+    zone.innerHTML = '';
+    if (!entries.length) zone.append(el('span', 'hint', 'Puzzleteile hierher ziehen …'));
+    let paren = 0, depth = 0, lineStart = true;
+    const brk = () => { if (!lineStart) { zone.append(el('div', 'brk')); lineStart = true; } };
+    entries.forEach((e, pos) => {
+      const kind = pieceInfo(e.k).kind;
+      if (kind === 'RBRACE') { depth = Math.max(0, depth - 1); brk(); }
+      if (lineStart && depth > 0) {
+        const ind = el('span', 'ind');
+        ind.style.width = (depth * 26 - 6) + 'px';
+        zone.append(ind);
+      }
+      const t = makeTile(e.k, e.v, true);
+      t.dataset.src = 'zone';
+      t.dataset.ti = ti;
+      t.dataset.pos = pos;
+      t.title = 'Ziehen zum Verschieben, Doppelklick legt es zurück';
+      if (pos === badIdx) t.classList.add('bad');
+      zone.append(t);
+      lineStart = false;
+      if (kind === 'LPAR') paren++;
+      else if (kind === 'RPAR') paren = Math.max(0, paren - 1);
+      if (kind === 'LBRACE') { depth++; brk(); }
+      else if (kind === 'RBRACE') brk();
+      else if (kind === 'SEMI' && paren === 0) brk();
+    });
+    zone.append(el('div', 'caret'));
+    if (focusIdx != null) {
+      const inp = zone.querySelector('.tile[data-pos="' + focusIdx + '"] input');
+      if (inp) inp.focus();
+    }
+  }
+
+  const LEVEL_BLURBS = {
+    einfach: 'Ganze Puzzleteile wie auf dem Arbeitsblatt, mit ausführlichen Tipps.',
+    mittel: 'Neue Bilder. Parameter selbst zusammensetzen, einige Teile sind überzählig.',
+    profi: 'Neue Bilder. Zahlen selbst eintragen, Graustufen, Schleife in der Schleife.',
+  };
+
+  function renderLevels() {
+    const nav = $('#levels');
+    nav.innerHTML = '';
+    for (const id of LEVEL_IDS) {
+      const d = state.levels[id];
+      const n = d.solved.filter(Boolean).length;
+      const b = el('button');
+      b.type = 'button';
+      b.append(el('span', '', LEVELS[id].title), el('span', 'lvl-prog', n + '/' + d.solved.length));
+      b.classList.toggle('on', id === state.level);
+      b.classList.toggle('complete', n === d.solved.length);
+      b.hidden = !!lockedLevel && id !== lockedLevel;
+      b.addEventListener('click', () => setLevel(id));
+      nav.append(b);
+    }
+
+    // Große Stufenauswahl über den Aufgaben
+    const strip = $('#level-strip');
+    strip.innerHTML = '';
+    strip.hidden = !!lockedLevel;
+    strip.append(el('div', 'ls-head', 'Wähle deine Schwierigkeitsstufe:'));
+    const row = el('div', 'ls-row');
+    LEVEL_IDS.forEach((id, n) => {
+      const d = state.levels[id];
+      const solved = d.solved.filter(Boolean).length;
+      const b = el('button', 'ls-card');
+      b.type = 'button';
+      b.classList.toggle('on', id === state.level);
+      b.classList.toggle('complete', solved === d.solved.length);
+      const top = el('div', 'ls-top');
+      top.append(el('span', 'ls-stars', '★'.repeat(n + 1) + '☆'.repeat(2 - n)), el('span', 'ls-title', LEVELS[id].title));
+      const bar = el('div', 'ls-bar');
+      const fillEl = el('span');
+      fillEl.style.width = (solved / d.solved.length * 100) + '%';
+      bar.append(fillEl);
+      b.append(top, el('div', 'ls-blurb', LEVEL_BLURBS[id]), bar,
+        el('div', 'ls-prog', (solved === d.solved.length ? '✓ ' : '') + solved + ' von ' + d.solved.length + ' gelöst'));
+      if (id === state.level) b.append(el('span', 'ls-here', 'Du bist hier'));
+      b.addEventListener('click', () => setLevel(id));
+      row.append(b);
+    });
+    strip.append(row);
+  }
+
+  function renderStatus() {
+    const d = cur();
+    let n = 0;
+    cards.forEach((c, i) => {
+      const s = d.solved[i];
+      if (s) n++;
+      c.card.classList.toggle('solved', s);
+      c.status.textContent = s ? '✓ richtig' : 'offen';
+    });
+    renderLevels();
+    const all = n === d.solved.length;
+    $('#done-banner').classList.toggle('show', all);
+    if (all) {
+      const idx = LEVEL_IDS.indexOf(state.level);
+      const next = LEVEL_IDS[idx + 1];
+      $('#done-text').textContent = 'Geschafft! Alle Programme der Stufe „' + L().title + '“ zeichnen genau die Zielbilder.';
+      const btn = $('#btn-next');
+      btn.hidden = !next || !!lockedLevel;
+      if (next) btn.textContent = 'Weiter mit „' + LEVELS[next].title + '“ →';
+    }
+  }
+
+  function renderIntro() {
+    const Lv = L();
+    $('#intro-title').textContent = 'Stufe „' + Lv.title + '“: Welches Programm zeichnet welches Bild?';
+    $('#intro-text').innerHTML = Lv.intro;
+    $('#intro').style.display = state.introHidden[state.level] ? 'none' : '';
+  }
+
+  function markStale(ti) {
+    const d = cur();
+    d.solved[ti] = false;
+    const c = cards[ti];
+    if (!c.rWrap.classList.contains('hidden')) c.rWrap.classList.add('stale');
+    c.con.textContent = '';
+    c.con.className = 'console';
+    c.zone.querySelectorAll('.tile.bad').forEach(t => t.classList.remove('bad'));
+    renderStatus();
+    save();
+  }
+
+  function changed(ti, focusIdx) {
+    renderZone(ti, null, focusIdx);
+    renderPool();
+    markStale(ti);
+  }
+
+  // ---------- Ausführen ----------
+  function runTask(ti) {
+    setActive(ti);
+    const Lv = L();
+    const task = Lv.tasks[ti];
+    const c = cards[ti];
+    const d = cur();
+    let cmds;
+    try {
+      cmds = execute(parse(d.zones[ti], Lv), Lv);
+    } catch (e) {
+      if (!e || typeof e.msg !== 'string') throw e;
+      renderZone(ti, e.idx);
+      c.con.className = 'console err';
+      c.con.textContent = 'Fehler: ' + e.msg;
+      c.rWrap.classList.add('hidden');
+      c.lastCmds = null;
+      d.solved[ti] = false;
+      renderStatus();
+      save();
+      return;
+    }
+    renderZone(ti);
+    c.lastCmds = cmds;
+    draw(c.rCanvas, task, cmds, c.grid);
+    c.rWrap.classList.remove('hidden', 'stale');
+
+    if (!task.targetPx) task.targetPx = pixels(task, task.target);
+    const ok = samePicture(pixels(task, cmds), task.targetPx);
+    d.solved[ti] = ok;
+    if (ok) {
+      c.con.className = 'console ok';
+      c.con.textContent = 'Richtig! Dein Programm zeichnet genau das Zielbild.';
+    } else {
+      c.con.className = 'console warn';
+      c.con.textContent = 'Dein Programm läuft, zeichnet aber etwas anderes als das Ziel.' +
+        (Lv.hints ? '\n' + mismatchHint(cmds, task.target) : '');
+    }
+    renderStatus();
+    save();
+    if (ok && d.solved.every(Boolean)) toast('Alle Bilder der Stufe „' + Lv.title + '“ gelöst!');
+  }
+
+  const shapeName = s => (s === 'ellipse' ? 'Kreise/Ellipsen' : 'Rechtecke');
+  function mismatchHint(mine, target) {
+    mine = mine.filter(x => x.shape !== 'fill');
+    target = target.filter(x => x.shape !== 'fill');
+    if (!mine.length) return 'Es wird gar nichts gezeichnet.';
+    const shapesMine = [...new Set(mine.map(x => x.shape))];
+    const shapesTarget = [...new Set(target.map(x => x.shape))];
+    if (shapesMine.join() !== shapesTarget.join()) {
+      return 'Tipp: Im Ziel siehst du ' + shapeName(shapesTarget[0]) + ', dein Programm zeichnet ' +
+        shapesMine.map(shapeName).join(' und ') + '.';
+    }
+    if (mine.length !== target.length) {
+      return 'Tipp: Dein Programm zeichnet ' + mine.length + ' Figuren, im Ziel sind es ' + target.length + '.';
+    }
+    return 'Tipp: Form und Anzahl stimmen – aber Lage oder Größe der Figuren nicht. Prüfe die Parameter.';
+  }
+
+  function insertSolution(ti) {
+    const sol = L().tasks[ti].sol;
+    const d = cur();
+    const old = d.zones[ti];
+    d.zones[ti] = [];
+    const need = {};
+    sol.forEach(e => { need[e.k] = (need[e.k] || 0) + 1; });
+    const missing = Object.keys(need).filter(k => available(k) < need[k]);
+    if (missing.length) {
+      d.zones[ti] = old;
+      cards[ti].con.className = 'console err';
+      cards[ti].con.textContent = 'Lösung kann nicht eingesetzt werden – diese Teile stecken in anderen Programmen: ' + missing.join('  ');
+      return;
+    }
+    d.zones[ti] = sol.map(e => (e.v != null ? { k: e.k, v: e.v } : { k: e.k }));
+    changed(ti);
+    runTask(ti);
+  }
+
+  // =====================================================================
+  //  Ziehen & Ablegen
+  // =====================================================================
+  let drag = null;
+  let lastClick = {};
+  let pointerY = 0, scrollRaf = 0;
+
+  document.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || drag) return;
+    if (e.target.closest('input')) return;
+    const tile = e.target.closest('.tile');
+    if (!tile || tile.classList.contains('empty') || tile.classList.contains('ghost')) return;
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    const r = tile.getBoundingClientRect();
+    const fromZone = tile.dataset.src === 'zone' ? +tile.dataset.ti : -1;
+    const fromPos = fromZone >= 0 ? +tile.dataset.pos : -1;
+    drag = {
+      entry: fromZone >= 0 ? cur().zones[fromZone][fromPos] : { k: tile.dataset.key },
+      fromZone, fromPos, tile,
+      x0: e.clientX, y0: e.clientY,
+      dx: e.clientX - r.left, dy: e.clientY - r.top,
+      started: false, ghost: null, overZone: -1, index: 0,
+    };
+  });
+
+  document.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (!drag.started) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) return;
+      startDrag();
+    }
+    pointerY = e.clientY;
+    drag.ghost.style.left = (e.clientX - drag.dx) + 'px';
+    drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+    updateDropTarget(drag, e.clientX, e.clientY);
+  });
+
+  document.addEventListener('pointerup', e => {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    if (!d.started) { handleClick(d); return; }
+    updateDropTarget(d, e.clientX, e.clientY);
+    cleanupDrag(d);
+    finishDrag(d);
+  });
+
+  document.addEventListener('pointercancel', () => {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    if (d.started) cleanupDrag(d);
+  });
+
+  function startDrag() {
+    drag.started = true;
+    const g = el('div', 'tile ' + pieceInfo(drag.entry.k).cls + ' ghost', fillText(drag.entry));
+    document.body.append(g);
+    drag.ghost = g;
+    document.body.classList.add('is-dragging');
+    if (drag.fromZone >= 0) {
+      drag.tile.classList.add('dragging');
+      setActive(drag.fromZone);
+    }
+    cancelAnimationFrame(scrollRaf);
+    const step = () => {
+      if (!drag || !drag.started) return;
+      const edge = 70;
+      if (pointerY < edge) window.scrollBy(0, -Math.ceil((edge - pointerY) / 5));
+      else if (pointerY > innerHeight - edge) window.scrollBy(0, Math.ceil((pointerY - innerHeight + edge) / 5));
+      scrollRaf = requestAnimationFrame(step);
+    };
+    scrollRaf = requestAnimationFrame(step);
+  }
+
+  function hitTest(x, y) {
+    const under = document.elementFromPoint(x, y);
+    if (!under) return { zone: -1, pool: false };
+    const z = under.closest('.zone');
+    if (z) return { zone: +z.dataset.ti, pool: false };
+    const card = under.closest('.card');
+    if (card) return { zone: +card.dataset.ti, pool: false, viaCard: true };
+    return { zone: -1, pool: !!under.closest('.pool') };
+  }
+
+  function updateDropTarget(d, x, y) {
+    const hit = hitTest(x, y);
+    cards.forEach((c, i) => {
+      c.zone.classList.toggle('over', i === hit.zone);
+      if (i !== hit.zone) $('.caret', c.zone).style.display = 'none';
+    });
+    $('#pool').classList.toggle('over', hit.pool && d.fromZone >= 0);
+    d.overZone = hit.zone;
+    if (hit.zone >= 0) {
+      const zone = cards[hit.zone].zone;
+      const ins = insertionPoint(zone, x, y, hit.viaCard);
+      d.index = ins.index;
+      const caret = $('.caret', zone);
+      if (ins.rect) {
+        const zr = zone.getBoundingClientRect();
+        caret.style.display = 'block';
+        caret.style.left = ((ins.after ? ins.rect.right + 1 : ins.rect.left - 5) - zr.left) + 'px';
+        caret.style.top = (ins.rect.top - zr.top - 2) + 'px';
+        caret.style.height = (ins.rect.height + 4) + 'px';
+      } else {
+        caret.style.display = 'none';
+      }
+    }
+  }
+
+  // Einfügeposition: Teil in derselben Zeile wie der Zeiger, links/rechts der Mitte
+  function insertionPoint(zone, x, y, append) {
+    const tiles = [...zone.querySelectorAll('.tile:not(.dragging)')];
+    const n = cur().zones[+zone.dataset.ti].length;
+    if (!tiles.length) return { index: n, rect: null };
+    const rects = tiles.map(t => t.getBoundingClientRect());
+    if (append) return { index: n, rect: rects[rects.length - 1], after: true };
+    let rowTop = null, best = Infinity;
+    rects.forEach(r => {
+      const dy = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      if (dy < best) { best = dy; rowTop = r.top; }
+    });
+    const row = [];
+    rects.forEach((r, i) => { if (Math.abs(r.top - rowTop) < 6) row.push(i); });
+    for (const i of row) {
+      if (x < rects[i].left + rects[i].width / 2) return { index: +tiles[i].dataset.pos, rect: rects[i], after: false };
+    }
+    const last = row[row.length - 1];
+    return { index: +tiles[last].dataset.pos + 1, rect: rects[last], after: true };
+  }
+
+  function cleanupDrag(d) {
+    cancelAnimationFrame(scrollRaf);
+    if (d.ghost) d.ghost.remove();
+    document.body.classList.remove('is-dragging');
+    $('#pool').classList.remove('over');
+    cards.forEach(c => {
+      c.zone.classList.remove('over');
+      $('.caret', c.zone).style.display = 'none';
+    });
+    d.tile.classList.remove('dragging');
+  }
+
+  function finishDrag(d) {
+    const zones = cur().zones;
+    const dst = d.overZone;
+    if (dst >= 0) {
+      let index = d.index;
+      let entry = d.entry;
+      if (d.fromZone >= 0) {
+        zones[d.fromZone].splice(d.fromPos, 1);
+        if (d.fromZone === dst && index > d.fromPos) index--;
+      } else {
+        if (available(entry.k) <= 0) return;
+        entry = entry.k.includes('#') ? { k: entry.k, v: '' } : { k: entry.k };
+      }
+      zones[dst].splice(index, 0, entry);
+      setActive(dst);
+      if (d.fromZone >= 0 && d.fromZone !== dst) changed(d.fromZone);
+      changed(dst, d.fromZone < 0 && entry.k.includes('#') ? index : null);
+    } else if (d.fromZone >= 0) {
+      // außerhalb eines Programms abgelegt -> zurück in die Kiste
+      zones[d.fromZone].splice(d.fromPos, 1);
+      changed(d.fromZone);
+    }
+  }
+
+  function handleClick(d) {
+    const now = Date.now();
+    const zones = cur().zones;
+    if (d.fromZone >= 0) {
+      setActive(d.fromZone);
+      if (lastClick.zone === d.fromZone && lastClick.pos === d.fromPos && now - lastClick.t < 400) {
+        zones[d.fromZone].splice(d.fromPos, 1);
+        changed(d.fromZone);
+        lastClick = {};
+        return;
+      }
+      lastClick = { zone: d.fromZone, pos: d.fromPos, t: now };
+      return;
+    }
+    // Klick in der Kiste: an das aktive Programm anhängen
+    const k = d.entry.k;
+    if (available(k) <= 0) return;
+    const gap = k.includes('#');
+    zones[activeZone].push(gap ? { k, v: '' } : { k });
+    const az = activeZone;
+    changed(az, gap ? zones[az].length - 1 : null);
+    cards[az].zone.classList.add('over');
+    setTimeout(() => cards[az] && cards[az].zone.classList.remove('over'), 160);
+  }
+
+  // Eingaben in Lückenteilen
+  document.addEventListener('input', e => {
+    const inp = e.target;
+    if (!inp.matches || !inp.matches('.gap-in')) return;
+    const tile = inp.closest('.tile');
+    const ti = +tile.dataset.ti, pos = +tile.dataset.pos;
+    const clean = inp.value.replace(/[^0-9ij+\-*/%() ]/g, '');
+    if (clean !== inp.value) inp.value = clean;
+    inp.size = Math.max(2, clean.length);
+    cur().zones[ti][pos].v = clean;
+    markStale(ti);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const inZone = e.target.matches && e.target.matches('.gap-in');
+    if (e.ctrlKey || e.metaKey || inZone) {
+      e.preventDefault();
+      const ti = inZone ? +e.target.closest('.tile').dataset.ti : activeZone;
+      runTask(ti);
+    }
+  });
+
+  // =====================================================================
+  //  Sonstiges
+  // =====================================================================
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function showLevel() {
+    buildCards();
+    cur().zones.forEach((_, i) => renderZone(i));
+    renderPool();
+    renderIntro();
+    renderStatus();
+    // Ergebnisse gelöster Aufgaben wieder anzeigen
+    cur().solved.forEach((s, i) => { if (s) runTask(i); });
+    setActive(0);
+  }
+
+  function setLevel(id) {
+    if (lockedLevel && id !== lockedLevel) return;
+    if (id === state.level) return;
+    state.level = id;
+    save();
+    showLevel();
+    window.scrollTo(0, 0);
+  }
+
+  $('#btn-reset').addEventListener('click', () => {
+    if (!confirm('Stufe „' + L().title + '“ wirklich neu anfangen? Alle Teile dieser Stufe kommen zurück in die Kiste.')) return;
+    state.levels[state.level] = freshLevel(state.level);
+    save();
+    showLevel();
+  });
+  $('#btn-help').addEventListener('click', () => {
+    state.introHidden[state.level] = false;
+    save();
+    const intro = $('#intro');
+    intro.style.display = '';
+    intro.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('#btn-intro-close').addEventListener('click', () => {
+    state.introHidden[state.level] = true;
+    save();
+    $('#intro').style.display = 'none';
+  });
+  $('#btn-next').addEventListener('click', () => {
+    const next = LEVEL_IDS[LEVEL_IDS.indexOf(state.level) + 1];
+    if (next) setLevel(next);
+  });
+  $('#btn-solve-all').addEventListener('click', () => {
+    if (!confirm('Alle Lösungen dieser Stufe einsetzen? Der bisherige Stand der Stufe geht verloren.')) return;
+    const d = cur();
+    d.zones = L().tasks.map(t => t.sol.map(e => (e.v != null ? { k: e.k, v: e.v } : { k: e.k })));
+    save();
+    showLevel();
+    d.zones.forEach((_, i) => runTask(i));
+  });
+
+  // Adresse auswerten:
+  //   #lehrer          -> Lösungsknöpfe
+  //   #stufe=mittel    -> nur diese Stufe (für Schülerrechner)
+  //   kombinierbar: #stufe=profi&lehrer
+  function readHash() {
+    const h = decodeURIComponent(location.hash + location.search).toLowerCase();
+    document.body.classList.toggle('teacher', /lehrer/.test(h));
+    const m = h.match(/stufe=(einfach|mittel|profi)/);
+    lockedLevel = m ? m[1] : null;
+  }
+  window.addEventListener('hashchange', () => {
+    readHash();
+    if (lockedLevel && state.level !== lockedLevel) setLevel(lockedLevel);
+    else renderStatus();
+  });
+
+  load();
+  readHash();
+  if (lockedLevel) state.level = lockedLevel;
+  showLevel();
+})();
+</script>
+</body>
+</html>
