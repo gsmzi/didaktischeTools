@@ -20,6 +20,6 @@ In `vorlagen/` stehen die Schülervorlagen mit TODOs, in `loesungen/` die vollst
 
 **Einsatz:** Den Projektordner in Processing öffnen. Die Hauptdatei heißt wie der Ordner.
 
-## Quellen
+## Quellen und Lizenz
 
-Die Projekte sind Processing-Portierungen der Java-Materialien zu ADTs von Rainer Helfrich (ZSL Baden-Württemberg, Lehrerfortbildung Informatik).
+Die Projekte sind Processing-Portierungen der Java-Materialien zu abstrakten Datentypen von **Rainer Helfrich** (Lehrerfortbildung Informatik Baden-Württemberg). Das Originalmaterial steht unter einer Creative-Commons-Lizenz. Diese Bearbeitung wird unter denselben Bedingungen weitergegeben.
