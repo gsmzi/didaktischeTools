@@ -12,6 +12,7 @@ Die HTML-Tools sind eigenständige Dateien ohne Abhängigkeiten. Man kann sie di
 |---|---|---|---|---|
 | Daten und Codierung | [Zweierkomplement](informatik/daten-und-codierung/zweierkomplement/) | Sek II | Interaktive Visualisierung | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/daten-und-codierung/zweierkomplement/) |
 | Algorithmen und Programmierung | [for-Schleifen-Puzzle](informatik/algorithmen-und-programmierung/for-schleifen-puzzle/) | Kl. 9 (IMP) | Puzzle | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/algorithmen-und-programmierung/for-schleifen-puzzle/) |
+| Algorithmen und Programmierung | [Zählschleifen-Training](informatik/algorithmen-und-programmierung/zaehlschleifen-training/) | Kl. 9 (IMP) | Übungsaufgaben (zufällig erzeugt) | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/algorithmen-und-programmierung/zaehlschleifen-training/) |
 | Algorithmen und Programmierung | [IMP 9: Algorithmen](informatik/algorithmen-und-programmierung/imp9-algorithmen/) | Kl. 9 (IMP) | Unterrichtseinheit: Arbeitsblätter + Processing | – |
 | Bildverarbeitung | [IMP 10: Digitale Bildbearbeitung](informatik/bildverarbeitung/imp10-bildbearbeitung/) | Kl. 10 (IMP) | Unterrichtseinheit: Arbeitsblätter + Processing | – |
 | Datenstrukturen | [ADT-Programmierbeispiele](informatik/datenstrukturen/adt-programmierbeispiele/) | Kursstufe | Processing-Vorlagen + Lösungen | – |

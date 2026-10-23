@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zählschleifen-Training</title>
+<style>
+  :root {
+    --bg: #eef1f5; --panel: #ffffff; --ink: #1d2330; --muted: #5b6475; --line: #c3cad6;
+    --accent: #1f6fd1; --accent-soft: #e6f0fc;
+    --ok: #1e8e44; --ok-soft: #e5f5ea; --err: #c62828; --err-soft: #fdecea; --warn-soft: #fff6dc;
+    --c-for: #1fae35; --c-int: #f07800; --c-fn: #1a7fe8; --c-void: #33997e;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #185fb5; }
+  button.toggle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  code, .mono { font-family: var(--mono); }
+  p code, li code, .fb code, .task-text code { background: #f2f4f8; padding: 0 4px; border-radius: 3px; }
+
+  /* Kopfzeile */
+  .topbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 20px; background: linear-gradient(180deg, #4a90dd, #1259a8); color: #fff; }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .topbar button.toggle.on { background: #fff; color: #12457f; box-shadow: inset 0 0 0 2px #ffd34d; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; align-items: center; }
+  .levels span { font-size: 13px; padding: 0 6px 0 4px; opacity: .9; }
+  .levels button { background: transparent; color: #fff; border: none; border-radius: 6px; padding: 4px 11px; }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #12457f; font-weight: 600; }
+  details.terms { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.terms summary { cursor: pointer; font-weight: 600; }
+  details.terms dl { margin: 8px 0 4px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+  details.terms dt { font-weight: 600; } details.terms dd { margin: 0; }
+  .note { font-size: 13.5px; color: var(--muted); background: #f4f6f9; border-left: 3px solid #9fb6d8; padding: 5px 10px; border-radius: 0 6px 6px 0; margin: 6px 0; }
+  .predict { border: 1px solid #ecd58c; background: var(--warn-soft); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+  .predict h4 { margin: 0 0 6px; font-size: 14.5px; }
+  .predict .pf { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .predict label { display: flex; align-items: center; gap: 5px; }
+  .predict input { width: 56px; font: 14px var(--mono); text-align: center; border: 1px solid var(--line); border-radius: 4px; padding: 3px; }
+  .predict input.right { background: var(--ok-soft); border-color: var(--ok); } .predict input.wrong { background: var(--err-soft); border-color: var(--err); }
+  .predict .res { margin-top: 6px; white-space: pre-line; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .modes button { display: flex; align-items: baseline; gap: 7px; border-radius: 8px; padding: 6px 12px; }
+  .modes button .nr { font-weight: 700; color: var(--accent); }
+  .modes button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .modes button.on .nr { color: #fff; }
+  .modes .cnt { font-size: 12px; color: var(--ok); font-weight: 600; }
+  .modes button.on .cnt { color: #d9ffe3; }
+
+  main { padding: 14px 20px 30px; max-width: 1250px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card h2 { margin: 0 0 6px; font-size: 18px; }
+  .card h3 { margin: 14px 0 6px; font-size: 15px; }
+  .intro p { margin: 4px 0; }
+  .intro ul { margin: 6px 0 2px; padding-left: 20px; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .task-text { margin: 4px 0 10px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+
+  /* Code */
+  pre.code { margin: 0; font-family: var(--mono); font-size: 15px; line-height: 1.45; background: #fbfcfe; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; overflow-x: auto; }
+  .k-for { color: var(--c-for); } .k-int { color: var(--c-int); } .k-fn { color: var(--c-fn); } .k-void { color: var(--c-void); }
+  .chg { background: #fff3c4; border-radius: 3px; padding: 0 2px; }
+
+  /* Processing-Fenster */
+  .pwin-wrap { max-width: 100%; }
+  .wlabel { font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 3px; text-transform: uppercase; letter-spacing: .05em; min-height: 18px; }
+  .wlabel .coords { font-family: var(--mono); font-size: 12px; color: var(--accent); text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 8px; }
+  .pwin { display: inline-block; max-width: 100%; border: 1.5px solid #222; background: #fff; }
+  .pbar { display: flex; align-items: center; gap: 7px; height: 24px; padding: 0 8px; font-size: 12.5px; color: #222; background: #fff; white-space: nowrap; overflow: hidden; }
+  .pbar .play { width: 14px; height: 14px; border-radius: 50%; background: #111; position: relative; flex: none; }
+  .pbar .play::after { content: ""; position: absolute; left: 5px; top: 3.5px; border-left: 6px solid #fff; border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent; }
+  .pwin canvas { display: block; max-width: 100%; height: auto; cursor: crosshair; }
+  .empty-win { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; background: #f4f6f9; border: 1.5px dashed #9aa3b2; padding: 18px; min-width: 160px; min-height: 70px; text-align: center; }
+
+  /* Auswahl-Bilder */
+  .choices { display: flex; flex-wrap: wrap; gap: 12px; }
+  .choice { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border: 2px solid var(--line); border-radius: 10px; background: #fff; }
+  .choice:hover { border-color: var(--accent); }
+  .choice.right { border-color: var(--ok); background: var(--ok-soft); }
+  .choice.wrong { border-color: var(--err); background: var(--err-soft); }
+  .choice .lbl { font-weight: 700; }
+  .choice .why { font-size: 13px; max-width: 240px; color: var(--ink); text-align: left; }
+
+  /* Feedback */
+  .fb { margin-top: 10px; padding: 8px 12px; border-radius: 8px; display: none; white-space: pre-line; }
+  .fb.show { display: block; }
+  .fb.ok { background: var(--ok-soft); color: #145c2e; border: 1px solid #9fd8b2; }
+  .fb.err { background: var(--err-soft); color: #8c1c1c; border: 1px solid #f0b4b0; }
+  .fb.info { background: var(--warn-soft); color: #6b5100; border: 1px solid #ecd58c; }
+
+  /* Tabellen */
+  table.vals { border-collapse: collapse; font-size: 14px; }
+  table.vals th, table.vals td { border: 1px solid var(--line); padding: 4px 8px; text-align: center; }
+  table.vals th { background: #f1f3f7; font-weight: 600; }
+  table.vals td.given { color: var(--muted); background: #fafbfc; font-family: var(--mono); }
+  table.vals input { width: 64px; font: 14px var(--mono); text-align: center; border: 1px solid var(--line); border-radius: 4px; padding: 3px; }
+  table.vals input.right { background: var(--ok-soft); border-color: var(--ok); }
+  table.vals input.wrong { background: var(--err-soft); border-color: var(--err); }
+  table.vals td.cmdcell { font-family: var(--mono); text-align: left; white-space: nowrap; }
+
+  select { font: 15px var(--mono); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--line); background: #fff; }
+  select.right { background: var(--ok-soft); border-color: var(--ok); }
+  select.wrong { background: var(--err-soft); border-color: var(--err); }
+
+  /* Editor */
+  .editor { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; min-width: min(100%, 460px); flex: 1; }
+  .editor .tb { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; background: #f3f5f8; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .editor textarea { display: block; width: 100%; min-height: 210px; resize: vertical; border: none; padding: 8px 12px; font: 15px/1.45 var(--mono); color: #111; tab-size: 2; outline: none; }
+  .console { background: #1e1e1e; color: #d8d8d8; font-family: var(--mono); font-size: 13.5px; padding: 7px 12px; min-height: 34px; white-space: pre-wrap; }
+  .console.err { color: #ff8a80; } .console.ok { color: #8be59a; }
+
+  /* Lückenprogramm */
+  .skel { font-family: var(--mono); font-size: 15px; line-height: 2; background: #fbfcfe; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; white-space: pre; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 6px; }
+  .opt { font-family: var(--mono); font-size: 14.5px; border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; background: #fff; white-space: nowrap; overflow-x: auto; }
+  .opt b { font-family: var(--sans); margin-right: 8px; color: var(--accent); }
+  .match { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .match label { display: flex; gap: 6px; align-items: center; font-weight: 600; }
+
+  .stage2 { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 6px; }
+  .hidden { display: none !important; }
+  input.num { width: 80px; font: 15px var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; text-align: center; }
+  input.num.right { background: var(--ok-soft); border-color: var(--ok); } input.num.wrong { background: var(--err-soft); border-color: var(--err); }
+
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; max-width: 1250px; }
+  @media (max-width: 700px) {
+    .topbar, .modes, main { padding-left: 12px; padding-right: 12px; }
+    pre.code, .skel { font-size: 13.5px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>ALGORITHMEN <small>Training: Zeichnen, Methoden und Zählschleifen</small></h1>
+  <span class="spacer"></span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <button id="btn-predict" class="toggle" type="button" title="Vor dem Ausführen bzw. vor der Bildauswahl erst Anzahl und Lage der Formen vorhersagen – wie in der Klassenarbeit auf Papier">Erst vorhersagen</button>
+  <button id="btn-grid" class="toggle" type="button" title="Hilfslinien alle 10 Pixel in allen Bildern">Raster</button>
+  <button id="btn-new" type="button">Neue Aufgabe</button>
+</header>
+
+<nav class="modes" id="modes" aria-label="Aufgabentypen"></nav>
+
+<main id="main"></main>
+
+<footer>
+  Übungen zu I02_alg, Blätter 03 und 04 (Zeichenbefehle, setup(), eigene Methoden, Zählschleife). Alle Aufgaben werden zufällig erzeugt –
+  mit „Neue Aufgabe“ bekommst du jederzeit eine weitere. Fährst du mit der Maus über ein Bild, siehst du die Koordinaten x und y.
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+//  Hilfsfunktionen
+// =====================================================================
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; } return a; }
+const ceil10 = v => Math.ceil(v / 10) * 10;
+const LETTERS = 'ABCDEFGH';
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// =====================================================================
+//  Kleiner Processing-Interpreter (Teilmenge von Java)
+// =====================================================================
+const BUILTIN = {
+  size: [2], rect: [4], ellipse: [4], line: [4], point: [2], triangle: [6], quad: [8],
+  fill: [1, 3], stroke: [1, 3], noFill: [0], noStroke: [0], strokeWeight: [1], background: [1, 3],
+};
+const DRAWING = new Set(['rect', 'ellipse', 'line', 'point', 'triangle', 'quad', 'background']);
+
+function tokenize(src) {
+  const toks = []; let p = 0, line = 1;
+  while (p < src.length) {
+    const c = src[p];
+    if (c === '\n') { line++; p++; continue; }
+    if (/\s/.test(c)) { p++; continue; }
+    if (src.startsWith('//', p)) { while (p < src.length && src[p] !== '\n') p++; continue; }
+    if (src.startsWith('/*', p)) { const e = src.indexOf('*/', p + 2); const end = e < 0 ? src.length : e + 2; line += (src.slice(p, end).match(/\n/g) || []).length; p = end; continue; }
+    let m;
+    if ((m = /^\d+(\.\d+)?/.exec(src.slice(p)))) { toks.push({ t: 'num', v: parseFloat(m[0]), s: m[0], line }); p += m[0].length; continue; }
+    if ((m = /^[A-Za-z_]\w*/.exec(src.slice(p)))) { toks.push({ t: 'id', v: m[0], s: m[0], line }); p += m[0].length; continue; }
+    const two = src.slice(p, p + 2);
+    if (['++', '--', '+=', '-=', '*=', '<=', '>=', '==', '!=', '&&', '||'].includes(two)) { toks.push({ t: 'sym', v: two, s: two, line }); p += 2; continue; }
+    if ('(){};,+-*/%<>=!'.includes(c)) { toks.push({ t: 'sym', v: c, s: c, line }); p++; continue; }
+    throw { msg: `Zeile ${line}: Das Zeichen „${c}“ ist hier nicht erlaubt.`, line };
+  }
+  toks.push({ t: 'eof', v: null, s: 'Ende des Programms', line });
+  return toks;
+}
+
+let CALL_ID = 0;
+function parseProgram(src) {
+  const T = tokenize(src); let p = 0;
+  const peek = (o = 0) => T[p + o];
+  const isSym = (v, o = 0) => T[p + o].t === 'sym' && T[p + o].v === v;
+  const isId = (v, o = 0) => T[p + o].t === 'id' && T[p + o].v === v;
+  function err(msg, tok) { tok = tok || peek(); throw { msg: `Zeile ${tok.line}: ${msg}`, line: tok.line }; }
+  function expectSym(v, hint) {
+    if (!isSym(v)) {
+      const t = peek();
+      if (v === ';') err(`Hier fehlt ein Semikolon „;“ (vor „${t.s}“).`, T[p - 1] && T[p - 1].line < t.line ? T[p - 1] : t);
+      err(`Erwartet wird „${v}“, hier steht aber „${t.s}“.${hint ? ' ' + hint : ''}`);
+    }
+    return T[p++];
+  }
+  function expectId() { if (peek().t !== 'id') err(`Hier wird ein Name erwartet, es steht aber „${peek().s}“ da.`); return T[p++]; }
+
+  // Ausdrücke
+  function expr() { return orE(); }
+  function bin(next, ops) { return function f() { let l = next(); while (peek().t === 'sym' && ops.includes(peek().v)) { const op = T[p++]; const r = next(); l = { k: 'bin', op: op.v, l, r, line: op.line }; } return l; }; }
+  function unary() {
+    if (isSym('-')) { const t = T[p++]; return { k: 'neg', e: unary(), line: t.line }; }
+    if (isSym('+')) { p++; return unary(); }
+    if (isSym('!')) { const t = T[p++]; return { k: 'not', e: unary(), line: t.line }; }
+    return primary();
+  }
+  function primary() {
+    const t = peek();
+    if (t.t === 'num') { p++; return { k: 'num', v: t.v, isInt: !t.s.includes('.') }; }
+    if (t.t === 'id') {
+      p++;
+      if (isSym('(')) err(`„${t.v}(…)“ liefert keinen Wert und kann nicht in einer Rechnung stehen.`, t);
+      return { k: 'var', name: t.v, line: t.line };
+    }
+    if (isSym('(')) { p++; const e = expr(); expectSym(')'); return e; }
+    err(`An dieser Stelle wird eine Zahl oder Rechnung erwartet, hier steht aber „${t.s}“.`);
+  }
+  const mulE = bin(unary, ['*', '/', '%']);
+  const addE = bin(mulE, ['+', '-']);
+  const cmpE = bin(addE, ['<', '<=', '>', '>=', '==', '!=']);
+  const andE = bin(cmpE, ['&&']);
+  const orE = bin(andE, ['||']);
+
+  // Anweisungen
+  function simple() { // Zuweisung, Inkrement, Deklaration, Aufruf (ohne ;)
+    const t = peek();
+    if (isId('int') || isId('float')) {
+      p++; const name = expectId();
+      let init = null; if (isSym('=')) { p++; init = expr(); }
+      return { k: 'decl', name: name.v, init, isInt: t.v === 'int', line: t.line };
+    }
+    if (t.t === 'id') {
+      if (isSym('(', 1)) {
+        p += 2; const args = [];
+        if (!isSym(')')) { args.push(expr()); while (isSym(',')) { p++; args.push(expr()); } }
+        expectSym(')', 'Prüfe die Klammern und Kommas.');
+        return { k: 'call', name: t.v, args, line: t.line, id: ++CALL_ID };
+      }
+      if (isSym('++', 1) || isSym('--', 1)) { p += 2; return { k: 'assign', name: t.v, op: T[p - 1].v === '++' ? '+=' : '-=', e: { k: 'num', v: 1, isInt: true }, line: t.line }; }
+      if (isSym('=', 1) || isSym('+=', 1) || isSym('-=', 1) || isSym('*=', 1)) { p++; const op = T[p++].v; return { k: 'assign', name: t.v, op, e: expr(), line: t.line }; }
+      err(`„${t.v}“ steht hier allein. Meintest du einen Befehl wie „${t.v}(…);“?`, t);
+    }
+    err(`„${t.s}“ kann hier nicht stehen.`);
+  }
+  function statement() {
+    const t = peek();
+    if (isId('for')) {
+      p++; expectSym('(', 'Nach „for“ kommt eine runde Klammer.');
+      const init = isSym(';') ? null : simple();
+      expectSym(';', 'Im Schleifenkopf trennen Semikolons Startwert, Bedingung und Schrittweite.');
+      const cond = isSym(';') ? null : expr();
+      expectSym(';', 'Im Schleifenkopf trennen Semikolons Startwert, Bedingung und Schrittweite.');
+      const upd = isSym(')') ? null : simple();
+      expectSym(')', 'Der Schleifenkopf endet mit „)“.');
+      const body = statement();
+      return { k: 'for', init, cond, upd, body, line: t.line };
+    }
+    if (isSym('{')) return block();
+    if (isSym(';')) { p++; return { k: 'empty' }; }
+    if (isId('void') && peek(1).t === 'id' && isSym('(', 2) && isSym(')', 3) && isSym(';', 4)) err('Beim Aufruf einer Methode steht kein „void“ davor – „void“ gehört nur in den Methodenkopf.', t);
+    if (isId('void')) err('Eine Methode darf nicht innerhalb einer anderen Methode stehen. Fehlt vorher eine „}“?', t);
+    const s = simple(); expectSym(';'); return s;
+  }
+  function block() {
+    const open = expectSym('{'); const body = [];
+    while (!isSym('}')) { if (peek().t === 'eof') err('Zu einer öffnenden Klammer „{“ fehlt die schließende Klammer „}“.', open); body.push(statement()); }
+    p++; return { k: 'block', body };
+  }
+  const methods = {}, top = [];
+  while (peek().t !== 'eof') {
+    if (isSym('}')) err('Zu dieser schließenden Klammer „}“ gibt es keine öffnende Klammer „{“.');
+    if (peek().t === 'id' && peek().v !== 'void' && isSym('(', 1) && isSym(')', 2) && isSym('{', 3)) err(`Vor dem Methodennamen „${peek().v}“ fehlt „void“.`);
+    if (isId('void')) {
+      p++; const name = expectId(); expectSym('(');
+      const params = [];
+      if (!isSym(')')) { do { if (isSym(',')) p++; if (!(isId('int') || isId('float'))) err('Vor einem Parameter steht sein Datentyp, z. B. „int anzahl“.'); p++; params.push(expectId().v); } while (isSym(',')); }
+      expectSym(')');
+      if (!isSym('{')) err('Nach dem Methodenkopf kommt eine geschweifte Klammer „{“.');
+      if (methods[name.v]) err(`Die Methode „${name.v}()“ gibt es schon.`, name);
+      methods[name.v] = { params, body: block(), line: name.line };
+    } else top.push(statement());
+  }
+  return { methods, top };
+}
+
+// Ausführen. opts: { W, H, entry }
+function runProgram(src, opts = {}) {
+  const prog = parseProgram(src);
+  const ops = []; let W = null, H = null; let steps = 0; let loopDepth = 0;
+  const st = { fill: [255, 255, 255], stroke: [0, 0, 0], sw: 1, noFill: false, noStroke: false };
+  const setupMode = !!prog.methods.setup;
+  function rt(msg, line) { throw { msg: line ? `Zeile ${line}: ${msg}` : msg, line }; }
+  function lookup(scopes, name) { for (let k = scopes.length - 1; k >= 0; k--) if (name in scopes[k]) return scopes[k]; return null; }
+  function ev(e, sc) {
+    switch (e.k) {
+      case 'num': return e.v;
+      case 'var': { const s = lookup(sc, e.name); if (!s) { if (e.name === 'width') return W ?? 100; if (e.name === 'height') return H ?? 100; rt(`Die Variable „${e.name}“ ist hier nicht bekannt.${/^[ij]$/.test(e.name) ? ' Die Zählvariable gibt es nur innerhalb ihrer Schleife.' : ''}`, e.line); } return s[e.name].v; }
+      case 'neg': return -ev(e.e, sc);
+      case 'not': return !ev(e.e, sc);
+      case 'bin': {
+        const a = ev(e.l, sc), b = ev(e.r, sc);
+        switch (e.op) {
+          case '+': return a + b; case '-': return a - b; case '*': return a * b;
+          case '/': if (b === 0) rt('Division durch 0.', e.line); return (Number.isInteger(a) && Number.isInteger(b)) ? Math.trunc(a / b) : a / b;
+          case '%': if (b === 0) rt('Division durch 0.', e.line); return a % b;
+          case '<': return a < b; case '<=': return a <= b; case '>': return a > b; case '>=': return a >= b;
+          case '==': return a === b; case '!=': return a !== b; case '&&': return a && b; case '||': return a || b;
+        }
+      }
+    }
+  }
+  function exec(s, sc) {
+    if (++steps > 200000) rt('Das Programm läuft zu lange. Endet deine Schleife wirklich irgendwann?');
+    switch (s.k) {
+      case 'empty': return;
+      case 'block': { sc.push({}); for (const x of s.body) exec(x, sc); sc.pop(); return; }
+      case 'decl': { const top = sc[sc.length - 1]; if (s.name in top) rt(`Die Variable „${s.name}“ gibt es hier schon.`, s.line); let v = s.init ? ev(s.init, sc) : 0; if (s.isInt) v = Math.trunc(v); top[s.name] = { v, isInt: s.isInt }; return; }
+      case 'assign': { const scope = lookup(sc, s.name); if (!scope) rt(`Die Variable „${s.name}“ ist nicht deklariert. Fehlt „int“?`, s.line); const o = scope[s.name]; const val = ev(s.e, sc); let v = s.op === '=' ? val : s.op === '+=' ? o.v + val : s.op === '-=' ? o.v - val : o.v * val; if (o.isInt) v = Math.trunc(v); o.v = v; return; }
+      case 'for': {
+        sc.push({});
+        if (s.init) exec(s.init, sc);
+        let guard = 0;
+        loopDepth++;
+        try {
+          while (s.cond ? ev(s.cond, sc) : true) {
+            if (++guard > 20000) rt('Die Schleife hört nicht auf. Prüfe Bedingung und Schrittweite.', s.line);
+            exec(s.body, sc);
+            if (s.upd) exec(s.upd, sc);
+          }
+        } finally { loopDepth--; }
+        sc.pop(); return;
+      }
+      case 'call': return call(s, sc);
+    }
+  }
+  function call(s, sc) {
+    const args = s.args.map(a => ev(a, sc));
+    if (BUILTIN[s.name]) {
+      const allowed = BUILTIN[s.name];
+      if (!allowed.includes(args.length)) rt(`„${s.name}()“ braucht ${allowed.join(' oder ')} Werte, hier sind es ${args.length}.`, s.line);
+      if (s.name === 'size') { if (ops.length) rt('size() muss als Erstes in setup() stehen – vor allen Zeichenbefehlen.', s.line); W = Math.round(args[0]); H = Math.round(args[1]); return; }
+      if (DRAWING.has(s.name) && W === null) {
+        if (setupMode) { W = 100; H = 100; } else { W = opts.W || 100; H = opts.H || 100; }
+      }
+      if (ops.length > 5000) rt('Es werden zu viele Formen gezeichnet. Hört deine Schleife irgendwann auf? Prüfe Bedingung und Schrittweite.', s.line);
+      switch (s.name) {
+        case 'fill': st.fill = args.length === 1 ? [args[0], args[0], args[0]] : args; st.noFill = false; return;
+        case 'stroke': st.stroke = args.length === 1 ? [args[0], args[0], args[0]] : args; st.noStroke = false; return;
+        case 'noFill': st.noFill = true; return;
+        case 'noStroke': st.noStroke = true; return;
+        case 'strokeWeight': st.sw = args[0]; return;
+        case 'background': ops.push({ t: 'background', c: args.length === 1 ? [args[0], args[0], args[0]] : args }); return;
+        default: ops.push({ t: s.name, a: args, fill: st.noFill ? null : st.fill.slice(), stroke: st.noStroke ? null : st.stroke.slice(), sw: st.sw, line: s.line, src: s.id, inLoop: loopDepth > 0 }); return;
+      }
+    }
+    const m = prog.methods[s.name];
+    if (!m) {
+      const low = Object.keys(BUILTIN).concat(Object.keys(prog.methods)).find(n => n.toLowerCase() === s.name.toLowerCase());
+      rt(`Die Methode „${s.name}()“ gibt es nicht.${low ? ` Meintest du „${low}()“? Auf Groß- und Kleinschreibung achten!` : ''}`, s.line);
+    }
+    if (m.params.length !== args.length) rt(`„${s.name}()“ erwartet ${m.params.length} Wert(e), hier sind es ${args.length}.`, s.line);
+    if (sc.length > 60) rt('Zu viele verschachtelte Methodenaufrufe.', s.line);
+    const scope = {}; m.params.forEach((n, k) => { scope[n] = { v: args[k], isInt: true }; });
+    const inner = [sc[0], scope];
+    exec(m.body, inner);
+  }
+  const globals = {};
+  const sc = [globals];
+  const names = Object.keys(prog.methods);
+  if (setupMode) {
+    for (const s of prog.top) { if (s.k !== 'decl') rt('Außerhalb von Methoden dürfen nur Variablen deklariert werden. Gehört die Zeile in setup()?', s.line); exec(s, sc); }
+    call({ name: 'setup', args: [], line: prog.methods.setup.line }, sc);
+  } else {
+    for (const s of prog.top) exec(s, sc);
+    const entry = opts.entry && prog.methods[opts.entry] ? opts.entry : names.length === 1 ? names[0] : null;
+    if (entry) { if (prog.methods[entry].params.length) rt(`Deine Methode „${entry}()“ hat Parameter – hier soll sie ohne Parameter auskommen.`); call({ name: entry, args: [], line: prog.methods[entry].line }, sc); }
+    else if (names.length > 1 && !prog.top.length) rt('Es gibt mehrere Methoden, aber kein setup(), das sie aufruft.');
+  }
+  if (W === null) { W = setupMode ? 100 : (opts.W || 100); H = setupMode ? 100 : (opts.H || 100); }
+  return { W, H, ops, methods: names };
+}
+
+// =====================================================================
+//  Zeichnen
+// =====================================================================
+let GRID = false;
+try { GRID = localStorage.getItem('zsTraining.grid') === '1'; } catch (e) { /* ohne Speicher */ }
+const rgb = c => `rgb(${c.map(v => Math.max(0, Math.min(255, Math.round(v)))).join(',')})`;
+
+function paint(ctx, res, o = {}) {
+  const { W, H } = res;
+  ctx.save();
+  ctx.fillStyle = 'rgb(204,204,204)'; ctx.fillRect(0, 0, W, H);
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  if (o.flipY) { ctx.translate(0, H); ctx.scale(1, -1); }
+  for (const op of res.ops) {
+    if (op.t === 'background') { ctx.fillStyle = rgb(op.c); ctx.fillRect(0, 0, W, H); continue; }
+    ctx.lineWidth = op.sw; ctx.lineJoin = 'miter'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    const a = op.a;
+    let anchorSwap = o.anchorSwap;
+    switch (op.t) {
+      case 'rect': anchorSwap ? ctx.rect(a[0] - a[2] / 2, a[1] - a[3] / 2, a[2], a[3]) : ctx.rect(a[0], a[1], a[2], a[3]); break;
+      case 'ellipse': { const cx = anchorSwap ? a[0] + a[2] / 2 : a[0], cy = anchorSwap ? a[1] + a[3] / 2 : a[1]; ctx.ellipse(cx, cy, Math.abs(a[2] / 2), Math.abs(a[3] / 2), 0, 0, Math.PI * 2); break; }
+      case 'line': ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); break;
+      case 'point': ctx.rect(a[0] - .5, a[1] - .5, 1, 1); break;
+      case 'triangle': ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); ctx.lineTo(a[4], a[5]); ctx.closePath(); break;
+      case 'quad': ctx.moveTo(a[0], a[1]); ctx.lineTo(a[2], a[3]); ctx.lineTo(a[4], a[5]); ctx.lineTo(a[6], a[7]); ctx.closePath(); break;
+    }
+    if (op.fill && op.t !== 'line') { ctx.fillStyle = rgb(op.fill); ctx.fill(); }
+    if (op.stroke) { ctx.strokeStyle = rgb(op.stroke); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+function drawGrid(ctx, W, H, k) {
+  ctx.save();
+  for (let x = 10; x < W; x += 10) { ctx.strokeStyle = x % 50 ? 'rgba(31,111,209,.22)' : 'rgba(31,111,209,.5)'; ctx.lineWidth = 1 / k; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 10; y < H; y += 10) { ctx.strokeStyle = y % 50 ? 'rgba(31,111,209,.22)' : 'rgba(31,111,209,.5)'; ctx.lineWidth = 1 / k; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
+}
+
+const WINDOWS = new Set();
+// Fenster-Element. o: { label, maxW, flipY, anchorSwap, title }
+function makeWin(res, o = {}) {
+  const coords = el('span', { class: 'coords' });
+  const label = el('div', { class: 'wlabel' }, o.label || '', coords);
+  const canvas = el('canvas');
+  const bar = el('div', { class: 'pbar' }, el('span', { class: 'play' }), o.title || 'sketch');
+  const win = el('div', { class: 'pwin' }, bar, canvas);
+  const wrap = el('div', { class: 'pwin-wrap' }, label, win);
+  const maxW = o.maxW || 420, maxH = o.maxH || 300;
+  const w = { res, o, canvas, wrap };
+  w.draw = () => {
+    const { W, H } = w.res;
+    const k = Math.min(3, maxW / W, maxH / H);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(W * k * dpr); canvas.height = Math.round(H * k * dpr);
+    canvas.style.width = Math.round(W * k) + 'px';
+    bar.style.width = Math.round(W * k) + 'px';
+    bar.style.minWidth = '120px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(k * dpr, 0, 0, k * dpr, 0, 0);
+    paint(ctx, w.res, w.o);
+    if (GRID) drawGrid(ctx, W, H, k);
+    w.k = k;
+  };
+  w.set = r => { w.res = r; w.draw(); };
+  canvas.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * w.res.W), y = Math.floor((e.clientY - r.top) / r.height * w.res.H);
+    coords.textContent = `x = ${x}  y = ${y}`;
+  });
+  canvas.addEventListener('pointerleave', () => { coords.textContent = ''; });
+  w.draw();
+  WINDOWS.add(w);
+  return w;
+}
+function redrawAll() { for (const w of WINDOWS) if (w.wrap.isConnected) w.draw(); else WINDOWS.delete(w); }
+
+// Pixelvergleich zweier Ergebnisse
+function pixels(res, o = {}) {
+  const c = document.createElement('canvas'); c.width = res.W; c.height = res.H;
+  const ctx = c.getContext('2d'); paint(ctx, res, o);
+  return ctx.getImageData(0, 0, res.W, res.H).data;
+}
+function samePicture(a, b, oa = {}, ob = {}) {
+  if (!a || !b || a.W !== b.W || a.H !== b.H) return false;
+  const pa = pixels(a, oa), pb = pixels(b, ob);
+  let diff = 0;
+  for (let k = 0; k < pa.length; k += 4) if (Math.abs(pa[k] - pb[k]) > 40 || Math.abs(pa[k + 1] - pb[k + 1]) > 40 || Math.abs(pa[k + 2] - pb[k + 2]) > 40) diff++;
+  return diff <= 2;
+}
+
+// =====================================================================
+//  Aufgaben-Bausteine: Schleifen mit Termen der Form a + i*b
+// =====================================================================
+const Tm = (a, b = 0) => ({ a, b });
+function termStr(t) {
+  if (!t.b) return String(t.a);
+  const m = 'i*' + Math.abs(t.b);
+  if (t.a === 0) return t.b > 0 ? m : '-' + m;
+  return `${t.a} ${t.b > 0 ? '+' : '-'} ${m}`;
+}
+const argsStr = s => s.args.map(termStr).join(', ');
+const headStr = s => `for (int i = ${s.start}; i ${s.op} ${s.end}; ${s.inc === 1 ? 'i++' : `i = i + ${s.inc}`}) {`;
+const bodyStr = s => `${s.cmd}(${argsStr(s)});`;
+function loopLines(s, ind = '') { return [ind + headStr(s), ind + '  ' + bodyStr(s), ind + '}']; }
+function methodLines(s) { return [`void ${s.name}() {`, ...loopLines(s, '  '), '}']; }
+function programLines(s, W, H) { return ['void setup() {', `  size(${W}, ${H});`, `  ${s.name}();`, '}', '', ...methodLines(s)]; }
+const clone = s => JSON.parse(JSON.stringify(s));
+function iters(s) { const out = []; for (let i = s.start; s.op === '<' ? i < s.end : i <= s.end; i += s.inc) out.push(i); return out; }
+function shapesOf(s) { return iters(s).map(i => ({ t: s.cmd, a: s.args.map(t => t.a + t.b * i), fill: [255, 255, 255], stroke: [0, 0, 0], sw: 1 })); }
+function bbox(ops) {
+  let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+  for (const o of ops) {
+    const a = o.a; let xs, ys;
+    if (o.t === 'rect') { xs = [a[0], a[0] + a[2]]; ys = [a[1], a[1] + a[3]]; }
+    else if (o.t === 'ellipse') { xs = [a[0] - a[2] / 2, a[0] + a[2] / 2]; ys = [a[1] - a[3] / 2, a[1] + a[3] / 2]; }
+    else { xs = [a[0], a[2]]; ys = [a[1], a[3]]; }
+    x1 = Math.min(x1, ...xs); x2 = Math.max(x2, ...xs); y1 = Math.min(y1, ...ys); y2 = Math.max(y2, ...ys);
+  }
+  return { x1, y1, x2, y2 };
+}
+function resOf(s, W, H) { return { W, H, ops: shapesOf(s) }; }
+function fitWindow(specs, min = 60) {
+  const all = specs.flatMap(shapesOf); const b = bbox(all);
+  return { W: Math.max(min, ceil10(b.x2 + 10)), H: Math.max(40, ceil10(b.y2 + 10)) };
+}
+const inside = (s, W, H) => { const b = bbox(shapesOf(s)); return b.x1 >= 0 && b.y1 >= 0 && b.x2 <= W && b.y2 <= H; };
+
+// Musterfamilien. Jede liefert eine Schleife; main = Index des Terms, der sich typischerweise ändert.
+const FAMILIES = {
+  reiheQuadrate() { const s = pick([20, 30]), g = pick([0, 10]), x0 = pick([10, 20]), y0 = pick([10, 20]);
+    return { cmd: 'rect', args: [Tm(x0, s + g), Tm(y0), Tm(s), Tm(s)], n: R(3, 6), name: 'zeichneReihe', main: 0, sizeIdx: [2, 3], what: 'Quadrate' }; },
+  spalteQuadrate() { const s = pick([20, 30]), g = pick([0, 10]), x0 = pick([10, 20, 30]), y0 = pick([10, 20]);
+    return { cmd: 'rect', args: [Tm(x0), Tm(y0, s + g), Tm(s), Tm(s)], n: R(3, 5), name: 'zeichneTurm', main: 1, sizeIdx: [2, 3], what: 'Quadrate' }; },
+  reiheKreise() { const d = pick([20, 30]), g = pick([0, 10]), x0 = d / 2 + pick([0, 10]), y = d / 2 + pick([10, 20]);
+    return { cmd: 'ellipse', args: [Tm(x0, d + g), Tm(y), Tm(d), Tm(d)], n: R(3, 6), name: 'zeichneKreise', main: 0, sizeIdx: [2, 3], what: 'Kreise' }; },
+  spalteKreise() { const d = pick([20, 30]), g = pick([0, 10]), x = d / 2 + pick([10, 20]), y0 = d / 2 + pick([0, 10]);
+    return { cmd: 'ellipse', args: [Tm(x), Tm(y0, d + g), Tm(d), Tm(d)], n: R(3, 5), name: 'zeichneKette', main: 1, sizeIdx: [2, 3], what: 'Kreise' }; },
+  treppeRunter() { const s = 20, x0 = pick([10, 20]), y0 = 10;
+    return { cmd: 'rect', args: [Tm(x0, s), Tm(y0, s), Tm(s), Tm(s)], n: R(3, 5), name: 'zeichneTreppe', main: 1, sizeIdx: [2, 3], what: 'Quadrate' }; },
+  treppeHoch() { const s = 20, n = R(3, 5), x0 = pick([10, 20]), y0 = 10 + (n - 1) * s;
+    return { cmd: 'rect', args: [Tm(x0, s), Tm(y0, -s), Tm(s), Tm(s)], n, name: 'zeichneTreppe', main: 1, sizeIdx: [2, 3], what: 'Quadrate' }; },
+  wachsendeKreise() { const n = R(3, 5), d0 = pick([10, 20]), dd = pick([10, 20]), dmax = d0 + dd * (n - 1), dx = pick([dmax / 2 + d0 / 2 + 5, dmax]), x0 = d0 / 2 + 10;
+    const dxx = ceil10(dx); return { cmd: 'ellipse', args: [Tm(x0, dxx), Tm(dmax / 2 + 10), Tm(d0, dd), Tm(d0, dd)], n, name: 'zeichneKreise', main: 2, sizeIdx: [2, 3], what: 'Kreise' }; },
+  ringe() { const n = R(3, 6), dd = pick([10, 20]), D = dd * n + pick([0, 10]), c = D / 2 + 10;
+    return { cmd: 'ellipse', args: [Tm(c), Tm(c), Tm(D, -dd), Tm(D, -dd)], n, name: 'zeichneRinge', main: 2, sizeIdx: [2, 3], what: 'Kreise' }; },
+  verschachtelteQuadrate() { const n = R(3, 5), k = pick([5, 10]), S = 2 * k * n + pick([10, 20]), x0 = 10;
+    return { cmd: 'rect', args: [Tm(x0, k), Tm(x0, k), Tm(S, -2 * k), Tm(S, -2 * k)], n, name: 'zeichneRahmen', main: 2, sizeIdx: [2, 3], what: 'Quadrate' }; },
+  balken() { const n = R(3, 6), w = pick([10, 20]), g = pick([10]), h0 = pick([10, 20]), dh = pick([10, 20]), base = 10 + h0 + dh * (n - 1);
+    return { cmd: 'rect', args: [Tm(10, w + g), Tm(base - h0, -dh), Tm(w), Tm(h0, dh)], n, name: 'zeichneBalken', main: 3, sizeIdx: [2, 3], what: 'Balken' }; },
+  latten() { const n = R(4, 8), dx = pick([20]), w = 10, x0 = pick([10, 20]), h = pick([40, 50, 60]);
+    return { cmd: 'rect', args: [Tm(x0, dx), Tm(10), Tm(w), Tm(h)], n, name: 'zeichneZaun', main: 0, sizeIdx: [2, 3], what: 'Latten' }; },
+  linien() { const n = R(4, 8), dx = pick([10, 20]), x0 = pick([10, 20]), y2 = pick([40, 50, 60]);
+    return { cmd: 'line', args: [Tm(x0, dx), Tm(10), Tm(x0, dx), Tm(y2)], n, name: 'zeichneLinien', main: 0, sizeIdx: [], what: 'Linien' }; },
+};
+const FAM_KEYS = Object.keys(FAMILIES);
+function makeSpec(key) {
+  const f = FAMILIES[key || pick(FAM_KEYS)]();
+  return Object.assign(f, { start: 0, op: '<', end: f.n, inc: 1, fam: key });
+}
+function specIn(keys, W, H, tries = 400) {
+  for (let k = 0; k < tries; k++) { const key = pick(keys); const s = makeSpec(key); s.fam = key; if (!W || inside(s, W, H)) return s; }
+  return null;
+}
+
+// Abwandlungen (für Fehler, Ablenker und „Was wäre, wenn …?“)
+const MODS = {
+  le: { ok: s => s.op === '<', apply: s => { s.op = '<='; },
+    why: 'Bei <code>i &lt;=</code> läuft die Schleife einmal mehr: Der Endwert selbst wird auch noch erreicht.',
+    bug: 'Mit <code>&lt;=</code> statt <code>&lt;</code> wird eine Form zu viel gezeichnet.' },
+  start1: { ok: s => s.start === 0, apply: s => { s.start = 1; },
+    why: 'Mit dem Startwert 1 fällt der Durchlauf für i = 0 weg: eine Form weniger, und die erste Form fehlt.',
+    bug: 'Der Startwert ist 1 statt 0 – die erste Form fehlt.' },
+  inc2: { ok: s => s.inc === 1 && s.end >= 3, apply: s => { s.inc = 2; },
+    why: 'Mit <code>i = i + 2</code> ist die <b>Schrittweite der Zählvariable</b> 2: i nimmt nur die Werte 0, 2, 4, … an. Es entsteht nur jede zweite Form, und ein Term wie <code>20 + i*30</code> ändert sich von Durchlauf zu Durchlauf um 60 statt um 30.' },
+  fewer: { ok: s => s.end >= 4, apply: s => { s.end -= 2; },
+    why: 'Mit einem kleineren Endwert gibt es weniger Durchläufe.' },
+  step: { ok: s => s.args[s.main].b !== 0, apply: s => { const vert = s.cmd === 'line' && s.args[0].a === s.args[2].a && s.args[0].b === s.args[2].b; const t = s.args[s.main]; t.b = t.b > 0 ? t.b + 10 : t.b - 10; if (vert) { s.args[0].b = t.b; s.args[2].b = t.b; } },
+    why: 'Die Zahl hinter <code>i*</code> gibt an, um wie viel sich dieser Wert pro Durchlauf ändert (bei <code>i++</code>). Hier ist diese <b>Änderung pro Durchlauf</b> anders.',
+    bug: 'Die Änderung pro Durchlauf (die Zahl hinter <code>i*</code>) ist zu groß.' },
+  swapXY: { ok: s => s.cmd !== 'line' && (s.args[0].a !== s.args[1].a || s.args[0].b !== s.args[1].b), apply: s => { const a = s.args; [a[0], a[1]] = [a[1], a[0]]; [a[2], a[3]] = [a[3], a[2]]; },
+    why: 'Hier sind x- und y-Werte vertauscht: Der erste Wert ist immer x (nach rechts), der zweite y (nach unten).',
+    bug: 'x- und y-Wert (und Breite/Höhe) sind vertauscht.' },
+  sign: { ok: s => s.args[1].b !== 0 && s.cmd !== 'line', apply: s => { const t = s.args[1]; const n = s.end - 1; t.a = t.a + t.b * n; t.b = -t.b; },
+    why: 'Wird y von Form zu Form kleiner, wandern die Formen nach oben – die y-Achse zeigt in Processing nach unten.' },
+  addY: { ok: s => s.args[1].b === 0 && s.cmd !== 'line', apply: s => { s.args[1].b = 10; },
+    why: 'Bekommt y einen Term mit i, verschiebt sich jede Form ein Stück weiter nach unten.' },
+  grow: { ok: s => s.cmd !== 'line' && s.args[2].b === 0 && s.args[3].b === 0 && s.args[2].a === s.args[3].a, apply: s => { s.args[2].b = 5; s.args[3].b = 5; },
+    why: 'Bekommen Breite und Höhe einen Term mit i, wird jede Form ein Stück größer.' },
+};
+function modded(s, key) { const c = clone(s); MODS[key].apply(c); return c; }
+
+// Beschreibung der Änderung im Programmtext
+function changeText(s, key) {
+  const c = modded(s, key);
+  if (['le', 'start1', 'inc2', 'fewer'].includes(key)) {
+    const parts = { le: [`i ${s.op} ${s.end}`, `i ${c.op} ${c.end}`], start1: [`int i = ${s.start}`, `int i = ${c.start}`], inc2: ['i++', 'i = i + 2'], fewer: [`i ${s.op} ${s.end}`, `i ${c.op} ${c.end}`] }[key];
+    return { html: `Im Schleifenkopf wird <code>${esc(parts[0])}</code> ersetzt durch <code>${esc(parts[1])}</code>.`, spec: c };
+  }
+  return { html: `Die Zeile <code>${esc(bodyStr(s))}</code> wird ersetzt durch <code>${esc(bodyStr(c))}</code>.`, spec: c };
+}
+
+// Code hervorheben
+function hl(lines, marks = []) {
+  return lines.map((l, k) => {
+    let h = esc(l)
+      .replace(/\b(for)\b/g, '<span class="k-for">$1</span>')
+      .replace(/\b(int)\b/g, '<span class="k-int">$1</span>')
+      .replace(/\b(void)\b/g, '<span class="k-void">$1</span>')
+      .replace(/\b(size|rect|ellipse|line|fill|stroke|noFill|noStroke|strokeWeight|background|setup)\b(?=\()/g, '<span class="k-fn">$1</span>');
+    return marks.includes(k) ? `<span class="chg">${h}</span>` : h;
+  }).join('\n');
+}
+const codeBox = (lines, marks) => el('pre', { class: 'code', html: hl(lines, marks) });
+
+// =====================================================================
+//  Zustand, Fortschritt
+// =====================================================================
+const STORE = 'zsTraining.v1';
+let score = {};
+try { score = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { score = {}; }
+function addScore(id) { score[id] = (score[id] || 0) + 1; try { localStorage.setItem(STORE, JSON.stringify(score)); } catch (e) { /* ohne Speicher */ } renderModes(); }
+
+function feedback() { const f = el('div', { class: 'fb' }); f.set = (kind, html) => { f.className = 'fb show ' + kind; f.innerHTML = html; }; f.clear = () => { f.className = 'fb'; f.innerHTML = ''; }; return f; }
+
+function editor(initial, onRun, o = {}) {
+  const ta = el('textarea', { spellcheck: 'false', autocapitalize: 'off', autocomplete: 'off', 'aria-label': 'Programmtext' });
+  ta.value = initial;
+  const cons = el('div', { class: 'console' }, o.consoleText || 'Noch nicht ausgeführt.');
+  const pbox = PREDICT && o.predict !== false ? predictBox(o.predictTitle || 'Erst vorhersagen: Was wird das Programm zeichnen?', () => { run.disabled = false; cons.textContent = 'Jetzt ausführen und mit deiner Vorhersage vergleichen.'; }) : null;
+  let compared = false;
+  const run = el('button', { class: 'primary', type: 'button', onclick: () => {
+    LASTRUN = null; onRun(ta.value, cons); const r = LASTRUN;
+    if (pbox && !compared && r) { compared = true; pbox.compare(r); }
+  } }, '▶ Ausführen');
+  if (pbox) { run.disabled = true; cons.textContent = 'Halte zuerst oben deine Vorhersage fest.'; }
+  const reset = el('button', { type: 'button', onclick: () => { ta.value = initial; cons.textContent = 'Zurückgesetzt.'; cons.className = 'console'; } }, 'Zurücksetzen');
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Tab') { e.preventDefault(); const s = ta.selectionStart, en = ta.selectionEnd; ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(en); ta.selectionStart = ta.selectionEnd = s + 2; }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (!run.disabled) run.click(); }
+    if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault(); const s = ta.selectionStart; const before = ta.value.slice(0, s); const ln = before.slice(before.lastIndexOf('\n') + 1);
+      let ind = ln.match(/^\s*/)[0]; if (/\{\s*$/.test(ln)) ind += '  ';
+      ta.value = before + '\n' + ind + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = s + 1 + ind.length;
+    }
+  });
+  const box = el('div', { class: 'editor' }, el('div', { class: 'tb' }, run, reset, el('span', null, 'Strg + Enter führt aus')), ta, cons);
+  box.ta = ta; box.cons = cons; box.pbox = pbox; box.run = run;
+  if (pbox) { const wrap = el('div', { class: 'col', style: 'flex:1; min-width:min(100%, 460px)' }, pbox, box); wrap.ta = ta; wrap.cons = cons; wrap.pbox = pbox; wrap.run = run; return wrap; }
+  return box;
+}
+// ---------- Erst vorhersagen ----------
+let PREDICT = false;
+try { PREDICT = localStorage.getItem('zsTraining.predict') === '1'; } catch (e) { /* ohne Speicher */ }
+const REFPT = { rect: 'linke obere Ecke', ellipse: 'Mittelpunkt', line: 'Anfangspunkt (die ersten beiden Werte)' };
+// Vorhersage von Anzahl, erster und letzter Form. onSubmit wird nach dem Festhalten aufgerufen.
+function predictBox(title, onSubmit) {
+  const n = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': 'Anzahl Formen' });
+  const fx = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': 'erste Form x' }), fy = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': 'erste Form y' });
+  const lx = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': 'letzte Form x' }), ly = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': 'letzte Form y' });
+  const res = el('div', { class: 'res' });
+  const all = [n, fx, fy, lx, ly];
+  const btn = el('button', { class: 'primary', type: 'button', onclick: () => {
+    if (all.some(x => x.value.trim() === '' || isNaN(Number(x.value.trim())))) { res.textContent = 'Trage zuerst alle fünf Zahlen ein.'; return; }
+    all.forEach(x => { x.disabled = true; }); btn.disabled = true; btn.textContent = 'Vorhersage festgehalten';
+    res.textContent = ''; box.done = true; onSubmit && onSubmit();
+  } }, 'Vorhersage festhalten');
+  const box = el('div', { class: 'predict' }, el('h4', null, title),
+    el('div', { class: 'pf' }, el('label', null, 'Anzahl Formen:', n), el('label', null, 'erste Form (', fx, '|', fy, ')'), el('label', null, 'letzte Form (', lx, '|', ly, ')'), btn),
+    el('div', { class: 'note', style: 'margin:6px 0 0' }, 'Gemeint ist jeweils der Bezugspunkt: bei rect() die linke obere Ecke, bei ellipse() der Mittelpunkt, bei line() der Anfangspunkt.'), res);
+  box.done = false;
+  // Vergleich mit dem tatsächlichen Ergebnis
+  box.compare = r => {
+    const d = r.ops.filter(o => o.t !== 'background'); if (!d.length) { res.textContent = 'Es wurde nichts gezeichnet.'; return; }
+    const f = d[0], l = d[d.length - 1];
+    const want = [d.length, f.a[0], f.a[1], l.a[0], l.a[1]];
+    let ok = 0; all.forEach((x, k) => { const good = Number(x.value.trim()) === want[k]; x.className = good ? 'right' : 'wrong'; if (good) ok++; });
+    res.innerHTML = (ok === 5 ? '<b>Vorhersage komplett richtig!</b>' : `<b>${ok} von 5 Angaben richtig.</b>`) +
+      `\nTatsächlich: ${d.length} Formen, erste ${f.t}() bei (${f.a[0]}|${f.a[1]}), letzte bei (${l.a[0]}|${l.a[1]}) – jeweils ${REFPT[f.t] || 'Bezugspunkt'}.`;
+  };
+  return box;
+}
+
+// Wurde das Bild wirklich mit einer Schleife gezeichnet? Alle Formen müssen aus einer Schleife stammen,
+// und mindestens ein Zeichenbefehl muss mehrfach ausgeführt worden sein. Kommentare zählen nicht.
+function usesLoop(r) {
+  const d = r.ops.filter(o => o.t !== 'background');
+  if (d.length < 2 || !d.every(o => o.inLoop)) return false;
+  return new Set(d.map(o => o.src)).size < d.length;
+}
+const NOLOOP = 'Das Bild stimmt – aber die Formen sollen von <b>einer Zählschleife</b> gezeichnet werden, die den Zeichenbefehl wiederholt. Einzelne Befehle zählen nicht, auch nicht in einer Schleife, die nur einmal läuft.';
+let LASTRUN = null;
+function autoCallNote(name, W, H) {
+  return el('div', { class: 'note', html: `Zum Testen ruft diese Übung deine Methode <code>${name}()</code> automatisch auf. In einem echten Processing-Programm passiert das nicht von selbst – dort brauchst du dafür einen Aufruf in <code>setup()</code>:<br><code>void setup() { size(${W}, ${H}); ${name}(); }</code>` });
+}
+function tryRun(src, cons, opts) {
+  LASTRUN = null;
+  try { const r = runProgram(src, opts); cons.textContent = 'Programm ausgeführt.'; cons.className = 'console ok'; LASTRUN = r; return r; }
+  catch (e) { if (e && e.msg) { cons.textContent = e.msg; cons.className = 'console err'; return null; } throw e; }
+}
+
+// =====================================================================
+//  Aufgabentypen
+// =====================================================================
+// ---------- Stufen ----------
+// Stufen: leicht = ein Wert ändert sich; mittel = zwei Werte ändern sich unterschiedlich; schwer = Werte werden auch kleiner, bis zu drei Werte
+const VG = {
+  leicht: () => makeSpec(pick(['reiheQuadrate', 'reiheKreise', 'latten', 'linien'])),
+  mittel: () => pick([
+    () => ({ cmd: 'rect', args: [Tm(10, 20), Tm(10, pick([5, 10])), Tm(20), Tm(20)], name: 'zeichneTreppe', what: 'Quadrate' }),
+    () => ({ cmd: 'rect', args: [Tm(10, 20), Tm(10), Tm(10), Tm(pick([10, 20]), pick([5, 10]))], name: 'zeichneBalken', what: 'Balken' }),
+    () => ({ cmd: 'line', args: [Tm(10, 10), Tm(10), Tm(10, 20), Tm(pick([50, 60]))], name: 'zeichneLinien', what: 'Linien' }),
+    () => ({ cmd: 'ellipse', args: [Tm(15, pick([25, 30])), Tm(15, pick([5, 10])), Tm(20), Tm(20)], name: 'zeichneKreise', what: 'Kreise' }),
+    () => ({ cmd: 'rect', args: [Tm(10, 30), Tm(10), Tm(20, pick([-2, 2])), Tm(20)], name: 'zeichneRechtecke', what: 'Rechtecke' }),
+  ])(),
+  schwer: () => pick([
+    () => { const d = pick([2, 3, 4]); return { cmd: 'ellipse', args: [Tm(25, 30), Tm(25), Tm(40, -d), Tm(40, -d)], name: 'zeichneKreise', what: 'Kreise' }; },
+    () => ({ cmd: 'rect', args: [Tm(10, 20), Tm(70, -10), Tm(20), Tm(10, 10)], name: 'zeichneBalken', what: 'Balken' }),
+    () => ({ cmd: 'line', args: [Tm(10), Tm(90), Tm(20, 20), Tm(10, pick([5, 8]))], name: 'zeichneFaecher', what: 'Linien' }),
+    () => ({ cmd: 'ellipse', args: [Tm(20, 30), Tm(20, 10), Tm(10, 4), Tm(10, 4)], name: 'zeichneKreise', what: 'Kreise' }),
+    () => ({ cmd: 'rect', args: [Tm(10, 25), Tm(10, 5), Tm(20), Tm(60, -5)], name: 'zeichneRechtecke', what: 'Rechtecke' }),
+    () => ({ cmd: 'rect', args: [Tm(10, 30), Tm(40, -5), Tm(20, 2), Tm(10, 5)], name: 'zeichneRechtecke', what: 'Rechtecke' }),
+  ])(),
+};
+const sizeIdx = s => s.cmd === 'line' ? [] : [2, 3];
+function maxN(s) { // größte Anzahl, bei der kein Wert negativ (Größen: nicht 0) wird
+  let m = 40;
+  s.args.forEach((t, k) => { if (t.b < 0) { const min = sizeIdx(s).includes(k) ? 1 : 0; m = Math.min(m, Math.floor((t.a - min) / -t.b) + 1); } });
+  return m;
+}
+const CHANGES = [
+  { id: 'rechts', text: 'Alle Formen sollen <b>20 Pixel weiter rechts</b> liegen.', ok: () => true,
+    apply: s => { s.args[0].a += 20; if (s.cmd === 'line') s.args[2].a += 20; } },
+  { id: 'unten', text: 'Alle Formen sollen <b>10 Pixel weiter unten</b> liegen.', ok: () => true,
+    apply: s => { s.args[1].a += 10; if (s.cmd === 'line') s.args[3].a += 10; } },
+  { id: 'abstand', text: 'Die Formen sollen weiter auseinanderrücken: Der <b>x-Wert</b> soll von Form zu Form um <b>10 Pixel mehr</b> zunehmen als bisher. Die erste Form bleibt, wo sie ist.', ok: s => s.cmd !== 'line' && s.args[0].b > 0,
+    apply: s => { s.args[0].b += 10; } },
+  { id: 'groesser', text: 'Alle Formen sollen <b>10 Pixel breiter und 10 Pixel höher</b> werden.', ok: s => s.cmd !== 'line' && s.args[2].b === 0 && s.args[3].b === 0,
+    apply: s => { s.args[2].a += 10; s.args[3].a += 10; } },
+];
+function countChanged(a, b) { let c = 0; const sa = shapesOf(a), sb = shapesOf(b); sa.forEach((o, k) => o.a.forEach((v, j) => { if (v !== sb[k].a[j]) c++; })); return c; }
+function countTermChanges(a, b) { let c = 0; a.args.forEach((t, k) => { if (t.a !== b.args[k].a) c++; if (t.b !== b.args[k].b) c++; }); return c; }
+function diffHint(s) {
+  const sh = shapesOf(s); const a = sh[0].a, b = sh[1].a;
+  const parts = a.map((v, k) => v === b[k] ? null : `${k + 1}. Wert: ${v} → ${b[k]} (${b[k] - v > 0 ? '+' : '−'}${Math.abs(b[k] - v)})`).filter(Boolean);
+  return 'Vergleiche die ersten beiden Zeilen. Diese Werte ändern sich:\n• ' + parts.join('\n• ') +
+    '\nAlle anderen Werte bleiben gleich. Der erste Tabellenwert (bei i = 0) ist der Anfangswert – er steht vorne im Term. Die Änderung pro Durchlauf steht hinter i*. Wird ein Wert kleiner, rechnest du minus.';
+}
+let LEVEL = 'leicht';
+try { const v = localStorage.getItem('zsTraining.level'); if (VG[v]) LEVEL = v; } catch (e) { /* ohne Speicher */ }
+function genLevelSpec(lvl) {
+  let s;
+  for (let tries = 0; tries < 100; tries++) { s = VG[lvl](); s.n = s.n || R(4, 5); Object.assign(s, { start: 0, op: '<', end: s.n, inc: 1 }); if (s.n <= maxN(s)) break; }
+  if (s.main == null) { const k = s.args.findIndex(t => t.b !== 0); s.main = k < 0 ? 0 : k; }
+  return s;
+}
+function genByLevel(lvl = LEVEL) {
+  if (lvl === 'leicht') return makeSpec(pick(['reiheQuadrate', 'spalteQuadrate', 'reiheKreise', 'spalteKreise', 'latten', 'linien']));
+  if (lvl === 'mittel' && Math.random() < 0.4) return makeSpec(pick(['treppeRunter', 'treppeHoch', 'ringe', 'verschachtelteQuadrate', 'wachsendeKreise', 'balken']));
+  return genLevelSpec(lvl);
+}
+
+const MODES = [];
+let LAST = null; // eslint-disable-line no-unused-vars
+function mode(id, title, intro, build) { MODES.push({ id, title, intro, build }); }
+
+// ---------- 1  Code → Bild ----------
+mode('bild', 'Was wird gezeichnet?',
+  '<p>Lies das Programm genau und überlege, <b>was im Fenster erscheint</b>. Wähle dann das passende Bild. ' +
+  'Tipp: Gehe die Schleife Schritt für Schritt durch: i = 0, i = 1, … und rechne jeweils die Werte aus.</p>',
+  (card, done) => {
+    let s, W, H, opts;
+    for (let tries = 0; tries < 50; tries++) {
+      s = genByLevel(); ({ W, H } = fitWindow([s]));
+      const right = { res: resOf(s, W, H), o: {}, ok: true, why: 'Richtig!' };
+      const cands = [];
+      for (const key of shuffle(['le', 'start1', 'step', 'swapXY', 'sign'])) if (MODS[key].ok(s)) cands.push({ res: resOf(modded(s, key), W, H), o: {}, why: MODS[key].why });
+      if (s.cmd !== 'line') cands.push({ res: right.res, o: { anchorSwap: true }, why: s.cmd === 'rect' ? 'Hier wurde rect() vom Mittelpunkt aus gezeichnet. Die ersten beiden Werte von <code>rect()</code> sind aber die <b>linke obere Ecke</b>.' : 'Hier wurde ellipse() von der linken oberen Ecke aus gezeichnet. Die ersten beiden Werte von <code>ellipse()</code> sind aber der <b>Mittelpunkt</b>.' });
+      cands.push({ res: right.res, o: { flipY: true }, why: 'Dieses Bild steht auf dem Kopf. In Processing liegt (0|0) <b>links oben</b>, die y-Achse zeigt nach unten.' });
+      const chosen = [right];
+      for (const c of shuffle(cands)) { if (chosen.length >= 4) break; if (!chosen.some(x => samePicture(x.res, c.res, x.o, c.o))) chosen.push(c); }
+      if (chosen.length === 4) { opts = shuffle(chosen); break; }
+    }
+    card.append(el('p', { class: 'task-text', html: 'Welches Bild zeichnet dieses Programm?' }));
+    const fb = feedback();
+    const choices = el('div', { class: 'choices' });
+    let answered = false;
+    opts.forEach((c, k) => {
+      const w = makeWin(c.res, { maxW: 250, maxH: 190, flipY: c.o.flipY, anchorSwap: c.o.anchorSwap });
+      const why = el('div', { class: 'why' });
+      const b = el('button', { class: 'choice', type: 'button' }, el('span', { class: 'lbl' }, 'Bild ' + LETTERS[k]), w.wrap, why);
+      b.addEventListener('click', () => {
+        if (c.ok) {
+          b.classList.add('right'); why.innerHTML = '<b>Richtig!</b>';
+          if (!answered) { fb.set('ok', 'Richtig! Bei den anderen Bildern steht jetzt, welcher Denkfehler dahintersteckt.'); addScore('bild'); done(); }
+          answered = true;
+          [...choices.children].forEach((ch, j) => { if (!opts[j].ok) { ch.classList.add('wrong'); ch.querySelector('.why').innerHTML = opts[j].why; } });
+        } else if (!answered) {
+          b.classList.add('wrong'); why.innerHTML = c.why; fb.set('err', 'Leider nicht. Lies den Hinweis unter dem Bild und versuche es noch einmal.');
+        }
+      });
+      choices.append(b);
+    });
+    const pre = PREDICT ? predictBox('Erst vorhersagen: Was zeichnet das Programm? Danach siehst du die Bilder.', () => { choices.classList.remove('hidden'); pre.compare(opts.find(o => o.ok).res); }) : null;
+    if (pre) choices.classList.add('hidden');
+    card.append(el('div', { class: 'row' }, codeBox(programLines(s, W, H))), pre, el('h3', null, 'Wähle das passende Bild:'), choices, fb);
+  });
+
+// ---------- 2  Was wäre, wenn …? ----------
+mode('wenn', 'Was passiert, wenn …?',
+  '<p>Das Programm und sein Bild sind gegeben. Dann wird <b>eine Stelle geändert</b>. Überlege, wie das Bild danach aussieht.</p>',
+  (card, done) => {
+    let s, W, H, change, opts;
+    for (let tries = 0; tries < 80; tries++) {
+      s = genByLevel();
+      const keys = shuffle(['le', 'start1', 'inc2', 'fewer', 'step', 'addY', 'grow', 'sign']).filter(k => MODS[k].ok(s));
+      if (keys.length < 3) continue;
+      const key = keys[0]; change = changeText(s, key);
+      const others = keys.slice(1).map(k => ({ key: k, spec: modded(s, k) }));
+      ({ W, H } = fitWindow([s, change.spec, ...others.map(o => o.spec)]));
+      if (W > 400 || H > 260) continue;
+      const right = { res: resOf(change.spec, W, H), ok: true };
+      const cands = [{ res: resOf(s, W, H), why: 'Das ist das Bild <b>ohne</b> Änderung.' }, ...others.map(o => ({ res: resOf(o.spec, W, H), why: 'So sähe es aus bei: ' + changeText(s, o.key).html.replace(/^Im Schleifenkopf wird /, '').replace(/^Die Zeile /, '') }))];
+      const chosen = [right];
+      for (const c of cands) { if (chosen.length >= 4) break; if (!chosen.some(x => samePicture(x.res, c.res))) chosen.push(c); }
+      if (chosen.length === 4) { opts = shuffle(chosen); change.why = MODS[key].why; break; }
+    }
+    const base = makeWin(resOf(s, W, H), { label: 'Ursprüngliches Bild', maxW: 300, maxH: 200 });
+    card.append(el('div', { class: 'row' }, codeBox(programLines(s, W, H)), base.wrap));
+    card.append(el('p', { class: 'task-text', html: '<b>Änderung:</b> ' + change.html + ' Welches Bild entsteht jetzt?' }));
+    const fb = feedback(); const choices = el('div', { class: 'choices' }); let answered = false;
+    opts.forEach((c, k) => {
+      const w = makeWin(c.res, { maxW: 250, maxH: 180 }); const why = el('div', { class: 'why' });
+      const b = el('button', { class: 'choice', type: 'button' }, el('span', { class: 'lbl' }, 'Bild ' + LETTERS[k]), w.wrap, why);
+      b.addEventListener('click', () => {
+        if (c.ok) { b.classList.add('right'); why.innerHTML = '<b>Richtig!</b> ' + change.why; if (!answered) { addScore('wenn'); done(); fb.set('ok', 'Richtig!'); } answered = true; [...choices.children].forEach((ch, j) => { if (!opts[j].ok) { ch.classList.add('wrong'); ch.querySelector('.why').innerHTML = opts[j].why; } }); }
+        else if (!answered) { b.classList.add('wrong'); why.innerHTML = c.why; fb.set('err', 'Leider nicht – versuche es noch einmal.'); }
+      });
+      choices.append(b);
+    });
+    const pre = PREDICT ? predictBox('Erst vorhersagen: Was wird nach der Änderung gezeichnet? Danach siehst du die Bilder.', () => { choices.classList.remove('hidden'); pre.compare(opts.find(o => o.ok).res); }) : null;
+    if (pre) choices.classList.add('hidden');
+    card.append(pre, choices, fb);
+  });
+
+// ---------- 3  Zuordnen ----------
+mode('zuordnen', 'Schleifen und Bilder zuordnen',
+  '<p>Vier Zählschleifen, fünf Bilder. Ordne jeder Schleife ihr Bild zu – <b>ein Bild bleibt übrig</b>. ' +
+  'Alle Bilder sind im gleichen Fenster gezeichnet.</p>',
+  (card, done) => {
+    const W = 160, H = 160; let specs, pics;
+    const fitSpec = () => { for (let t = 0; t < 300; t++) { const x = genByLevel(); if (inside(x, W, H)) return x; } return null; };
+    for (let tries = 0; tries < 200; tries++) {
+      specs = [fitSpec(), fitSpec(), fitSpec(), fitSpec()]; if (specs.some(x => !x)) continue;
+      const base = pick(specs);
+      const dk = shuffle(['swapXY', 'sign', 'le', 'step']).find(k => MODS[k].ok(base) && inside(modded(base, k), W, H));
+      if (!dk) continue;
+      const dist = modded(base, dk);
+      pics = [...specs.map((s, k) => ({ res: resOf(s, W, H), loop: k })), { res: resOf(dist, W, H), loop: -1 }];
+      let distinct = true;
+      for (let a = 0; a < pics.length && distinct; a++) for (let b = a + 1; b < pics.length; b++) if (samePicture(pics[a].res, pics[b].res)) { distinct = false; break; }
+      if (distinct) { pics = shuffle(pics); break; }
+    }
+    const loops = el('div', { class: 'row' });
+    specs.forEach((s, k) => loops.append(el('div', { class: 'col' }, el('b', null, `(${k + 1})`), codeBox(loopLines(s)))));
+    const gal = el('div', { class: 'choices' });
+    pics.forEach((p, k) => gal.append(el('div', { class: 'choice' }, el('span', { class: 'lbl' }, 'Bild ' + LETTERS[k]), makeWin(p.res, { maxW: 160, maxH: 160 }).wrap)));
+    const sels = specs.map(() => el('select', null, el('option', { value: '' }, '–'), ...pics.map((_, k) => el('option', { value: k }, LETTERS[k]))));
+    const match = el('div', { class: 'match' }, ...sels.map((s, k) => el('label', null, `(${k + 1}) →`, s)));
+    const fb = feedback();
+    const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+      let right = 0;
+      sels.forEach((s, k) => { const ok = s.value !== '' && pics[+s.value].loop === k; s.className = s.value === '' ? '' : ok ? 'right' : 'wrong'; if (ok) right++; });
+      if (right === 4) { const rest = pics.findIndex(p => p.loop === -1); fb.set('ok', `Alles richtig! Bild ${LETTERS[rest]} bleibt übrig.`); if (!card.classList.contains('solved')) { addScore('zuordnen'); done(); } }
+      else fb.set('err', `${right} von 4 richtig. Rechne bei den rot markierten Schleifen die Werte für i = 0 und i = 1 aus und vergleiche mit den Bildern.`);
+    } }, 'Prüfen');
+    card.append(loops, el('h3', null, 'Bilder'), gal, el('h3', null, 'Deine Zuordnung'), match, el('div', { class: 'bar' }, check), fb);
+  });
+
+// ---------- 4  Zeilen einsetzen ----------
+mode('einsetzen', 'Zeilen einsetzen',
+  '<p>Das Programm soll das gezeigte Bild zeichnen. Wähle für jedes Kästchen die passende Zeile aus. ' +
+  '<b>Nicht alle Zeilen werden gebraucht</b> – einige sind Ablenker. Welche Stellen fehlen, ändert sich von Aufgabe zu Aufgabe – und die Methode kann auch über <code>setup()</code> stehen. Mit „Prüfen“ wird dein Programm auch ausgeführt.</p>',
+  (card, done) => {
+    let s, W, H, prog, slots, opts;
+    const cap = n => n[0].toUpperCase() + n.slice(1);
+    for (let tries = 0; tries < 200; tries++) {
+      s = genByLevel(); ({ W, H } = fitWindow([s]));
+      // auf mittel/schwer manchmal ein zweiter Zeichenbefehl in der Schleife (Kreis in jedem Rechteck)
+      let ext = null;
+      if (LEVEL !== 'leicht' && s.cmd === 'rect' && s.args[2].b === 0 && s.args[3].b === 0 && Math.random() < 0.5) {
+        const w = s.args[2].a, h = s.args[3].a, d = Math.min(w, h) / 2;
+        ext = { cmd: 'ellipse', args: [Tm(s.args[0].a + w / 2, s.args[0].b), Tm(s.args[1].a + h / 2, s.args[1].b), Tm(d), Tm(d)] };
+      }
+      const body2 = ext ? `${ext.cmd}(${ext.args.map(termStr).join(', ')});` : null;
+      const setupBlock = [
+        { txt: 'void setup() {', ind: 0, role: 'fix' },
+        { txt: `size(${W}, ${H});`, ind: 1, role: 'size' },
+        { txt: `${s.name}();`, ind: 1, role: 'call' },
+        { txt: '}', ind: 0, role: 'fix' },
+      ];
+      const methodBlock = [
+        { txt: `void ${s.name}() {`, ind: 0, role: 'mhead' },
+        { txt: headStr(s), ind: 1, role: 'for' },
+        { txt: bodyStr(s), ind: 2, role: 'body' },
+        ...(body2 ? [{ txt: body2, ind: 2, role: 'body2' }] : []),
+        { txt: '}', ind: 1, role: 'fix' },
+        { txt: '}', ind: 0, role: 'fix' },
+      ];
+      const blank = { txt: '', ind: 0, role: 'fix' };
+      // Die Reihenfolge der Methoden im Programmtext spielt keine Rolle – deshalb wechselt sie.
+      prog = Math.random() < 0.5 ? [...setupBlock, blank, ...methodBlock] : [...methodBlock, blank, ...setupBlock];
+      const VARIANTS = LEVEL === 'leicht'
+        ? [['size', 'call', 'for', 'body'], ['call', 'for', 'body'], ['size', 'for', 'body']]
+        : [['size', 'call', 'for', 'body'], ['call', 'mhead', 'for', 'body'], ['size', 'mhead', 'for', 'body'], ['size', 'call', 'mhead', 'body'], ['size', 'call', 'for']];
+      slots = pick(VARIANTS).slice();
+      if (body2 && slots.includes('body')) slots.push('body2');
+      // Ablenker passend zu den Lücken
+      const setupD = [], loopD = [];
+      if (slots.includes('for')) { for (const k of ['le', 'start1']) if (MODS[k].ok(s)) loopD.push({ txt: headStr(modded(s, k)), why: k }); }
+      if (slots.includes('body')) { for (const k of ['swapXY', 'step']) if (MODS[k].ok(s)) loopD.push({ txt: bodyStr(modded(s, k)), why: k }); }
+      if (slots.includes('size')) {
+        if (!inside(s, W - 30, H)) setupD.push({ txt: `size(${W - 30}, ${H});`, why: 'klein' });
+        if (W !== H) setupD.push({ txt: `size(${H}, ${W});`, why: 'tausch' });
+      }
+      if (slots.includes('call')) setupD.push({ txt: `${s.name};`, why: 'klammer' }, { txt: `${cap(s.name)}();`, why: 'gross' }, { txt: `void ${s.name}();`, why: 'void' });
+      if (slots.includes('mhead')) setupD.push({ txt: `${s.name}() {`, why: 'ohnevoid' }, { txt: `void ${s.name} {`, why: 'ohneklammer' });
+      const nD = { leicht: 2, mittel: 3, schwer: 4 }[LEVEL];
+      const chosen = [];
+      const a = shuffle(loopD), b = shuffle(setupD);
+      if (a.length) chosen.push(a.shift());
+      if (LEVEL !== 'leicht' && b.length) chosen.push(b.shift());
+      for (const x of shuffle(LEVEL === 'leicht' ? a : [...a, ...b])) { if (chosen.length >= nD) break; chosen.push(x); }
+      const correct = slots.map(r => ({ txt: prog.find(p => p.role === r).txt, role: r }));
+      const all = [...correct, ...chosen.map(x => ({ txt: x.txt, role: null, why: x.why }))];
+      if (chosen.length === nD && new Set(all.map(x => x.txt)).size === all.length) { opts = shuffle(all); break; }
+    }
+    LAST = { s, W, H, slots, opts };
+    const target = makeWin(resOf(s, W, H), { label: 'So soll es aussehen', maxW: 360, maxH: 220 });
+    const sels = {};
+    const sel = () => el('select', null, el('option', { value: '' }, '–'), ...opts.map((_, k) => el('option', { value: k }, LETTERS[k])));
+    const skel = el('div', { class: 'skel' });
+    for (const p of prog) {
+      const ind = '  '.repeat(p.ind);
+      if (slots.includes(p.role)) { sels[p.role] = sel(); skel.append(el('div', null, ind, sels[p.role])); LAST.domRoles = (LAST.domRoles || []).concat(p.role); }
+      else skel.append(el('div', { html: (p.txt ? hl([ind + p.txt]) : '&nbsp;') }));
+    }
+    const nLeft = opts.length - slots.length;
+    const optsBox = el('div', { class: 'opts' }, ...opts.map((l, k) => el('div', { class: 'opt' }, el('b', null, LETTERS[k]), l.txt)));
+    const resultSlot = el('div');
+    const fb = feedback();
+    const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+      if (slots.some(r => sels[r].value === '')) { fb.set('info', `Fülle zuerst alle ${slots.length} Kästchen aus.`); return; }
+      const src = prog.map(p => '  '.repeat(p.ind) + (slots.includes(p.role) ? opts[+sels[p.role].value].txt : p.txt)).join('\n');
+      resultSlot.innerHTML = '';
+      let res = null, msg = '';
+      try { res = runProgram(src); } catch (e) { if (!e.msg) throw e; msg = e.msg.replace(/^Zeile \d+: /, ''); }
+      slots.forEach(r => { sels[r].className = opts[+sels[r].value].role === r ? 'right' : 'wrong'; });
+      if (res) resultSlot.append(makeWin(res, { label: 'Das zeichnet dein Programm', maxW: 360, maxH: 220 }).wrap);
+      else resultSlot.append(el('div', { class: 'empty-win' }, 'Fehler: ' + msg));
+      const allRight = slots.every(r => opts[+sels[r].value].role === r);
+      const WHY = {
+        le: 'Mit <code>&lt;=</code> läuft die Schleife einmal zu oft – es entsteht eine Form zu viel.',
+        start1: 'Mit dem Startwert 1 fällt der Durchlauf für i = 0 weg – die erste Form fehlt.',
+        swapXY: 'In dieser Zeile sind x und y (und Breite und Höhe) vertauscht.',
+        step: 'Hier stimmt die Änderung pro Durchlauf (die Zahl hinter <code>i*</code>) nicht.',
+        klein: 'Mit dieser Fenstergröße werden Formen abgeschnitten.',
+        tausch: 'Hier sind Breite und Höhe des Fensters vertauscht.',
+        klammer: 'Beim Methodenaufruf fehlen die runden Klammern <code>()</code>.',
+        gross: `Groß- und Kleinschreibung: Die Methode heißt <code>${s.name}</code>. Java unterscheidet <code>Z</code> und <code>z</code>.`,
+        void: 'Das ist ein Methodenkopf, kein Aufruf: Beim Aufruf steht kein <code>void</code> davor.',
+        ohnevoid: 'Im Methodenkopf fehlt <code>void</code>.',
+        ohneklammer: 'Im Methodenkopf fehlen die runden Klammern <code>()</code>.',
+      };
+      const hints = [];
+      slots.forEach(r => { const o = opts[+sels[r].value]; const L = LETTERS[+sels[r].value];
+        if (o.role === r) return;
+        if (o.why && WHY[o.why]) hints.push(`Zeile ${L}: ${WHY[o.why]}`);
+        else if (o.role) hints.push(`Zeile ${L} wird gebraucht, gehört aber an eine andere Stelle.`); });
+      const hintTxt = hints.length ? '\n• ' + [...new Set(hints)].join('\n• ') : '';
+      if (allRight) { fb.set('ok', `Richtig! Die ${nLeft} übrigen Zeilen waren Ablenker.`); if (!card.classList.contains('solved')) { addScore('einsetzen'); done(); } }
+      else if (res && samePicture(res, resOf(s, W, H))) fb.set('info', 'Das Bild stimmt, aber nicht jede Zeile steht an ihrem Platz. Was gehört in setup(), was in die Methode?' + hintTxt);
+      else fb.set('err', 'Noch nicht richtig. Rot markierte Kästchen passen nicht.' + (hintTxt || ' Vergleiche dein Bild mit dem Ziel: Stimmen Fenster, Anzahl, Lage und Richtung?'));
+    } }, 'Prüfen');
+    card.append(el('p', { class: 'task-text', html: `${slots.length} Kästchen sind frei, <b>${nLeft} Zeilen</b> bleiben übrig.` }),
+      el('div', { class: 'row' }, skel, target.wrap), el('h3', null, 'Diese Zeilen stehen zur Auswahl'), optsBox, el('div', { class: 'bar' }, check), fb, el('div', { style: 'margin-top:10px' }, resultSlot));
+  });
+
+// ---------- 5  Fehler finden ----------
+const NAMES = ['Ben', 'Lina', 'Jonas', 'Emma', 'Noah', 'Ida', 'Paul', 'Sophie', 'Elias', 'Hanna', 'Finn', 'Nele'];
+function twoNames() { const a = shuffle(NAMES); return [a[0], a[1]]; }
+mode('fehler', 'Fehler finden',
+  '<p>Das Programm soll das Zielbild zeichnen, enthält aber <b>Fehler</b>. Führe es aus, vergleiche mit dem Ziel und verbessere den Programmtext, bis beide Bilder gleich sind.</p>',
+  (card, done) => {
+    let s, bugged, bugs, W, H;
+    for (let tries = 0; tries < 100; tries++) {
+      s = LEVEL === 'leicht' ? makeSpec(pick(['reiheQuadrate', 'spalteQuadrate', 'reiheKreise', 'spalteKreise', 'latten'])) : genByLevel();
+      const avail = shuffle(['le', 'start1', 'step', 'swapXY']).filter(k => MODS[k].ok(s));
+      const nb = LEVEL === 'leicht' ? 1 : LEVEL === 'mittel' ? pick([1, 2]) : 2; bugs = avail.slice(0, nb); if (bugs.length < nb) continue;
+      if (bugs.includes('start1') && bugs.includes('le')) continue;
+      bugged = clone(s); bugs.forEach(k => MODS[k].apply(bugged));
+      ({ W, H } = fitWindow([s]));
+      if (!samePicture(resOf(s, W, H), resOf(bugged, W, H))) break;
+    }
+    LAST = { s, W, H };
+    const who = pick(NAMES);
+    const target = makeWin(resOf(s, W, H), { label: 'So soll es aussehen', maxW: 380, maxH: 220 });
+    const outSlot = el('div', null, el('div', { class: 'empty-win' }, 'Hier erscheint, was das Programm zeichnet.'));
+    const fb = feedback();
+    const ed = editor(programLines(bugged, W, H).join('\n'), (src, cons) => {
+      const r = tryRun(src, cons); outSlot.innerHTML = '';
+      if (!r) { outSlot.append(el('div', { class: 'empty-win' }, 'Fehler – siehe Meldung unter dem Programm.')); return; }
+      outSlot.append(makeWin(r, { label: 'Das zeichnet das Programm', maxW: 380, maxH: 220 }).wrap);
+      if (samePicture(r, resOf(s, W, H))) {
+        fb.set('ok', '<b>Geschafft!</b> Die Fehler waren:\n• ' + bugs.map(k => MODS[k].bug).join('\n• ') + `\n\nRichtig ist zum Beispiel:\n<code>${esc(headStr(s))}</code>\n<code>  ${esc(bodyStr(s))}</code>`);
+        if (!card.classList.contains('solved')) { addScore('fehler'); done(); }
+      } else fb.set('err', 'Das Bild stimmt noch nicht mit dem Ziel überein. Vergleiche Anzahl, Lage, Abstand und Größe.');
+    }, { predictTitle: 'Erst vorhersagen: Was zeichnet das fehlerhafte Programm, so wie es jetzt ist?' });
+    const hint = el('button', { type: 'button', onclick: () => fb.set('info', 'Tipps:\n• Zähle die Formen: Wie oft muss die Schleife laufen? Stimmen Startwert und Bedingung?\n• Miss mit der Maus: Wo liegt die erste Form? Um wie viel verschiebt sich die nächste?\n• Ist rect() bzw. ellipse() mit x und y in der richtigen Reihenfolge aufgerufen?') }, 'Tipp');
+    card.append(el('p', { class: 'task-text', html: `${who} hat das Programm geschrieben. Es enthält <b>${bugs.length} Fehler</b>.` }),
+      el('div', { class: 'row' }, target.wrap, outSlot), el('div', { class: 'row', style: 'margin-top:10px' }, ed), el('div', { class: 'bar' }, hint), fb);
+    if (!PREDICT) {
+      ed.run.click(); fb.clear();
+      ed.cons.textContent = 'Das ist das Bild des fehlerhaften Programms. Verbessere den Programmtext und führe es erneut aus.'; ed.cons.className = 'console';
+    } else { outSlot.innerHTML = ''; outSlot.append(el('div', { class: 'empty-win' }, 'Sage zuerst vorher, was das fehlerhafte Programm zeichnet. Dann führe es aus.')); }
+  });
+
+// ---------- 6  Bild → Schleife ----------
+function argNames(cmd) { return cmd === 'rect' ? ['x (Ecke)', 'y (Ecke)', 'Breite', 'Höhe'] : cmd === 'ellipse' ? ['x (Mitte)', 'y (Mitte)', 'Breite', 'Höhe'] : ['x1', 'y1', 'x2', 'y2']; }
+mode('schreiben', 'Vom Bild zur Schleife',
+  '<p>Schreibe eine Methode mit einer <b>Zählschleife</b>, die das Bild zeichnet. Die Tabelle hilft dir: ' +
+  'Ergänze die Werte für jede Form und suche, um wie viel sie sich von Form zu Form ändern. Diese <b>Änderung pro Durchlauf</b> steht dann hinter <code>i*</code>. ' +
+  'Wird ein Wert kleiner, rechnest du minus, z. B. <code>70 - i*10</code>.</p>',
+  (card, done) => {
+    const s = genByLevel(); const { W, H } = fitWindow([s]); LAST = { s, W, H };
+    const target = makeWin(resOf(s, W, H), { label: 'Zielbild', maxW: 420, maxH: 260 });
+    const names = argNames(s.cmd); const its = iters(s);
+    const tbl = el('table', { class: 'vals' });
+    tbl.append(el('tr', null, el('th', null, 'i'), ...names.map(n => el('th', null, n))));
+    const inputs = [];
+    its.forEach((i, r) => {
+      const tr = el('tr', null, el('th', null, String(i)));
+      s.args.forEach((t, c) => {
+        const v = t.a + t.b * i;
+        if (r < 2) tr.append(el('td', { class: 'given' }, String(v)));
+        else { const inp = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': `${names[c]} für i = ${i}` }); inp.want = v; inputs.push(inp); tr.append(el('td', null, inp)); }
+      });
+      tbl.append(tr);
+    });
+    const fbT = feedback();
+    const tipT = el('button', { type: 'button', onclick: () => fbT.set('info', diffHint(s)) }, 'Tipp');
+    const chkT = el('button', { type: 'button', onclick: () => {
+      let ok = 0; inputs.forEach(inp => { const good = inp.value.trim() !== '' && Number(inp.value.trim()) === inp.want; inp.className = inp.value.trim() === '' ? '' : good ? 'right' : 'wrong'; if (good) ok++; });
+      fbT.set(ok === inputs.length ? 'ok' : 'err', ok === inputs.length ? 'Tabelle richtig! Jetzt kannst du die Terme ablesen: Startwert + i * Änderung.' : `${ok} von ${inputs.length} Werten richtig. Fahre mit der Maus über das Bild, um Werte abzulesen.`);
+    } }, 'Tabelle prüfen');
+    const fb = feedback();
+    const outSlot = el('div');
+    const ed = editor(`void ${s.name}() {\n  \n}`, (src, cons) => {
+      const r = tryRun(src, cons, { W, H, entry: s.name }); outSlot.innerHTML = '';
+      if (!r) return;
+      outSlot.append(makeWin(r, { label: 'Dein Bild', maxW: 420, maxH: 260 }).wrap);
+      const same = samePicture(r, resOf(s, W, H));
+      if (same && !usesLoop(r)) fb.set('info', NOLOOP);
+      else if (same) { fb.set('ok', `<b>Richtig!</b> Eine mögliche Lösung:\n<code>${esc(headStr(s))}</code>\n<code>  ${esc(bodyStr(s))}</code>\n<code>}</code>`); if (!card.classList.contains('solved')) { addScore('schreiben'); done(); } }
+      else fb.set('err', 'Dein Bild weicht noch vom Ziel ab. Vergleiche mit der Tabelle.');
+    });
+    card.append(el('p', { class: 'task-text', html: `Fenstergröße ${W} × ${H}. Es werden ${its.length} ${s.what} gezeichnet. Für die ersten beiden sind die Werte eingetragen.` }),
+      el('div', { class: 'row' }, target.wrap, el('div', { class: 'col' }, tbl, el('div', { class: 'bar' }, chkT, tipT), fbT)),
+      el('h3', null, 'Deine Methode'), autoCallNote(s.name, W, H), el('div', { class: 'row' }, ed, outSlot), fb);
+  });
+
+// ---------- 7  Wiederholung -> Schleife ----------
+mode('vergleich', 'Wiederholung → Schleife',
+  '<p>Jemand hat jede Form mit einer eigenen Zeile gezeichnet. Jemand anderes meint: „Das geht mit einer Schleife kürzer.“ ' +
+  'Schreibe die Methode mit Schleife. Danach sollen es <b>viel mehr Formen</b> werden, und zum Schluss soll sich <b>etwas am Bild ändern</b> – ' +
+  'dann siehst du die beiden großen Vorteile von Schleifen.</p>',
+  (card, done) => {
+    let s, N2;
+    for (let tries = 0; tries < 100; tries++) {
+      s = LEVEL === 'leicht' ? VG.leicht() : VG[LEVEL](); s.n = s.n || R(4, 5); Object.assign(s, { start: 0, op: '<', end: s.n, inc: 1 });
+      N2 = Math.min(pick([10, 12, 15]), maxN(s));
+      if (s.n <= maxN(s) && N2 >= s.n + 3) break;
+    }
+    const { W, H } = fitWindow([s]);
+    const [nA, nB] = twoNames();
+    const big = clone(s); big.end = big.n = N2;
+    const B = fitWindow([big]);
+    const ch = pick(CHANGES.filter(c => c.ok(s)));
+    const big2 = clone(big); ch.apply(big2);
+    const B2 = fitWindow([big, big2]);
+    LAST = { s, W, H, big, big2, ch, nCh: countChanged(big, big2) };
+
+
+    const lena = [`void ${s.name}() {`, ...shapesOf(s).map(o => `  ${s.cmd}(${o.a.join(', ')});`), '}'];
+    const target = makeWin(resOf(s, W, H), { label: 'Bild', maxW: 360, maxH: 200 });
+    const fb = feedback(); const outSlot = el('div');
+    const stage2 = el('div', { class: 'stage2 hidden' });
+    const stage3 = el('div', { class: 'stage2 hidden' });
+
+    // Teil 1
+    let solved1 = false;
+    const ed = editor(`void ${s.name}() {\n  \n}`, (src, cons) => {
+      const r = tryRun(src, cons, { W, H, entry: s.name }); outSlot.innerHTML = ''; if (!r) return;
+      outSlot.append(makeWin(r, { label: `Bild von ${nB}`, maxW: 360, maxH: 200 }).wrap);
+      if (samePicture(r, resOf(s, W, H)) && usesLoop(r)) {
+        fb.set('ok', `Richtig! Die Methode von ${nB} zeichnet dasselbe Bild – mit einer Schleife.`);
+        if (!solved1) { solved1 = true; stage2.classList.remove('hidden'); ed2.ta.value = src; }
+      } else if (samePicture(r, resOf(s, W, H))) fb.set('info', NOLOOP);
+      else fb.set('err', `Das Bild ist noch anders als das Bild von ${nA}.`);
+    });
+    const tip1 = el('button', { type: 'button', onclick: () => fb.set('info', diffHint(s)) }, 'Tipp');
+
+    // Teil 2: viele Formen
+    const numIn = el('input', { class: 'num', type: 'text', inputmode: 'numeric', 'aria-label': 'Anzahl Zeilen' });
+    const fb2 = feedback(); const out2 = el('div');
+    let okNum = false, okLoop = false, solved2 = false;
+    const finish2 = () => { if (okNum && okLoop && !solved2) { solved2 = true; fb2.set('ok', `<b>Beides richtig!</b> ${nA} müsste ${big.n - s.n} Zeilen dazuschreiben und alle Werte ausrechnen – ${nB} ändert nur den Endwert von ${s.end} auf ${big.end}. <b>Vorteil 1:</b> Mehr Wiederholungen kosten bei einer Schleife keine Arbeit.`); stage3.classList.remove('hidden'); ed3.ta.value = ed2.ta.value; } };
+    const chkNum = el('button', { type: 'button', onclick: () => { okNum = Number(numIn.value.trim()) === big.n; numIn.className = 'num ' + (okNum ? 'right' : 'wrong'); if (!okNum) fb2.set('err', `${nA} braucht für jede Form eine eigene Zeile.`); else { fb2.set('ok', 'Richtig.'); finish2(); } } }, 'Prüfen');
+    const ed2 = editor('', (src, cons) => {
+      const r = tryRun(src, cons, { W: B.W, H: B.H, entry: s.name }); out2.innerHTML = ''; if (!r) return;
+      out2.append(makeWin(r, { label: `Ziel: ${big.n} ${s.what}`, maxW: 520, maxH: 220 }).wrap);
+      okLoop = samePicture(r, resOf(big, B.W, B.H)) && usesLoop(r);
+      if (okLoop) { fb2.set('ok', `Die Methode von ${nB} zeichnet jetzt alle Formen.`); finish2(); } else fb2.set('err', `Es sollen genau ${big.n} ${s.what} in der gleichen Anordnung entstehen. Welche Zahl im Schleifenkopf musst du ändern?`);
+    });
+
+    // Teil 3: etwas ändern
+    const numIn3 = el('input', { class: 'num', type: 'text', inputmode: 'numeric', 'aria-label': 'Anzahl Zahlen' });
+    const fb3 = feedback(); const out3 = el('div');
+    let okNum3 = false, okLoop3 = false;
+    const nLoop = countTermChanges(big, big2);
+    const finish3 = () => { if (okNum3 && okLoop3 && !card.classList.contains('solved')) { addScore('vergleich'); done();
+      fb3.set('ok', `<b>Geschafft!</b> ${nA} müsste ${LAST.nCh} Zahlen in ${big.n} Zeilen ändern – ${nB} nur ${nLoop} ${nLoop === 1 ? 'Zahl' : 'Zahlen'} in der Schleife. <b>Vorteil 2:</b> Jede Regel steht nur an einer Stelle. Änderungen macht man einmal statt in jeder Zeile – und vergisst dabei keine.`); } };
+    const chkNum3 = el('button', { type: 'button', onclick: () => { okNum3 = Number(numIn3.value.trim()) === LAST.nCh; numIn3.className = 'num ' + (okNum3 ? 'right' : 'wrong');
+      if (!okNum3) fb3.set('err', `Überlege für eine Zeile von ${nA}: Wie viele Zahlen ändern sich darin? Und wie viele Zeilen hat die Methode mit ${big.n} ${s.what}?`); else { fb3.set('ok', 'Richtig.'); finish3(); } } }, 'Prüfen');
+    const ed3 = editor('', (src, cons) => {
+      const r = tryRun(src, cons, { W: B2.W, H: B2.H, entry: s.name }); out3.innerHTML = ''; if (!r) return;
+      out3.append(makeWin(r, { label: 'Dein Bild', maxW: 520, maxH: 220 }).wrap);
+      okLoop3 = samePicture(r, resOf(big2, B2.W, B2.H)) && usesLoop(r);
+      if (okLoop3) { fb3.set('ok', 'Das Bild stimmt.'); finish3(); } else fb3.set('err', 'Das Bild stimmt noch nicht. Welche Zahl in der Zeile mit dem Zeichenbefehl gehört zu dieser Änderung?');
+    });
+    const goal3 = makeWin(resOf(big2, B2.W, B2.H), { label: 'So soll es danach aussehen', maxW: 520, maxH: 220 });
+
+    stage2.append(el('h3', null, `Teil 2: Jetzt sollen es ${big.n} ${s.what} werden (das Fenster ist groß genug).`),
+      el('p', null, `a) Wie viele Zeilen mit Zeichenbefehlen bräuchte ${nA} dann in der Methode? `, numIn, ' ', chkNum),
+      el('p', null, `b) Ändere die Methode von ${nB} so, dass sie alle Formen zeichnet:`), el('div', { class: 'row' }, ed2, out2), fb2);
+    stage3.append(el('h3', null, `Teil 3: Etwas ändern – ${big.n} ${s.what} sind schon da.`),
+      el('p', { html: ch.text }), goal3.wrap,
+      el('p', null, `a) Wie viele Zahlen müsste ${nA} in der Methode mit ${big.n} Zeilen dafür ändern? `, numIn3, ' ', chkNum3),
+      el('p', null, `b) Ändere die Methode von ${nB}:`), el('div', { class: 'row' }, ed3, out3), fb3);
+    card.append(
+      el('div', { class: 'row' }, el('div', { class: 'col' }, el('b', null, `Methode von ${nA}`), codeBox(lena)), target.wrap),
+      el('p', { class: 'task-text', html: `${nA} hat jede Form mit einer eigenen Zeile gezeichnet. ${nB} sagt: „Das geht mit einer Schleife viel kürzer!“` }),
+      el('h3', null, `Teil 1: Schreibe die Methode von ${nB} mit einer Zählschleife`), autoCallNote(s.name, W, H), el('div', { class: 'row' }, ed, outSlot), el('div', { class: 'bar' }, tip1), fb, stage2, stage3);
+  });
+
+// ---------- 8  Durchspielen ----------
+mode('tabelle', 'Schleife durchspielen',
+  '<p>Spiele die Schleife Schritt für Schritt durch: Welche Werte bekommen die Befehle bei <b>jedem Durchlauf</b>? ' +
+  'Trage sie in die Tabelle ein. Werte, die sich nicht ändern, sind schon eingetragen. Danach siehst du, was gezeichnet wird.</p>',
+  (card, done) => {
+    let n = R(3, 4); const s0 = pick([20, 30]), dx = pick([30, 40, 50]), x0 = pick([0, 10, 20]), y0 = pick([10, 20]);
+    let cmds = [{ cmd: pick(['rect', 'ellipse']), args: [Tm(x0 + 10, dx), Tm(y0 + 10), Tm(s0), Tm(s0)] }];
+    if (LEVEL === 'schwer') { const sp = genLevelSpec('schwer'); n = Math.min(R(3, 4), maxN(sp)); cmds = [{ cmd: sp.cmd, args: sp.args }]; }
+    if (LEVEL === 'mittel') cmds = [{ cmd: 'rect', args: [Tm(x0, dx), Tm(y0), Tm(s0), Tm(s0)] }];
+    const second = LEVEL === 'mittel' ? pick(['ellipse', 'line', 'ellipse2']) : 'none';
+    if (second === 'ellipse') cmds.push({ cmd: 'ellipse', args: [Tm(x0 + s0 / 2, dx), Tm(y0 + s0 / 2), Tm(s0 - 10), Tm(s0 - 10)] });
+    if (second === 'ellipse2') cmds.push({ cmd: 'ellipse', args: [Tm(x0 + s0 + 10, dx), Tm(y0 + s0 / 2), Tm(10), Tm(10)] });
+    if (second === 'line') cmds.push({ cmd: 'line', args: [Tm(x0, dx), Tm(y0), Tm(x0 + s0, dx), Tm(y0 + s0)] });
+    const name = pick(['wasZeichneIch', 'muster', 'zeichneEtwas']);
+    const code = [`void ${name}() {`, `  for (int i = 0; i < ${n}; i++) {`, ...cmds.map(c => `    ${c.cmd}(${c.args.map(termStr).join(', ')});`), '  }', '}'];
+    const ops = []; for (let i = 0; i < n; i++) for (const c of cmds) ops.push({ t: c.cmd, a: c.args.map(t => t.a + t.b * i), fill: [255, 255, 255], stroke: [0, 0, 0], sw: 1 });
+    const b = bbox(ops); const res = { W: Math.max(60, ceil10(b.x2 + 10)), H: Math.max(40, ceil10(b.y2 + 10)), ops };
+    const tbl = el('table', { class: 'vals' }); const inputs = [];
+    tbl.append(el('tr', null, el('th', null, 'i'), el('th', null, 'Befehl'), el('th', { colspan: 4 }, 'übergebene Werte')));
+    for (let i = 0; i < n; i++) cmds.forEach((c, k) => {
+      const tr = el('tr', null, k === 0 ? el('th', { rowspan: cmds.length }, String(i)) : null, el('td', { class: 'cmdcell' }, c.cmd + '('));
+      c.args.forEach((t, a) => {
+        if (t.b === 0) { tr.append(el('td', { class: 'given', title: 'Dieser Wert ändert sich nicht.' }, String(t.a))); return; }
+        const inp = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': `${c.cmd} Wert ${a + 1} für i = ${i}` }); inp.want = t.a + t.b * i; inputs.push(inp); tr.append(el('td', null, inp)); });
+      tbl.append(tr);
+    });
+    const fb = feedback(); const out = el('div');
+    const chk = el('button', { class: 'primary', type: 'button', onclick: () => {
+      let ok = 0; inputs.forEach(inp => { const good = inp.value.trim() !== '' && Number(inp.value.trim()) === inp.want; inp.className = inp.value.trim() === '' ? '' : good ? 'right' : 'wrong'; if (good) ok++; });
+      if (ok === inputs.length) { fb.set('ok', 'Alles richtig! So sieht das Bild aus:'); out.innerHTML = ''; out.append(makeWin(res, { label: 'Ergebnis', maxW: 420, maxH: 220 }).wrap); if (!card.classList.contains('solved')) { addScore('tabelle'); done(); } }
+      else { const t0 = cmds[0].args.find(t => t.b !== 0); fb.set('err', `${ok} von ${inputs.length} Werten richtig. Setze für i die Zahl aus der ersten Spalte ein, z. B. ergibt <code>${termStr(t0)}</code> für i = 1 den Wert ${t0.a + t0.b}.`); }
+    } }, 'Prüfen');
+    card.append(el('div', { class: 'row' }, codeBox(code), el('div', { class: 'col' }, tbl, el('div', { class: 'bar' }, chk))), fb, out);
+  });
+
+// =====================================================================
+//  Oberfläche
+// =====================================================================
+let current = 'bild';
+try { const m = localStorage.getItem('zsTraining.mode'); if (m && MODES.some(x => x.id === m)) current = m; } catch (e) { /* ohne Speicher */ }
+const modesNav = document.getElementById('modes');
+const main = document.getElementById('main');
+
+function renderModes() {
+  modesNav.innerHTML = '';
+  MODES.forEach((m, k) => {
+    const b = el('button', { type: 'button', class: m.id === current ? 'on' : '', onclick: () => { current = m.id; try { localStorage.setItem('zsTraining.mode', m.id); } catch (e) { /* */ } renderModes(); show(); } },
+      el('span', { class: 'nr' }, String(k + 1)), m.title, score[m.id] ? el('span', { class: 'cnt' }, '✓ ' + score[m.id]) : null);
+    modesNav.append(b);
+  });
+}
+const TERMS = `<summary>Begriffe zur Zählschleife</summary><dl>
+  <dt>Zählvariable</dt><dd><code>i</code> – zählt die Durchläufe mit.</dd>
+  <dt>Startwert</dt><dd><code>int i = 0</code> – damit beginnt i.</dd>
+  <dt>Bedingung / Endwert</dt><dd><code>i &lt; 5</code> – solange sie stimmt, läuft die Schleife weiter (hier i = 0 … 4, also 5 Durchläufe).</dd>
+  <dt>Schrittweite</dt><dd><code>i++</code> bzw. <code>i = i + 2</code> – um so viel wird <b>die Zählvariable</b> nach jedem Durchlauf erhöht.</dd>
+  <dt>Term mit i</dt><dd><code>20 + i*30</code> – <b>Anfangswert</b> 20 (bei i = 0), <b>Änderung pro Durchlauf</b> 30 (bei Schrittweite 1). Bei <code>i = i + 2</code> ändert sich der Wert pro Durchlauf um 60.</dd>
+  <dt>Bezugspunkt</dt><dd><code>rect(x, y, b, h)</code>: linke obere Ecke · <code>ellipse(x, y, b, h)</code>: Mittelpunkt · <code>line(x1, y1, x2, y2)</code>: Anfangs- und Endpunkt.</dd>
+  <dt>Methodenaufruf</dt><dd>Eine eigene Methode wird nur ausgeführt, wenn sie aufgerufen wird, z. B. in <code>setup()</code>.</dd></dl>`;
+const LEVEL_INFO = { leicht: 'Ein Wert ändert sich von Form zu Form.', mittel: 'Zwei Werte ändern sich unterschiedlich stark.', schwer: 'Werte werden auch kleiner, bis zu drei Werte ändern sich.' };
+function renderLevels() {
+  const nav = document.getElementById('levels'); nav.innerHTML = '';
+  nav.append(el('span', null, 'Stufe'), ...Object.keys(VG).map(k => el('button', { type: 'button', id: 'lvl-' + k, class: k === LEVEL ? 'on' : '', title: LEVEL_INFO[k],
+    onclick: () => { LEVEL = k; try { localStorage.setItem('zsTraining.level', k); } catch (e) { /* */ } renderLevels(); show(); } }, k)));
+}
+function show() {
+  const m = MODES.find(x => x.id === current);
+  main.innerHTML = '';
+  WINDOWS.clear();
+  main.append(el('div', { class: 'card intro' }, el('h2', null, m.title), el('div', { html: m.intro })));
+  main.append(el('details', { class: 'terms', html: TERMS }));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { class: 'note', style: 'margin-top:0' }, `Stufe ${LEVEL}: ${LEVEL_INFO[LEVEL]}${PREDICT ? ' · Vorhersage-Modus an' : ''}`));
+  const next = el('button', { class: 'primary hidden', type: 'button', onclick: show }, 'Nächste Aufgabe →');
+  m.build(card, () => { card.classList.add('solved'); next.classList.remove('hidden'); });
+  card.append(el('div', { class: 'bar', style: 'margin-top:14px' }, next));
+  main.append(card);
+}
+const predBtn = document.getElementById('btn-predict');
+predBtn.classList.toggle('on', PREDICT);
+predBtn.addEventListener('click', () => { PREDICT = !PREDICT; predBtn.classList.toggle('on', PREDICT); try { localStorage.setItem('zsTraining.predict', PREDICT ? '1' : '0'); } catch (e) { /* */ } show(); });
+const gridBtn = document.getElementById('btn-grid');
+gridBtn.classList.toggle('on', GRID);
+gridBtn.addEventListener('click', () => { GRID = !GRID; gridBtn.classList.toggle('on', GRID); try { localStorage.setItem('zsTraining.grid', GRID ? '1' : '0'); } catch (e) { /* */ } redrawAll(); });
+document.getElementById('btn-new').addEventListener('click', show);
+
+renderLevels(); renderModes(); show();
+
+})();
+</script>
+</body>
+</html>
