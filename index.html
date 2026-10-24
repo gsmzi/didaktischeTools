@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Didaktische Tools</title>
+  <meta name="description" content="Interaktive Werkzeuge für den Unterricht in Informatik, Chemie und Mathematik, sortiert nach Fach und Thema.">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5b6572;
+      --line: #d9dee7;
+      --soft: #eef2f7;
+      --accent: #1267b1;
+      --accent-strong: #084f8f;
+      --shadow: 0 10px 28px rgba(31, 42, 55, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #12161c;
+        --panel: #1b212a;
+        --ink: #e6ebf1;
+        --muted: #9aa5b3;
+        --line: #2e3742;
+        --soft: #232b36;
+        --accent: #6cb4f5;
+        --accent-strong: #9ccdfa;
+        --shadow: none;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 40px 16px 56px;
+    }
+
+    header h1 { margin: 0 0 6px; font-size: 2rem; }
+    header p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+    section { margin-top: 40px; }
+    section h2 {
+      margin: 0 0 14px;
+      font-size: 1.25rem;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      color: inherit;
+      text-decoration: none;
+      transition: border-color .15s, transform .15s;
+    }
+    a.card:hover, a.card:focus-visible {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      outline: none;
+    }
+    .card .topic { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .card .name { font-weight: 600; font-size: 1.05rem; color: var(--accent-strong); }
+    .card .kind { font-size: .92rem; color: var(--muted); }
+    .card .level {
+      align-self: flex-start;
+      margin-top: 4px;
+      padding: 2px 8px;
+      font-size: .78rem;
+      background: var(--soft);
+      border-radius: 999px;
+    }
+    .card.offline .name { color: var(--ink); }
+
+    footer { margin-top: 48px; font-size: .9rem; color: var(--muted); }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Didaktische Tools</h1>
+    <p>Interaktive Werkzeuge für den Unterricht, sortiert nach Fach und Thema. Alle Tools laufen direkt im Browser.</p>
+  </header>
+
+  <section>
+    <h2>Informatik</h2>
+    <div class="grid">
+      <a class="card" href="informatik/daten-und-codierung/zweierkomplement/">
+        <span class="topic">Daten und Codierung</span>
+        <span class="name">Zweierkomplement</span>
+        <span class="kind">Interaktive Visualisierung</span>
+        <span class="level">Sek II</span>
+      </a>
+      <a class="card" href="informatik/algorithmen-und-programmierung/for-schleifen-puzzle/">
+        <span class="topic">Algorithmen und Programmierung</span>
+        <span class="name">for-Schleifen-Puzzle</span>
+        <span class="kind">Puzzle</span>
+        <span class="level">Kl. 9 (IMP)</span>
+      </a>
+      <a class="card" href="informatik/algorithmen-und-programmierung/zaehlschleifen-training/">
+        <span class="topic">Algorithmen und Programmierung</span>
+        <span class="name">Zählschleifen-Training</span>
+        <span class="kind">Übungsaufgaben (zufällig erzeugt)</span>
+        <span class="level">Kl. 9 (IMP)</span>
+      </a>
+      <a class="card" href="informatik/bildverarbeitung/pixel-trainer/">
+        <span class="topic">Bildverarbeitung</span>
+        <span class="name">Pixel-Trainer</span>
+        <span class="kind">Übungsaufgaben (zufällig erzeugt)</span>
+        <span class="level">Kl. 10 (IMP)</span>
+      </a>
+      <a class="card" href="informatik/bildverarbeitung/faltungs-trainer/">
+        <span class="topic">Bildverarbeitung</span>
+        <span class="name">Faltungs-Trainer</span>
+        <span class="kind">Übungsaufgaben (zufällig erzeugt)</span>
+        <span class="level">Kl. 10 (IMP)</span>
+      </a>
+      <a class="card" href="informatik/technische-informatik/mehrbit-addierer/">
+        <span class="topic">Technische Informatik</span>
+        <span class="name">Mehrbit-Addierer</span>
+        <span class="kind">Interaktive Visualisierung</span>
+        <span class="level">Sek II</span>
+      </a>
+      <a class="card" href="informatik/technische-informatik/rs-flipflop/">
+        <span class="topic">Technische Informatik</span>
+        <span class="name">RS-Flipflop</span>
+        <span class="kind">Interaktive Visualisierung</span>
+        <span class="level">Sek II</span>
+      </a>
+      <a class="card offline" href="https://github.com/gsmzi/didaktischeTools/tree/main/informatik/datenstrukturen/adt-programmierbeispiele">
+        <span class="topic">Datenstrukturen</span>
+        <span class="name">ADT-Programmierbeispiele</span>
+        <span class="kind">Processing-Vorlagen + Lösungen (auf GitHub)</span>
+        <span class="level">Kursstufe</span>
+      </a>
+      <a class="card offline" href="https://github.com/gsmzi/didaktischeTools/tree/main/informatik/netze-und-internet/internet-simulator">
+        <span class="topic">Netze und Internet</span>
+        <span class="name">Internet-Simulator (Palastnetzwerk)</span>
+        <span class="kind">Client-Server-Rollenspiel, lokaler Node.js-Server (auf GitHub)</span>
+        <span class="level">Kl. 7 (IuM)</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Chemie</h2>
+    <div class="grid">
+      <a class="card" href="chemie/grundlagen/grundlagen-trainer/">
+        <span class="topic">Grundlagen</span>
+        <span class="name">Grundlagen-Trainer</span>
+        <span class="kind">Übungsaufgaben: Ionen, Säure-Base-Paare, Stöchiometrie</span>
+        <span class="level">Kursstufe (LF)</span>
+      </a>
+      <a class="card" href="chemie/energetik/rechentrainer/">
+        <span class="topic">Energetik</span>
+        <span class="name">Energetik-Rechentrainer</span>
+        <span class="kind">Übungsaufgaben: Kalorimetrie, Satz von Hess</span>
+        <span class="level">Kursstufe (LF)</span>
+      </a>
+      <a class="card" href="chemie/energetik/gibbs-helmholtz/">
+        <span class="topic">Energetik</span>
+        <span class="name">Gibbs-Helmholtz-Explorer</span>
+        <span class="kind">Interaktive Visualisierung + Übungsaufgaben</span>
+        <span class="level">Kursstufe (LF)</span>
+      </a>
+      <a class="card" href="chemie/saeure-base/titration/">
+        <span class="topic">Säure-Base</span>
+        <span class="name">Titrations-Simulator</span>
+        <span class="kind">Simulation + Übungsaufgaben</span>
+        <span class="level">Kursstufe (LF)</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Mathematik</h2>
+    <div class="grid">
+      <a class="card" href="mathematik/aussagenlogik/aussagenlogik-trainer/">
+        <span class="topic">Aussagenlogik</span>
+        <span class="name">Aussagenlogik-Trainer</span>
+        <span class="kind">Übungsaufgaben (zufällig erzeugt)</span>
+        <span class="level">Kl. 10 (IMP)</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    Quellcode und Hinweise zum Einsatz: <a href="https://github.com/gsmzi/didaktischeTools">github.com/gsmzi/didaktischeTools</a>
+  </footer>
+</main>
+</body>
+</html>

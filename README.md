@@ -55,3 +55,4 @@ Material, das auf Vorlagen anderer Autorinnen und Autoren beruht, nennt die Quel
 2. Web-Tools als `index.html` ablegen.
 3. Eine kurze `README.md` mit Lernziel und Stufe schreiben.
 4. Eine Zeile in den Katalog oben eintragen.
+5. Eine Karte in die Startseite `index.html` im Hauptordner eintragen.
