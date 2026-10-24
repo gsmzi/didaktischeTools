@@ -2,7 +2,7 @@
 
 Interaktive Übungsseite zu Bildern als zweidimensionale Arrays: Spiegeln, Drehen, Koordinaten, Farbanteile und Graustufen. Alle Aufgaben werden zufällig erzeugt.
 
-Passend zur Unterrichtseinheit *Digitale Bildbearbeitung* in IMP, Klasse 10 (Blätter 01_alg_bilderalsarray und 02_alg_farbmodell, siehe [imp10-bildbearbeitung](../imp10-bildbearbeitung/)), und zur Vorbereitung auf die Klassenarbeit (Bearbeitung dort auf Papier). Der Code entspricht der aktuellen Processing-Vorlage: `color[][]`, `pixel[x][y]`, Breite `pixel.length`, Höhe `pixel[0].length`, neues Ergebnisarray `pixelNeu`.
+Passend zur Unterrichtseinheit *Digitale Bildbearbeitung* in IMP, Klasse 10, und zur Vorbereitung auf die Klassenarbeit (Bearbeitung dort auf Papier). Der Code entspricht der aktuellen Processing-Vorlage: `color[][]`, `pixel[x][y]`, Breite `pixel.length`, Höhe `pixel[0].length`, neues Ergebnisarray `pixelNeu`.
 
 **Aufgabentypen**
 
