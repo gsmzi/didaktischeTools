@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="M. Zimmer">
+<title>Titrations-Simulator</title>
+<style>
+  :root {
+    --bg: #eef3f2; --panel: #ffffff; --ink: #1d2330; --muted: #5b6475; --line: #c3cfcd;
+    --accent: #0f7a6a; --accent-soft: #e2f3f0;
+    --ok: #1e8e44; --ok-soft: #e5f5ea; --err: #c62828; --err-soft: #fdecea; --warn-soft: #fff6dc;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #0b6356; }
+  button.toggle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .55; cursor: default; }
+
+  .topbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 20px; background: linear-gradient(180deg, #2a9d8a, #0d5f53); color: #fff; }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; align-items: center; }
+  .levels span { font-size: 13px; padding: 0 6px 0 4px; opacity: .9; }
+  .levels button { background: transparent; color: #fff; border: none; border-radius: 6px; padding: 4px 11px; }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #0d5f53; font-weight: 600; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .modes button { display: flex; align-items: baseline; gap: 7px; border-radius: 8px; padding: 6px 12px; }
+  .modes button .nr { font-weight: 700; color: var(--accent); }
+  .modes button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .modes button.on .nr { color: #fff; }
+  .modes .cnt { font-size: 12px; color: var(--ok); font-weight: 600; }
+  .modes button.on .cnt { color: #d9ffe3; }
+
+  main { padding: 14px 20px 30px; max-width: 1250px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card h2 { margin: 0 0 6px; font-size: 18px; }
+  .card h3 { margin: 14px 0 6px; font-size: 15px; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .grow { flex: 1 1 480px; }
+  .task-text { margin: 4px 0 10px; }
+  .bar { display: flex; gap: 8px 10px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .note { font-size: 13.5px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 5px 10px; border-radius: 0 6px 6px 0; margin: 6px 0; }
+  .lvl { font-size: 13px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 4px 10px; border-radius: 0 6px 6px 0; margin: 0 0 8px; }
+  .lbl-small { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  details.terms { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.terms summary { cursor: pointer; font-weight: 600; }
+  details.terms dl { margin: 8px 0 4px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+  details.terms dt { font-weight: 600; } details.terms dd { margin: 0; }
+  .formula { font-family: Cambria, "Times New Roman", serif; font-size: 17px; font-weight: 600; }
+  .scroll { overflow-x: auto; max-width: 100%; }
+
+  .chart { width: 100%; max-width: 760px; }
+  .chart svg { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px; touch-action: pan-y; }
+  .chart text { font: 12px var(--sans); fill: #444; }
+  .chart svg.small text { font-size: 17px; }
+  .readout { font: 14px var(--mono); min-height: 20px; margin-top: 4px; }
+  .mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+  .mini .chart svg { border-radius: 6px; }
+
+  .flaskbox { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 150px; }
+  .flaskbox svg { width: 150px; height: auto; }
+  .big { font: 600 22px var(--mono); }
+  .mono { font-family: var(--mono); }
+  .species { font-size: 13.5px; }
+  .species b { font-weight: 600; }
+  label.inline { display: inline-flex; align-items: center; gap: 6px; }
+  select { font: 15px var(--sans); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
+  select.right { background: var(--ok-soft); border-color: var(--ok); } select.wrong { background: var(--err-soft); border-color: var(--err); }
+  input[type=range] { width: min(100%, 360px); accent-color: var(--accent); }
+
+  .qa { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; max-width: 780px; }
+  .qa .why { grid-column: 1 / -1; font-size: 13.5px; margin: -4px 0 4px; white-space: pre-line; }
+  .qa .why.ok { color: #145c2e; } .qa .why.err { color: #8c1c1c; }
+  .unitbox { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .unit { color: var(--muted); }
+  input.num { width: 110px; font: 15px var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; text-align: center; }
+  input.num.right { background: var(--ok-soft); border-color: var(--ok); } input.num.wrong { background: var(--err-soft); border-color: var(--err); }
+  .indlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 6px 12px; }
+  .indlist label { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
+  .indlist label.right { background: var(--ok-soft); border-color: var(--ok); } .indlist label.wrong { background: var(--err-soft); border-color: var(--err); }
+  .indlist .why { display: block; font-size: 12.5px; margin-top: 2px; }
+  .sw { display: inline-block; width: 12px; height: 12px; border: 1px solid #888; border-radius: 2px; vertical-align: -1px; }
+
+  .fb { margin-top: 10px; padding: 8px 12px; border-radius: 8px; display: none; white-space: pre-line; }
+  .fb.show { display: block; }
+  .fb.ok { background: var(--ok-soft); color: #145c2e; border: 1px solid #9fd8b2; }
+  .fb.err { background: var(--err-soft); color: #8c1c1c; border: 1px solid #f0b4b0; }
+  .fb.info { background: var(--warn-soft); color: #6b5100; border: 1px solid #ecd58c; }
+
+  .hidden { display: none !important; }
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; max-width: 1250px; }
+  @media (max-width: 700px) {
+    .topbar, .modes, main { padding-left: 12px; padding-right: 12px; }
+    .qa { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media print { .topbar, .modes, .bar, footer { display: none; } body { background: #fff; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>SÄURE-BASE <small>Titrations-Simulator</small></h1>
+  <span class="spacer"></span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <button id="btn-new" type="button">Neue Aufgabe</button>
+</header>
+
+<nav class="modes" id="modes" aria-label="Aufgabentypen"></nav>
+
+<main id="main"></main>
+
+<footer>
+  Leistungsfach Chemie, Säure-Base-Gleichgewichte. pK<sub>S</sub>-Werte und Indikatoren nach der IQB-Formelsammlung (Anhang), T = 25 °C.
+  Die pH-Werte werden ohne Näherung aus Ladungsbilanz und Massenwirkungsgesetz berechnet; Leitfähigkeiten mit den Ionenleitfähigkeiten verdünnter Lösungen (Richtwerte). Der Fortschritt wird nur in diesem Browser gespeichert. · M. Zimmer
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+//  Hilfsfunktionen
+// =====================================================================
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const RF = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; } return a; }
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+// sicheres append (überspringt null/false)
+const add = (parent, ...kids) => { for (const k of kids.flat()) if (k != null && k !== false) parent.append(k); return parent; };
+const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const rnd = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
+function de(v, d = 0) { return rnd(v, d).toFixed(d).replace('.', ',').replace('-', '−'); }
+function readNum(s) {
+  const t = String(s).trim().replace(/\s/g, '').replace(/−/g, '-').replace(',', '.');
+  if (t === '' || !/^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$/i.test(t)) return NaN;
+  return Number(t);
+}
+const close = (a, b, rel = 0.02, abs = 0) => Math.abs(a - b) <= Math.max(abs, Math.abs(b) * rel);
+const lg = Math.log10;
+const cTxt = c => { let t = de(c, 4); if (t.includes(',')) t = t.replace(/0+$/, '').replace(/,$/, ''); return t; };
+
+const STORE = 'tiTraining.score';
+let SCORE = {};
+try { SCORE = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { SCORE = {}; }
+function addScore(id) { SCORE[id] = (SCORE[id] || 0) + 1; try { localStorage.setItem(STORE, JSON.stringify(SCORE)); } catch (e) {} renderModes(); }
+let LEVEL = 'leicht'; try { LEVEL = localStorage.getItem('tiTraining.level') || 'leicht'; } catch (e) {}
+let MODE = 'labor'; try { MODE = localStorage.getItem('tiTraining.mode') || 'labor'; } catch (e) {}
+
+function feedback() {
+  const box = el('div', { class: 'fb', role: 'status' });
+  box.set = (kind, text) => { box.className = 'fb show ' + kind; box.textContent = text; };
+  return box;
+}
+function addQ(qa, rows, label, unit, want, alts, expl, tol = {}) {
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', 'aria-label': label.replace(/<[^>]+>/g, '') });
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: label }), el('span', { class: 'unitbox' }, inp, unit ? el('span', { class: 'unit', html: unit }) : null), why);
+  const rel = tol.rel != null ? tol.rel : 0.02, abs = tol.abs || 0;
+  rows.push({ inp, why, want, rel, abs, expl, alts: (alts || []).filter(a => isFinite(a.v) && !close(a.v, want, rel, abs)) });
+}
+function checkRows(rows) {
+  let ok = 0, empty = 0;
+  for (const q of rows) {
+    const v = readNum(q.inp.value);
+    if (isNaN(v)) { empty++; q.inp.className = 'num'; q.why.className = 'why hidden'; continue; }
+    const good = close(v, q.want, q.rel, q.abs);
+    if (good) ok++;
+    q.inp.className = 'num ' + (good ? 'right' : 'wrong');
+    const a = good ? null : q.alts.find(x => close(v, x.v, q.rel, q.abs));
+    q.why.className = 'why ' + (good ? 'ok' : 'err');
+    q.why.textContent = good ? q.expl : (a ? a.why + '\n' : 'Noch nicht. ') + q.expl;
+  }
+  return { ok, empty };
+}
+function checkButton(card, rows, scoreId, extra) {
+  card.__rows = rows;
+  const fb = feedback();
+  const b = el('button', { class: 'primary', type: 'button', onclick: () => {
+    const { ok, empty } = checkRows(rows);
+    const ex = extra ? extra() : { ok: true, empty: false, n: 0, good: 0 };
+    if (empty || ex.empty) { fb.set('info', 'Fülle alle Felder aus. Dezimalzahlen mit Komma oder Punkt.'); return; }
+    const total = rows.length + (ex.n || 0), good = ok + (ex.good || 0);
+    if (ok === rows.length && ex.ok) { fb.set('ok', 'Alles richtig!' + (ex.msg ? ' ' + ex.msg : '')); card.classList.add('solved'); if (!card.done) { card.done = true; addScore(scoreId); } }
+    else fb.set('err', `${good} von ${total} richtig. Die Erklärungen stehen bei den einzelnen Antworten.`);
+  } }, 'Prüfen');
+  return [el('div', { class: 'bar' }, b), fb];
+}
+
+// =====================================================================
+//  Stoffe (pKS nach IQB-Formelsammlung)
+// =====================================================================
+// Ionenleitfähigkeiten in S·cm²/mol (verdünnte Lösungen, 25 °C)
+const LAM = { H3O: 350, OH: 199, Na: 50, K: 74, Cl: 76, NO3: 71, CH3COO: 41, HCOO: 55, F: 55, NH4: 74, H2PO4: 36, HPO4: 114, PO4: 207, HCO3: 45, CO3: 139 };
+const SYS = {
+  CH3COOH: { pk: [4.75], z0: 0, sp: ['CH<sub>3</sub>COOH', 'CH<sub>3</sub>COO<sup>−</sup>'], lam: [0, LAM.CH3COO] },
+  HCOOH:   { pk: [3.75], z0: 0, sp: ['HCOOH', 'HCOO<sup>−</sup>'], lam: [0, LAM.HCOO] },
+  HF:      { pk: [3.20], z0: 0, sp: ['HF', 'F<sup>−</sup>'], lam: [0, LAM.F] },
+  H3PO4:   { pk: [2.16, 7.21, 12.32], z0: 0, sp: ['H<sub>3</sub>PO<sub>4</sub>', 'H<sub>2</sub>PO<sub>4</sub><sup>−</sup>', 'HPO<sub>4</sub><sup>2−</sup>', 'PO<sub>4</sub><sup>3−</sup>'], lam: [0, LAM.H2PO4, LAM.HPO4, LAM.PO4] },
+  NH4:     { pk: [9.25], z0: 1, sp: ['NH<sub>4</sub><sup>+</sup>', 'NH<sub>3</sub>'], lam: [LAM.NH4, 0] },
+  H2CO3:   { pk: [6.35, 10.33], z0: 0, sp: ['H<sub>2</sub>CO<sub>3</sub>', 'HCO<sub>3</sub><sup>−</sup>', 'CO<sub>3</sub><sup>2−</sup>'], lam: [0, LAM.HCO3, LAM.CO3] }
+};
+// vorgelegte Lösungen
+const AN = {
+  HCl:     { name: 'Salzsäure', f: 'HCl', kind: 'acid', strong: true, ion: ['Cl', 1], eq: 1 },
+  HNO3:    { name: 'Salpetersäure', f: 'HNO<sub>3</sub>', kind: 'acid', strong: true, ion: ['NO3', 1], eq: 1 },
+  HCOOH:   { name: 'Ameisensäure-Lösung', f: 'HCOOH', kind: 'acid', sys: 'HCOOH', eq: 1 },
+  CH3COOH: { name: 'Essigsäure-Lösung', f: 'CH<sub>3</sub>COOH', kind: 'acid', sys: 'CH3COOH', eq: 1 },
+  HF:      { name: 'Flusssäure', f: 'HF', kind: 'acid', sys: 'HF', eq: 1 },
+  H3PO4:   { name: 'Phosphorsäure', f: 'H<sub>3</sub>PO<sub>4</sub>', kind: 'acid', sys: 'H3PO4', eq: 3, visible: 2 },
+  NaOH:    { name: 'Natronlauge', f: 'NaOH', kind: 'base', strong: true, ion: ['Na', 1], eq: 1 },
+  KOH:     { name: 'Kalilauge', f: 'KOH', kind: 'base', strong: true, ion: ['K', 1], eq: 1 },
+  NH3:     { name: 'Ammoniak-Lösung', f: 'NH<sub>3</sub>', kind: 'base', sys: 'NH4', eq: 1 },
+  Na2CO3:  { name: 'Natriumcarbonat-Lösung', f: 'Na<sub>2</sub>CO<sub>3</sub>', kind: 'base', sys: 'H2CO3', ion: ['Na', 2], eq: 2 }
+};
+const plain = s => s.replace(/<[^>]+>/g, '');
+// Säuren der Tabelle für die Bestimmung aus dem HÄP
+const PKS_TABLE = [['HF', 'Flusssäure', 3.20], ['HNO2', 'Salpetrige Säure', 3.25], ['HCOOH', 'Ameisensäure', 3.75], ['CH3COOH', 'Essigsäure', 4.75], ['Al', '[Al(H₂O)₆]³⁺', 4.97], ['H2CO3', 'Kohlensäure', 6.35], ['H2S', 'Schwefelwasserstoff', 7.05], ['HCN', 'Blausäure', 9.21], ['NH4', 'Ammonium-Ion (→ Ammoniak)', 9.25]];
+
+// Indikatoren nach IQB-Formelsammlung (Thymolblau mit zwei Umschlägen)
+const COL = { rot: '#d32f2f', gelb: '#f2cf1d', gelborange: '#f39a1e', blau: '#1e5bd8', farblos: '#f4f8fb', purpur: '#a3127a', hellgelb: '#f6eeaa', rotbraun: '#8a3a1a' };
+const IND = [
+  { id: 'tb1', name: 'Thymolblau (1. Umschlag)', lo: 1.2, hi: 2.8, a: 'rot', b: 'gelb' },
+  { id: 'mo', name: 'Methylorange', lo: 3.0, hi: 4.4, a: 'rot', b: 'gelborange' },
+  { id: 'bkg', name: 'Bromkresolgrün', lo: 3.8, hi: 5.4, a: 'gelb', b: 'blau' },
+  { id: 'mr', name: 'Methylrot', lo: 4.2, hi: 6.2, a: 'rot', b: 'gelb' },
+  { id: 'la', name: 'Lackmus', lo: 5.0, hi: 8.0, a: 'rot', b: 'blau' },
+  { id: 'btb', name: 'Bromthymolblau', lo: 6.0, hi: 7.6, a: 'gelb', b: 'blau' },
+  { id: 'tb2', name: 'Thymolblau (2. Umschlag)', lo: 8.0, hi: 9.6, a: 'gelb', b: 'blau' },
+  { id: 'pp', name: 'Phenolphthalein', lo: 8.2, hi: 10.0, a: 'farblos', b: 'purpur' },
+  { id: 'tp', name: 'Thymolphthalein', lo: 9.3, hi: 10.5, a: 'farblos', b: 'blau' },
+  { id: 'az', name: 'Alizarin R', lo: 10.0, hi: 12.1, a: 'hellgelb', b: 'rotbraun' }
+];
+const IND_LAB = [ // für das Labor: Thymolblau als ein Indikator mit zwei Umschlägen, Universalindikator
+  { id: 'none', name: 'kein Indikator' }, { id: 'ui', name: 'Universalindikator' },
+  { id: 'tb', name: 'Thymolblau' }, ...IND.filter(i => i.id !== 'tb1' && i.id !== 'tb2')
+];
+const hex2rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (c1, c2, f) => { const a = hex2rgb(c1), b = hex2rgb(c2); return 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',') + ')'; };
+const frac = (pH, lo, hi) => 1 / (1 + 10 ** ((lo + hi) / 2 - pH) * 1); // Anteil der basischen Form (pKInd = Mitte)
+function indColor(id, pH) {
+  if (id === 'none') return '#eef6fb';
+  if (id === 'ui') { // grober Universalindikator: rot → orange → gelb → grün → blau → violett
+    const st = [[1, '#d0202a'], [4, '#f08a1c'], [6, '#f2d31d'], [7, '#4caf50'], [9, '#1e6fd8'], [12, '#5a2a9a']];
+    if (pH <= st[0][0]) return st[0][1]; if (pH >= st[st.length - 1][0]) return st[st.length - 1][1];
+    for (let i = 1; i < st.length; i++) if (pH <= st[i][0]) return mix(st[i - 1][1], st[i][1], (pH - st[i - 1][0]) / (st[i][0] - st[i - 1][0]));
+  }
+  if (id === 'tb') { const f1 = frac(pH, 1.2, 2.8), f2 = frac(pH, 8.0, 9.6); return f2 > 0.02 ? mix(COL.gelb, COL.blau, f2) : mix(COL.rot, COL.gelb, f1); }
+  const I = IND.find(i => i.id === id);
+  return mix(COL[I.a], COL[I.b], frac(pH, I.lo, I.hi));
+}
+
+// =====================================================================
+//  Exakte pH-Berechnung (Ladungsbilanz, Bisektion)
+// =====================================================================
+const KW = 1e-14;
+function alphas(pk, h) {
+  const n = pk.length, K = pk.map(p => 10 ** -p); const t = [];
+  let prod = 1;
+  for (let j = 0; j <= n; j++) { if (j > 0) prod *= K[j - 1]; t.push(prod * h ** (n - j)); }
+  const s = t.reduce((a, b) => a + b, 0); return t.map(v => v / s);
+}
+// mix: { ions: {Na: c, Cl: c, ...}, sys: [{key, C}] }
+function solvePH(mixd) {
+  const pos = (mixd.ions.Na || 0) + (mixd.ions.K || 0), neg = (mixd.ions.Cl || 0) + (mixd.ions.NO3 || 0);
+  const f = lh => {
+    const h = 10 ** lh; let s = h + pos - KW / h - neg;
+    for (const { key, C } of mixd.sys) { const S = SYS[key], al = alphas(S.pk, h); al.forEach((a, j) => { s += C * a * (S.z0 - j); }); }
+    return s;
+  };
+  let lo = -16, hi = 1.5;
+  for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (f(mid) > 0) hi = mid; else lo = mid; }
+  return -(lo + hi) / 2;
+}
+function conductivity(mixd, pH) { // in mS/cm
+  const h = 10 ** -pH; let k = h * LAM.H3O + KW / h * LAM.OH;
+  for (const ion in mixd.ions) k += mixd.ions[ion] * (LAM[ion] || 0);
+  for (const { key, C } of mixd.sys) { const S = SYS[key], al = alphas(S.pk, h); al.forEach((a, j) => { k += C * a * S.lam[j]; }); }
+  return k;
+}
+// Titration: Vorlage (Analyt) V0 mL, c0; Maßlösung ct, V mL
+function titration(cfg) {
+  const A = AN[cfg.an]; const T = A.kind === 'acid' ? { name: cfg.tName || 'Natronlauge', f: 'NaOH', ion: cfg.tIon || 'Na' } : { name: 'Salzsäure', f: 'HCl', ion: 'Cl' };
+  const extra = cfg.extra; // zweite Säure (Gemisch, Leitfähigkeit)
+  const mixAt = V => {
+    const Vt = cfg.V0 + V, d = cfg.V0 / Vt; const ions = {}; const sys = [];
+    const addA = (key, c) => { const a = AN[key]; if (a.strong) ions[a.ion[0]] = (ions[a.ion[0]] || 0) + a.ion[1] * c * d; else { sys.push({ key: a.sys, C: c * d }); if (a.ion) ions[a.ion[0]] = (ions[a.ion[0]] || 0) + a.ion[1] * c * d; } };
+    addA(cfg.an, cfg.c0); if (extra) addA(extra.an, extra.c0);
+    ions[T.ion] = (ions[T.ion] || 0) + cfg.ct * V / Vt;
+    return { ions, sys };
+  };
+  const pHAt = V => solvePH(mixAt(V));
+  const kAt = V => { const m = mixAt(V); return conductivity(m, solvePH(m)); };
+  const n0 = cfg.c0 * cfg.V0 / 1000;
+  const eqs = [];
+  if (extra) { const n1 = extra.c0 * cfg.V0 / 1000; const strongFirst = AN[extra.an].strong; const nS = strongFirst ? n1 : n0, nW = strongFirst ? n0 : n1; eqs.push(nS / cfg.ct * 1000, (nS + nW) / cfg.ct * 1000); }
+  else { const vis = A.visible || A.eq; for (let k = 1; k <= vis; k++) eqs.push(k * n0 / cfg.ct * 1000); }
+  return { A, T, cfg, pHAt, kAt, mixAt, eqs, n0 };
+}
+function sampleCurve(t, Vmax, fn, n = 260) {
+  const xs = new Set(); for (let i = 0; i <= n; i++) xs.add(Vmax * i / n);
+  for (const e of t.eqs) for (let i = -40; i <= 40; i++) { const x = e * (1 + i / 1000); if (x > 0 && x < Vmax) xs.add(x); }
+  return [...xs].sort((a, b) => a - b).map(V => [V, fn(V)]);
+}
+function speciesText(t, V) {
+  const m = t.mixAt(V), pH = solvePH(m), h = 10 ** -pH; const out = [];
+  for (const { key, C } of m.sys) { const S = SYS[key], al = alphas(S.pk, h); al.forEach((a, j) => { if (a > 0.005) out.push([a, `${S.sp[j]} ${de(100 * a, a > 0.995 ? 0 : 1)} %`]); }); }
+  return out.sort((x, y) => y[0] - x[0]).map(x => x[1]).join(' · ');
+}
+
+// =====================================================================
+//  Diagramm
+// =====================================================================
+function niceStep(raw) { const p = 10 ** Math.floor(Math.log10(raw)); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function makeChart(o) {
+  // o: {xmax, ymin, ymax, ylabel, xlabel, series:[{pts, color, dots}], small, onMove(V)->text, marks:[{x,y,label}]}
+  const W = o.small ? 420 : 720, H = o.small ? 300 : 380, L = o.small ? 58 : 50, Rr = 14, T = 12, B = 40;
+  const X = x => L + x / o.xmax * (W - L - Rr), Y = y => T + (o.ymax - y) / (o.ymax - o.ymin) * (H - T - B);
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': o.aria || 'Titrationskurve', class: o.small ? 'small' : '' });
+  const ys = niceStep((o.ymax - o.ymin) / (o.small ? 5 : 7)), xs = niceStep(o.xmax / (o.small ? 5 : 10));
+  for (let y = Math.ceil(o.ymin / ys) * ys; y <= o.ymax + 1e-9; y += ys) { svg.append(svgEl('line', { x1: L, x2: W - Rr, y1: Y(y), y2: Y(y), stroke: '#e3e8e7' })); const tx = svgEl('text', { x: L - 6, y: Y(y) + 4, 'text-anchor': 'end' }); tx.textContent = de(y, Number.isInteger(ys) ? 0 : 1); svg.append(tx); }
+  for (let x = 0; x <= o.xmax + 1e-9; x += xs) { svg.append(svgEl('line', { x1: X(x), x2: X(x), y1: T, y2: H - B, stroke: '#e3e8e7' })); const tx = svgEl('text', { x: X(x), y: H - B + (o.small ? 19 : 15), 'text-anchor': 'middle' }); tx.textContent = de(x, Number.isInteger(xs) ? 0 : 1); svg.append(tx); }
+  svg.append(svgEl('line', { x1: L, x2: L, y1: T, y2: H - B, stroke: '#333' }), svgEl('line', { x1: L, x2: W - Rr, y1: H - B, y2: H - B, stroke: '#333' }));
+  const xl = svgEl('text', { x: (L + W) / 2, y: H - (o.small ? 2 : 6), 'text-anchor': 'middle', style: 'font-weight:600' }); xl.textContent = o.xlabel || 'V(Maßlösung) in mL'; svg.append(xl);
+  const yl = svgEl('text', { x: 12, y: (T + H - B) / 2, 'text-anchor': 'middle', transform: `rotate(-90 12 ${(T + H - B) / 2})`, style: 'font-weight:600' }); yl.textContent = o.ylabel || 'pH'; svg.append(yl);
+  for (const s of o.series) {
+    if (s.pts.length > 1 && !s.dotsOnly) svg.append(svgEl('polyline', { points: s.pts.map(([x, y]) => `${X(x)},${Y(Math.max(o.ymin, Math.min(o.ymax, y)))}`).join(' '), fill: 'none', stroke: s.color, 'stroke-width': s.width || 2.4, 'stroke-dasharray': s.dash || '' }));
+    if (s.dots) s.pts.forEach(([x, y]) => svg.append(svgEl('circle', { cx: X(x), cy: Y(y), r: 3.4, fill: s.color })));
+  }
+  for (const m of o.marks || []) {
+    svg.append(svgEl('circle', { cx: X(m.x), cy: Y(m.y), r: 5, fill: '#fff', stroke: m.color || '#c62828', 'stroke-width': 2.2 }));
+    const tx = svgEl('text', { x: X(m.x) + 7, y: Y(m.y) - 7, style: `fill:${m.color || '#c62828'};font-weight:600` }); tx.textContent = m.label; svg.append(tx);
+  }
+  const cur = svgEl('line', { y1: T, y2: H - B, stroke: '#333', 'stroke-dasharray': '3 3', visibility: 'hidden' });
+  const dot = svgEl('circle', { r: 4.5, fill: '#c62828', visibility: 'hidden' });
+  svg.append(cur, dot);
+  svg.X = X; svg.Y = Y;
+  if (o.onMove) {
+    const move = ev => {
+      const r = svg.getBoundingClientRect(); const x = (ev.clientX - r.left) / r.width * W;
+      const V = (x - L) / (W - L - Rr) * o.xmax; if (V < 0 || V > o.xmax) return;
+      const res = o.onMove(V); if (!res) return;
+      cur.setAttribute('x1', X(V)); cur.setAttribute('x2', X(V)); cur.setAttribute('visibility', 'visible');
+      dot.setAttribute('cx', X(V)); dot.setAttribute('cy', Y(Math.max(o.ymin, Math.min(o.ymax, res.y)))); dot.setAttribute('visibility', 'visible');
+    };
+    svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move);
+  }
+  return svg;
+}
+// Kurve mit Ableseanzeige
+function readableCurve(t, Vmax, opts = {}) {
+  const fn = opts.cond ? t.kAt : t.pHAt;
+  const pts = sampleCurve(t, Vmax, fn);
+  const yv = pts.map(p => p[1]);
+  const ymax = opts.cond ? Math.ceil(Math.max(...yv) * 1.1) : 14, ymin = 0;
+  const out = el('div', { class: 'readout' }, opts.small ? ' ' : 'Fahre über die Kurve oder tippe sie an, um Werte abzulesen.');
+  const svg = makeChart({ xmax: Vmax, ymin, ymax, small: opts.small, ylabel: opts.cond ? 'Leitfähigkeit in mS/cm' : 'pH', series: [{ pts, color: opts.color || '#0f7a6a' }], marks: opts.marks,
+    onMove: V => { const y = fn(V); out.textContent = `V = ${de(V, 2)} mL   ${opts.cond ? 'Leitfähigkeit = ' + de(y, 2) + ' mS/cm' : 'pH = ' + de(y, 2)}`; return { y }; } });
+  return el('div', { class: 'col' }, el('div', { class: 'chart' }, svg), out);
+}
+
+// =====================================================================
+//  Aufgabentypen
+// =====================================================================
+const LEVEL_TXT = {
+  labor: { leicht: '', mittel: '', schwer: '' },
+  kurve: { leicht: 'Stufe leicht: starke Säure oder starke Base – Äquivalenzpunkt, Konzentration, Anfangs-pH, Indikator.', mittel: 'Stufe mittel: schwache Säure oder Base – zusätzlich Halbäquivalenzpunkt, pKS und Stoff bestimmen.', schwer: 'Stufe schwer: mehrprotonige Säuren, Carbonat, Gemische und Leitfähigkeitstitrationen.' },
+  zuordnen: { leicht: 'Stufe leicht: Kurven aus „Titrationskurven zuordnen“, deutlich verschiedene Lösungen.', mittel: 'Stufe mittel: auch gleiche Stoffe in verschiedenen Konzentrationen.', schwer: 'Stufe schwer: auch Phosphorsäure und Natriumcarbonat (mehrere Äquivalenzpunkte).' },
+  ph: { leicht: 'Stufe leicht: sehr starke Säuren und Basen (vollständige Protolyse).', mittel: 'Stufe mittel: schwache Säuren und Basen (Näherung der Formelsammlung).', schwer: 'Stufe schwer: Puffer (Henderson-Hasselbalch), pH am Äquivalenzpunkt, c₀ aus dem pH-Wert.' }
+};
+const lvlNote = mode => LEVEL_TXT[mode][LEVEL] ? el('div', { class: 'lvl' }, LEVEL_TXT[mode][LEVEL]) : null;
+const MODES = [
+  { id: 'labor', nr: 1, title: 'Titrieren', count: false },
+  { id: 'kurve', nr: 2, title: 'Kurve auswerten' },
+  { id: 'zuordnen', nr: 3, title: 'Kurven zuordnen' },
+  { id: 'ph', nr: 4, title: 'pH berechnen' }
+];
+function renderLevels() {
+  const nav = document.getElementById('levels'); nav.innerHTML = '';
+  nav.append(el('span', null, 'Stufe'));
+  for (const l of ['leicht', 'mittel', 'schwer']) nav.append(el('button', { type: 'button', class: l === LEVEL ? 'on' : '', 'aria-pressed': String(l === LEVEL),
+    onclick: () => { LEVEL = l; try { localStorage.setItem('tiTraining.level', l); } catch (e) {} renderLevels(); show(); } }, l));
+}
+function renderModes() {
+  const nav = document.getElementById('modes'); nav.innerHTML = '';
+  for (const m of MODES) {
+    const n = SCORE[m.id] || 0;
+    nav.append(el('button', { type: 'button', class: m.id === MODE ? 'on' : '', 'aria-pressed': String(m.id === MODE),
+      onclick: () => { MODE = m.id; try { localStorage.setItem('tiTraining.mode', m.id); } catch (e) {} renderModes(); show(); } },
+      el('span', { class: 'nr' }, String(m.nr)), m.title, m.count === false || !n ? null : el('span', { class: 'cnt' }, '✓ ' + n)));
+  }
+}
+function terms() {
+  return el('details', { class: 'terms' }, el('summary', null, 'Formeln und Begriffe'),
+    el('dl', null,
+      el('dt', null, 'pH, pOH'), el('dd', { html: 'pH = −lg{c(H<sub>3</sub>O<sup>+</sup>)}, pOH = −lg{c(OH<sup>−</sup>)}, pH + pOH = 14 (25 °C)' }),
+      el('dt', null, 'vollständige Protolyse'), el('dd', { html: 'sehr starke Säuren: pH = −lg{c<sub>0</sub>(HA)}; sehr starke Basen entsprechend über pOH. Ca(OH)<sub>2</sub> liefert 2 OH<sup>−</sup> je Formeleinheit.' }),
+      el('dt', null, 'unvollständige Protolyse'), el('dd', { html: 'schwache Säuren (Näherung): <span class="formula">pH = ½ (pK<sub>S</sub> − lg{c<sub>0</sub>})</span>; schwache Basen entsprechend mit pK<sub>B</sub> = 14 − pK<sub>S</sub>(korrespondierende Säure). Exakt: c(H<sub>3</sub>O<sup>+</sup>) = −K<sub>S</sub>/2 + √(K<sub>S</sub>²/4 + K<sub>S</sub>·c<sub>0</sub>).' }),
+      el('dt', null, 'Puffer'), el('dd', { html: '<span class="formula">pH = pK<sub>S</sub> + lg (c(A<sup>−</sup>) / c(HA))</span> (Henderson-Hasselbalch); am Halbäquivalenzpunkt c(A<sup>−</sup>) = c(HA), also pH = pK<sub>S</sub>.' }),
+      el('dt', null, 'Äquivalenzpunkt'), el('dd', { html: 'Die zugegebene Stoffmenge der Maßlösung entspricht der Stoffmenge der vorgelegten Säure bzw. Base: c<sub>0</sub> · V<sub>0</sub> = c(Maßlösung) · V<sub>ÄP</sub> (bei einprotonigen Säuren). Wendepunkt der Kurve, steiler pH-Sprung.' }),
+      el('dt', null, 'Indikator'), el('dd', null, 'Geeignet, wenn sein Umschlagsbereich im steilen Teil der Kurve um den Äquivalenzpunkt liegt (pH(Umschlag) ≈ pKS(Indikator)).'),
+      el('dt', null, 'Leitfähigkeit'), el('dd', { html: 'hängt von Konzentration und Art der Ionen ab; H<sub>3</sub>O<sup>+</sup> und OH<sup>−</sup> leiten besonders gut. Der Äquivalenzpunkt zeigt sich als Knick.' })));
+}
+
+// ---------------------------------------------------------------------
+// 1 Titrieren (Labor)
+// ---------------------------------------------------------------------
+let LAB = { an: 'CH3COOH', c0: 0.1, V0: 20, ct: 0.1, ind: 'pp', V: 0, pts: [], full: false, marks: false, cond: false };
+const C_OPTS = [0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 1], V_OPTS = [10, 20, 25, 50, 100], CT_OPTS = [0.1, 0.5, 1];
+function flaskSVG(color, level) {
+  const s = svgEl('svg', { viewBox: '0 0 120 150', 'aria-label': 'Erlenmeyerkolben' });
+  // Bürette
+  s.append(svgEl('rect', { x: 54, y: 0, width: 12, height: 38, fill: '#e8f1f4', stroke: '#5b6475' }), svgEl('rect', { x: 58, y: 38, width: 4, height: 14, fill: '#5b6475' }));
+  const clip = svgEl('clipPath', { id: 'fclip' }); clip.append(svgEl('path', { d: 'M48 58 L48 86 L14 140 L106 140 L72 86 L72 58 Z' })); s.append(clip);
+  const yTop = 140 - Math.min(70, 30 + level * 40);
+  s.append(svgEl('rect', { x: 0, y: yTop, width: 120, height: 150, fill: color, 'clip-path': 'url(#fclip)' }));
+  s.append(svgEl('path', { d: 'M48 58 L48 86 L14 140 L106 140 L72 86 L72 58', fill: 'none', stroke: '#333', 'stroke-width': 2.2 }));
+  return s;
+}
+function modeLabor(card) {
+  card.append(el('h2', null, 'Titrieren'),
+    el('p', { class: 'task-text', html: 'Stelle die Titration ein und gib die Maßlösung schrittweise zu – die Messwerte werden aufgezeichnet wie mit einem pH-Meter. Achte auf die Farbe des Indikators. Mit „ganze Kurve“ siehst du den berechneten Verlauf, mit „ÄP/HÄP markieren“ die besonderen Punkte.' }));
+  const sel = (label, opts, val, fmt, cb) => { const s = el('select', { 'aria-label': label }, ...opts.map(o => el('option', { value: String(o) }, fmt(o)))); s.value = String(val); s.addEventListener('change', () => cb(s.value)); return el('label', { class: 'inline' }, label + ' ', s); };
+  const cfgBar = el('div', { class: 'bar' });
+  const reset = () => { LAB.V = 0; LAB.pts = []; render(); };
+  const left = el('div', { class: 'col grow' }), right = el('div', { class: 'flaskbox' });
+  const controls = el('div', { class: 'bar' }), info = el('div', { class: 'col' });
+  function build() {
+    cfgBar.innerHTML = '';
+    add(cfgBar,
+      sel('Vorlage:', Object.keys(AN), LAB.an, k => AN[k].name, v => { LAB.an = v; build(); reset(); }),
+      sel('c₀ =', C_OPTS, LAB.c0, c => cTxt(c) + ' mol/L', v => { LAB.c0 = Number(v); reset(); }),
+      sel('V₀ =', V_OPTS, LAB.V0, v => v + ' mL', v => { LAB.V0 = Number(v); reset(); }),
+      sel(`Maßlösung: ${AN[LAB.an].kind === 'acid' ? 'Natronlauge' : 'Salzsäure'}, c =`, CT_OPTS, LAB.ct, c => cTxt(c) + ' mol/L', v => { LAB.ct = Number(v); reset(); }),
+      sel('Indikator:', IND_LAB.map(i => i.id), LAB.ind, id => IND_LAB.find(i => i.id === id).name, v => { LAB.ind = v; render(); }));
+  }
+  function render() {
+    const t = titration({ an: LAB.an, c0: LAB.c0, V0: LAB.V0, ct: LAB.ct });
+    const last = t.eqs[t.eqs.length - 1];
+    const Vmax = Math.max(5, niceStep(last * 2 / 10) * Math.ceil(last * 2 / niceStep(last * 2 / 10)));
+    if (LAB.V > Vmax) LAB.V = Vmax;
+    const fn = LAB.cond ? t.kAt : t.pHAt;
+    const cur = t.pHAt(LAB.V);
+    const series = [];
+    if (LAB.full) series.push({ pts: sampleCurve(t, Vmax, fn), color: '#9fb6b1', width: 1.8, dash: '5 4' });
+    series.push({ pts: LAB.pts.map(([V]) => [V, fn(V)]), color: '#0f7a6a', dots: true });
+    let ymax = 14; if (LAB.cond) ymax = Math.ceil(Math.max(...sampleCurve(t, Vmax, t.kAt, 80).map(p => p[1])) * 1.1);
+    const marks = [];
+    if (LAB.marks) {
+      t.eqs.forEach((e, i) => { if (e <= Vmax) marks.push({ x: e, y: fn(e), label: t.eqs.length > 1 ? `ÄP${i + 1}` : 'ÄP' }); });
+      if (!t.A.strong) { const prev = [0, ...t.eqs]; t.eqs.forEach((e, i) => { const h = (prev[i] + e) / 2; if (!(AN[LAB.an].sys === 'H2CO3' && false)) marks.push({ x: h, y: fn(h), label: t.eqs.length > 1 ? `HÄP${i + 1}` : 'HÄP', color: '#1f6fd1' }); }); }
+    }
+    const read = el('div', { class: 'readout' }, ' ');
+    const svg = makeChart({ xmax: Vmax, ymin: 0, ymax, ylabel: LAB.cond ? 'Leitfähigkeit in mS/cm' : 'pH', series, marks,
+      onMove: V => { if (!LAB.full && !LAB.pts.length) return null; const y = fn(V); read.textContent = `V = ${de(V, 2)} mL   ${LAB.cond ? 'Leitfähigkeit = ' + de(y, 2) + ' mS/cm' : 'pH = ' + de(y, 2)}`; return { y }; } });
+    left.innerHTML = ''; add(left, el('div', { class: 'chart' }, svg), read);
+    right.innerHTML = '';
+    add(right, flaskSVG(indColor(LAB.ind, cur), (LAB.V0 + LAB.V) / (LAB.V0 + Vmax)),
+      el('div', { class: 'big' }, 'pH ' + de(cur, 2)), el('div', { class: 'mono' }, 'V = ' + de(LAB.V, 2) + ' mL'),
+      LAB.cond ? el('div', { class: 'mono' }, de(t.kAt(LAB.V), 2) + ' mS/cm') : null);
+    info.innerHTML = '';
+    add(info, el('div', { class: 'species', html: '<b>Teilchen jetzt:</b> ' + (speciesText(t, LAB.V) || 'nur Ionen der starken Säure bzw. Base, Wasser') }),
+      el('div', { class: 'note', html: `Äquivalenzpunkt${t.eqs.length > 1 ? 'e' : ''} bei ${t.eqs.map(e => de(e, 2) + ' mL').join(' und ')} – ` + (LAB.marks ? 'markiert.' : 'findest du ihn?') + (t.A.visible && t.A.visible < t.A.eq ? ' Der 3. Äquivalenzpunkt der Phosphorsäure ist nicht sichtbar (pKS 12,32 zu nah am pH der Maßlösung).' : '') }));
+    controls.innerHTML = '';
+    const step = d => () => { LAB.V = Math.min(Vmax, rnd(LAB.V + d, 3)); LAB.pts.push([LAB.V, cur]); LAB.pts = LAB.pts.filter((p, i, a) => a.findIndex(q => Math.abs(q[0] - p[0]) < 1e-9) === i); render(); };
+    if (!LAB.pts.length) LAB.pts.push([0, t.pHAt(0)]);
+    add(controls, el('span', { class: 'lbl-small' }, 'Zugeben:'),
+      ...[0.1, 0.5, 1, 2, 5].map(d => el('button', { type: 'button', onclick: step(d) }, '+' + de(d, d < 1 ? 1 : 0) + ' mL')),
+      el('button', { type: 'button', onclick: reset }, 'Neu beginnen'),
+      el('button', { type: 'button', class: 'toggle' + (LAB.full ? ' on' : ''), 'aria-pressed': String(LAB.full), onclick: () => { LAB.full = !LAB.full; render(); } }, 'ganze Kurve'),
+      el('button', { type: 'button', class: 'toggle' + (LAB.marks ? ' on' : ''), 'aria-pressed': String(LAB.marks), onclick: () => { LAB.marks = !LAB.marks; render(); } }, 'ÄP/HÄP markieren'),
+      el('button', { type: 'button', class: 'toggle' + (LAB.cond ? ' on' : ''), 'aria-pressed': String(LAB.cond), onclick: () => { LAB.cond = !LAB.cond; render(); } }, 'Leitfähigkeit'));
+  }
+  build();
+  add(card, cfgBar, controls, el('div', { class: 'row' }, left, el('div', { class: 'col' }, right, info)));
+  render();
+}
+
+// ---------------------------------------------------------------------
+// gemeinsame Bausteine für Aufgaben
+// ---------------------------------------------------------------------
+function suitableIndicators(t, k = 0) {
+  const e = t.eqs[k], lo = t.pHAt(e * 0.99), hi = t.pHAt(e * 1.01);
+  const a = Math.min(lo, hi), b = Math.max(lo, hi);
+  return IND.map(I => { const m = (I.lo + I.hi) / 2; return { I, ok: m >= a && m <= b, m, a, b }; });
+}
+function indicatorQuestion(t, k = 0) {
+  const all = suitableIndicators(t, k);
+  const good = all.filter(x => x.ok), bad = all.filter(x => !x.ok);
+  const opts = shuffle([...shuffle(good).slice(0, Math.min(2, good.length)), ...shuffle(bad).slice(0, 5 - Math.min(2, good.length))]);
+  const box = el('div', { class: 'indlist' }); const items = [];
+  for (const o of opts) {
+    const cb = el('input', { type: 'checkbox', 'aria-label': o.I.name });
+    const why = el('span', { class: 'why hidden' });
+    const lab = el('label', null, cb, el('span', null, el('b', null, o.I.name), ` ${de(o.I.lo, 1)}–${de(o.I.hi, 1)} `, el('span', { class: 'sw', style: `background:${COL[o.I.a]}` }), '→', el('span', { class: 'sw', style: `background:${COL[o.I.b]}` }), why));
+    box.append(lab); items.push({ o, cb, lab, why });
+  }
+  const check = () => {
+    let good = 0;
+    for (const it of items) {
+      const right = it.cb.checked === it.o.ok; if (right) good++;
+      it.lab.className = right ? 'right' : 'wrong';
+      it.why.className = 'why';
+      it.why.textContent = it.o.ok ? `geeignet: Umschlag bei pH ≈ ${de(it.o.m, 1)} liegt im Sprung (${de(it.o.a, 1)}–${de(it.o.b, 1)}).` : `nicht geeignet: Umschlag bei pH ≈ ${de(it.o.m, 1)} liegt ${it.o.m < it.o.a ? 'vor' : 'nach'} dem Sprung (${de(it.o.a, 1)}–${de(it.o.b, 1)}) – Titrationsfehler über 1 %.`;
+    }
+    return { ok: good === items.length, good, n: items.length, empty: false };
+  };
+  return { box, check };
+}
+function titrantText(t) { return `${t.T.name} (c = ${cTxt(t.cfg.ct)} mol/L)`; }
+
+// ---------------------------------------------------------------------
+// 2 Kurve auswerten
+// ---------------------------------------------------------------------
+function modeKurve(card) {
+  card.append(el('h2', null, 'Titrationskurve auswerten'));
+  add(card, lvlNote('kurve'));
+  const V0 = pick([10, 20, 25, 50]), ct = pick([0.1, 0.1, 0.5, 1]);
+  let an, c0;
+  if (LEVEL === 'leicht') { an = pick(['HCl', 'HNO3', 'NaOH', 'KOH', 'HCl']); }
+  else if (LEVEL === 'mittel') { an = pick(['CH3COOH', 'HCOOH', 'HF', 'NH3', 'CH3COOH']); }
+  else { an = pick(['H3PO4', 'Na2CO3', 'COND', 'MIX']); }
+  if (an === 'COND' || an === 'MIX') return kurveLeitfaehigkeit(card, an === 'MIX');
+  // c0 so wählen, dass V_ÄP gut ablesbar ist (5–30 mL)
+  for (;;) { c0 = rnd(RF(0.04, 0.6), 2); const v = c0 * V0 / ct; if (v >= 5 && v <= 30 && (AN[an].eq === 1 || v * (AN[an].visible || AN[an].eq) <= 40)) break; }
+  const t = titration({ an, c0, V0, ct });
+  const last = t.eqs[t.eqs.length - 1], Vmax = Math.ceil(last * 1.6 / 5) * 5;
+  card.append(el('p', { class: 'task-text', html: `${V0} mL ${t.A.name} unbekannter Konzentration werden mit ${titrantText(t)} titriert. Lies die nötigen Werte an der Kurve ab (Maus darüber bewegen bzw. tippen).` }),
+    readableCurve(t, Vmax));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  const e1 = t.eqs[0];
+  addQ(qa, rows, 'Volumen am (1.) Äquivalenzpunkt V<sub>ÄP</sub>', 'mL', e1, [{ v: e1 / 2, why: 'Das ist der Halbäquivalenzpunkt. Der Äquivalenzpunkt liegt in der Mitte des steilen Sprungs.' }], `Wendepunkt in der Mitte des Sprungs bei V ≈ ${de(e1, 1)} mL`, { rel: 0.04, abs: 0.3 });
+  const nPer = an === 'Na2CO3' ? 1 : 1; // 1. ÄP: einprotonig betrachtet (H3PO4 → H2PO4−, CO3²− → HCO3−)
+  addQ(qa, rows, `Konzentration c<sub>0</sub>(${t.A.f})`, 'mol/L', c0,
+    [{ v: ct * e1 / 1000 / V0, why: 'Volumina in derselben Einheit einsetzen (oder beide in L).' }, { v: ct * V0 / e1, why: 'Umgekehrt: c₀ = c(Maßlösung) · V_ÄP / V₀.' }, { v: ct * e1 / (V0 + e1), why: 'Durch das vorgelegte Volumen V₀ teilen, nicht durch das Gesamtvolumen.' }],
+    `c₀ · V₀ = c(Maßlösung) · V_ÄP${t.eqs.length > 1 ? ' (1. ÄP: erstes Proton bzw. erste Stufe)' : ''}  →  c₀ = ${cTxt(ct)} mol/L · ${de(e1, 2)} mL / ${V0} mL = ${de(c0, 3)} mol/L`, { rel: 0.05 });
+  const pH0 = t.pHAt(0);
+  if (LEVEL === 'leicht') {
+    addQ(qa, rows, 'pH-Wert der vorgelegten Lösung (berechnet aus c<sub>0</sub>)', '', pH0,
+      [{ v: -lg(c0), why: 'Bei Laugen erst den pOH berechnen: pH = 14 − pOH.' }, { v: 14 + lg(c0), why: 'Bei Säuren gilt pH = −lg c₀ direkt.' }, { v: -Math.log(c0), why: 'lg ist der Zehnerlogarithmus, nicht ln.' }],
+      t.A.kind === 'acid' ? `vollständige Protolyse: pH = −lg ${de(c0, 3)} = ${de(pH0, 2)}` : `pOH = −lg ${de(c0, 3)} = ${de(14 - pH0, 2)};  pH = 14 − pOH = ${de(pH0, 2)}`, { rel: 0, abs: 0.08 });
+  } else if (LEVEL === 'mittel') {
+    const half = e1 / 2, pk = t.A.kind === 'acid' ? SYS[t.A.sys].pk[0] : SYS[t.A.sys].pk[0];
+    addQ(qa, rows, 'pH-Wert am Halbäquivalenzpunkt', '', t.pHAt(half), [], `Bei V = ${de(half, 2)} mL ist pH ≈ ${de(t.pHAt(half), 2)}; dort ist c(HA) = c(A⁻), also pH = pK_S.`, { rel: 0, abs: 0.12 });
+    const sel = el('select', { 'aria-label': 'Stoff' }, el('option', { value: '' }, 'Stoff wählen …'), ...PKS_TABLE.map(([k, n, p]) => el('option', { value: k }, `${n} (pKS ${de(p, 2)})`)));
+    qa.append(el('div', null, 'Um welchen Stoff handelt es sich (pK', el('sub', null, 'S'), '-Tabelle)?'), sel);
+    const pHE = t.pHAt(e1);
+    const sel2 = el('select', { 'aria-label': 'pH am Äquivalenzpunkt' }, el('option', { value: '' }, 'pH am ÄP ist …'), el('option', { value: 'a' }, 'kleiner als 7'), el('option', { value: 'n' }, 'gleich 7'), el('option', { value: 'b' }, 'größer als 7'));
+    qa.append(el('div', null, 'pH-Wert am Äquivalenzpunkt'), sel2);
+    const wantKey = { CH3COOH: 'CH3COOH', HCOOH: 'HCOOH', HF: 'HF', NH3: 'NH4' }[an];
+    const ind = indicatorQuestion(t);
+    card.append(el('h3', null, 'Auswertung'), qa, el('h3', null, 'Welche Indikatoren sind geeignet? (mehrere möglich)'), ind.box,
+      ...checkButton(card, rows, 'kurve', () => {
+        const r = ind.check();
+        const s1 = sel.value === wantKey, s2 = sel2.value === (pHE < 6.9 ? 'a' : pHE > 7.1 ? 'b' : 'n');
+        if (sel.value) sel.className = s1 ? 'right' : 'wrong'; if (sel2.value) sel2.className = s2 ? 'right' : 'wrong';
+        return { ok: r.ok && s1 && s2, good: r.good + s1 + s2, n: r.n + 2, empty: !sel.value || !sel2.value, msg: `${t.A.kind === 'acid' ? 'Am ÄP liegt die korrespondierende Base vor – die Lösung reagiert alkalisch' : 'Am ÄP liegen Ammonium-Ionen vor – die Lösung reagiert sauer'} (pH ≈ ${de(pHE, 1)}).` };
+      }));
+    card.__test = { e1, c0, pHhalf: t.pHAt(half), key: wantKey, pHE, suit: suitableIndicators(t).filter(x => x.ok).map(x => x.I.name) };
+    return;
+  } else {
+    // schwer: H3PO4 bzw. Na2CO3 – zweiter Äquivalenzpunkt und Teilchen
+    const e2 = t.eqs[1];
+    addQ(qa, rows, 'Volumen am 2. Äquivalenzpunkt', 'mL', e2, [{ v: e1, why: 'Das ist der 1. ÄP.' }], `2. Sprung bei V ≈ ${de(e2, 1)} mL = 2 · V(1. ÄP)`, { rel: 0.04, abs: 0.3 });
+    const hp = an === 'H3PO4' ? 1.5 * e1 : e1 / 2; const pkWant = an === 'H3PO4' ? 7.21 : 10.33;
+    addQ(qa, rows, an === 'H3PO4' ? 'pK<sub>S</sub>(H<sub>2</sub>PO<sub>4</sub><sup>−</sup>) aus der Kurve (2. Halbäquivalenzpunkt)' : 'pK<sub>S</sub>(HCO<sub>3</sub><sup>−</sup>) aus der Kurve (1. Halbäquivalenzpunkt)', '', t.pHAt(hp),
+      [], `Bei V = ${de(hp, 2)} mL liegen ${an === 'H3PO4' ? 'H₂PO₄⁻ und HPO₄²⁻' : 'CO₃²⁻ und HCO₃⁻'} zu gleichen Teilen vor: pH ≈ ${de(t.pHAt(hp), 2)} ≈ pK_S (Tabelle ${de(pkWant, 2)}).`, { rel: 0, abs: 0.15 });
+    const spSel = el('select', { 'aria-label': 'Teilchen am 1. Äquivalenzpunkt' }, el('option', { value: '' }, 'hauptsächlich …'),
+      ...(an === 'H3PO4' ? ['H₃PO₄', 'H₂PO₄⁻', 'HPO₄²⁻', 'PO₄³⁻'] : ['CO₃²⁻', 'HCO₃⁻', 'H₂CO₃']).map(s => el('option', { value: s }, s)));
+    qa.append(el('div', null, 'Welches Teilchen liegt am 1. Äquivalenzpunkt hauptsächlich vor?'), spSel);
+    const wantSp = an === 'H3PO4' ? 'H₂PO₄⁻' : 'HCO₃⁻';
+    card.append(el('h3', null, 'Auswertung'), qa, ...checkButton(card, rows, 'kurve', () => {
+      const ok = spSel.value === wantSp; if (spSel.value) spSel.className = ok ? 'right' : 'wrong';
+      return { ok, good: +ok, n: 1, empty: !spSel.value, msg: an === 'H3PO4' ? 'Der 3. Äquivalenzpunkt ist nicht sichtbar: HPO₄²⁻ (pKS 12,32) ist eine zu schwache Säure.' : 'Am 2. Äquivalenzpunkt liegt Kohlensäure (CO₂ + H₂O) vor – die Lösung ist sauer.' };
+    }));
+    card.__test = { e1, e2, c0, pk: t.pHAt(hp), sp: wantSp };
+    return;
+  }
+  const ind = indicatorQuestion(t);
+  card.append(el('h3', null, 'Auswertung'), qa, el('h3', null, 'Welche Indikatoren sind geeignet? (mehrere möglich)'), ind.box, ...checkButton(card, rows, 'kurve', () => ind.check()));
+  card.__test = { e1, c0, pH0, suit: suitableIndicators(t).filter(x => x.ok).map(x => x.I.name) };
+}
+function kurveLeitfaehigkeit(card, mixed) {
+  const V0 = 100, ct = 1;
+  let t, e;
+  if (mixed) { const c1 = pick([0.05, 0.1]), c2 = pick([0.05, 0.1]); t = titration({ an: 'CH3COOH', c0: c2, V0, ct, extra: { an: 'HCl', c0: c1 } }); }
+  else { const an = pick(['CH3COOH', 'HCl']); t = titration({ an, c0: rnd(RF(0.05, 0.12), 3), V0, ct }); }
+  const last = t.eqs[t.eqs.length - 1], Vmax = Math.ceil(last * 1.6);
+  const desc = mixed ? `${V0} mL eines Gemisches aus Salzsäure und Essigsäure` : `${V0} mL ${t.A.name}`;
+  card.append(el('p', { class: 'task-text', html: `${desc} werden mit Natronlauge (c = 1 mol/L) titriert; gemessen wird die elektrische Leitfähigkeit (wie im Arbeitsblatt „Leitfähigkeitstitration“). Lies die Äquivalenzpunkte am Knick der Kurve ab.` }),
+    readableCurve(t, Vmax, { cond: true }));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  if (mixed) {
+    const [e1, e2] = t.eqs, cH = ct * e1 / V0, cE = ct * (e2 - e1) / V0;
+    addQ(qa, rows, '1. Knick (Salzsäure neutralisiert) bei', 'mL', e1, [], `Bis ${de(e1, 1)} mL werden H₃O⁺-Ionen (sehr gut leitend) durch Na⁺ ersetzt – die Leitfähigkeit sinkt.`, { rel: 0.05, abs: 0.3 });
+    addQ(qa, rows, '2. Knick (Essigsäure neutralisiert) bei', 'mL', e2, [], `Danach entstehen Na⁺ und Acetat-Ionen – Anstieg; ab ${de(e2, 1)} mL steigt sie steil (überschüssige OH⁻).`, { rel: 0.05, abs: 0.3 });
+    addQ(qa, rows, 'c(HCl) im Gemisch', 'mol/L', cH, [{ v: ct * e2 / V0, why: 'Bis zum 1. Knick wird nur die Salzsäure neutralisiert.' }], `c = 1 mol/L · ${de(e1, 2)} mL / ${V0} mL = ${de(cH, 3)} mol/L`, { rel: 0.06 });
+    addQ(qa, rows, 'c(CH<sub>3</sub>COOH) im Gemisch', 'mol/L', cE, [{ v: ct * e2 / V0, why: 'Für die Essigsäure nur das Volumen zwischen 1. und 2. Knick verwenden.' }], `c = 1 mol/L · (${de(e2, 2)} − ${de(e1, 2)}) mL / ${V0} mL = ${de(cE, 3)} mol/L`, { rel: 0.08 });
+    card.__test = { e1, e2, cH, cE };
+  } else {
+    e = t.eqs[0]; const c0 = t.cfg.c0;
+    addQ(qa, rows, 'Äquivalenzpunkt (Knick) bei', 'mL', e, [], `Knick bei ${de(e, 1)} mL`, { rel: 0.05, abs: 0.3 });
+    addQ(qa, rows, `c<sub>0</sub>(${t.A.f})`, 'mol/L', c0, [{ v: ct * e / (V0 + e), why: 'Durch das vorgelegte Volumen teilen.' }], `c₀ = 1 mol/L · ${de(e, 2)} mL / ${V0} mL = ${de(c0, 3)} mol/L`, { rel: 0.06 });
+    const s = el('select', { 'aria-label': 'Verlauf vor dem Äquivalenzpunkt' }, el('option', { value: '' }, 'Vor dem ÄP …'), el('option', { value: 'sinkt' }, 'sinkt die Leitfähigkeit'), el('option', { value: 'steigt' }, 'steigt die Leitfähigkeit'));
+    qa.append(el('div', null, 'Verlauf vor dem Äquivalenzpunkt'), s);
+    const want = t.A.strong ? 'sinkt' : 'steigt';
+    card.append(el('h3', null, 'Auswertung'), qa, ...checkButton(card, rows, 'kurve', () => { const ok = s.value === want; if (s.value) s.className = ok ? 'right' : 'wrong'; return { ok, good: +ok, n: 1, empty: !s.value, msg: t.A.strong ? 'H₃O⁺ (sehr gut leitend) wird durch Na⁺ ersetzt.' : 'Essigsäure ist kaum protolysiert; es entstehen Na⁺- und Acetat-Ionen, die Ionenkonzentration steigt.' }; }));
+    card.__test = { e1: e, c0, trend: want };
+    return;
+  }
+  card.append(el('h3', null, 'Auswertung'), qa, ...checkButton(card, rows, 'kurve'));
+}
+
+// ---------------------------------------------------------------------
+// 3 Kurven zuordnen (AB „Titrationskurven zuordnen“)
+// ---------------------------------------------------------------------
+function modeZuordnen(card) {
+  card.append(el('h2', null, 'Titrationskurven zuordnen'));
+  add(card, lvlNote('zuordnen'));
+  const POOL = [
+    ['HCl', 0.1], ['HCl', 0.3], ['HCOOH', 0.1], ['HCOOH', 0.3], ['CH3COOH', 0.01], ['CH3COOH', 0.1], ['CH3COOH', 0.3], ['NH3', 0.01], ['NH3', 0.1], ['NaOH', 0.1]
+  ];
+  if (LEVEL === 'schwer') POOL.push(['H3PO4', 0.1], ['Na2CO3', 0.1]);
+  let chosen;
+  for (;;) {
+    chosen = shuffle(POOL).slice(0, 4);
+    const kinds = new Set(chosen.map(([a]) => a));
+    if (LEVEL === 'leicht' && kinds.size < 4) continue;
+    if (LEVEL !== 'leicht' && kinds.size === 4 && Math.random() < 0.7) continue;
+    break;
+  }
+  const items = chosen.map(([an, c0]) => {
+    const ct = 1;
+    const t = titration({ an, c0, V0: 100, ct });
+    return { an, c0, ct, t, label: `${AN[an].name} (c₀ = ${cTxt(c0)} mol/L) mit ${t.T.name} (c = ${cTxt(ct)} mol/L)` };
+  });
+  // nicht unterscheidbare Paare vermeiden (gleiche Kurve)
+  card.append(el('p', { class: 'task-text' }, 'Wie im Arbeitsblatt „Titrationskurven zuordnen“ wurden je 100 mL einer Lösung vorgelegt und titriert – leider ohne Legende. Ordne jeder Kurve die passende Titration zu und begründe für dich: Anfangs-pH, Volumen am Äquivalenzpunkt, pH am Halbäquivalenzpunkt und am Äquivalenzpunkt.'));
+  const labels = shuffle(items.map((it, i) => ({ i, text: it.label })));
+  const grid = el('div', { class: 'mini' }); const sels = [];
+  const Vmax = Math.max(...items.map(it => it.t.eqs[it.t.eqs.length - 1])) * 1.5;
+  const VmaxN = Math.max(10, Math.ceil(Vmax / 5) * 5);
+  items.forEach((it, k) => {
+    const s = el('select', { 'aria-label': `Kurve ${String.fromCharCode(65 + k)}` }, el('option', { value: '' }, 'Titration wählen …'), ...labels.map(l => el('option', { value: String(l.i) }, l.text)));
+    sels.push(s);
+    grid.append(el('div', { class: 'col' }, el('b', null, 'Kurve ' + String.fromCharCode(65 + k)), readableCurve(it.t, VmaxN, { small: true }), s, el('div', { class: 'why hidden', style: 'font-size:13px' })));
+  });
+  card.append(grid);
+  const fb = feedback();
+  card.append(el('div', { class: 'bar' }, el('button', { class: 'primary', type: 'button', onclick: () => {
+    if (sels.some(s => !s.value)) { fb.set('info', 'Wähle für jede Kurve eine Titration.'); return; }
+    let ok = 0;
+    sels.forEach((s, k) => {
+      const right = Number(s.value) === k; if (right) ok++;
+      s.className = right ? 'right' : 'wrong';
+      const it = items[k], t = it.t, why = s.parentElement.querySelector('.why');
+      const hp = t.A.strong ? '' : ` · pH am HÄP ${de(t.pHAt(t.eqs[0] / 2), 1)}`;
+      why.className = 'why'; why.style.color = right ? '#145c2e' : '#8c1c1c';
+      why.textContent = `${right ? 'Richtig' : 'Richtig wäre: ' + it.label}. Anfangs-pH ${de(t.pHAt(0), 1)} · ÄP bei ${de(t.eqs[0], 1)} mL (pH ${de(t.pHAt(t.eqs[0]), 1)})${hp}.`;
+    });
+    if (ok === 4) { fb.set('ok', 'Alle Kurven richtig zugeordnet!'); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('zuordnen'); } }
+    else fb.set('err', `${ok} von 4 richtig. Tipp: Das Volumen am ÄP verrät c₀ (c₀ · 100 mL = c(Maßlösung) · V_ÄP), der Anfangs-pH und der HÄP verraten, ob die Säure/Base stark oder schwach ist.`);
+  } }, 'Prüfen')), fb);
+  card.__test = { n: items.length };
+}
+
+// ---------------------------------------------------------------------
+// 4 pH berechnen
+// ---------------------------------------------------------------------
+const WEAK = [['CH3COOH', 'Essigsäure', 4.75, 'acid'], ['HCOOH', 'Ameisensäure', 3.75, 'acid'], ['HF', 'Flusssäure', 3.20, 'acid'], ['HCN', 'Blausäure', 9.21, 'acid'], ['NH3', 'Ammoniak', 9.25, 'base'], ['CH3COO', 'Natriumacetat', 4.75, 'base'], ['HCO3', 'Natriumhydrogencarbonat (als Base)', 6.35, 'base'], ['CO3', 'Natriumcarbonat', 10.33, 'base']];
+function modePH(card) {
+  card.append(el('h2', null, 'pH-Wert berechnen'));
+  add(card, lvlNote('ph'));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  let text;
+  if (LEVEL === 'leicht') {
+    const kind = pick(['HCl', 'HNO3', 'NaOH', 'KOH', 'CaOH2', 'mass']);
+    if (kind === 'mass') {
+      const sub = pick([['NaOH', 'Natriumhydroxid', 40, 1], ['CaOH2', 'Calciumhydroxid', 74, 2], ['KOH', 'Kaliumhydroxid', 56, 1]]);
+      const m = pick([0.2, 0.4, 1, 2, 4]), V = pick([100, 250, 500, 1000]);
+      const c = m / sub[2] / (V / 1000), cOH = c * sub[3], pH = 14 + lg(cOH);
+      text = `${de(m, 1)} g ${sub[1]} (M = ${sub[2]} g/mol) werden in Wasser gelöst; es entstehen ${V} mL Lösung. Berechne den pH-Wert.`;
+      addQ(qa, rows, 'c(OH<sup>−</sup>)', 'mol/L', cOH, [{ v: c, why: sub[3] === 2 ? 'Jede Formeleinheit Ca(OH)₂ liefert 2 OH⁻-Ionen.' : '' }, { v: m / sub[2] / V, why: 'Volumen in Liter umrechnen.' }].filter(a => a.why), `n = ${de(m, 1)} g / ${sub[2]} g/mol = ${de(m / sub[2], 4)} mol;  c(OH⁻) = ${sub[3] === 2 ? '2 · ' : ''}${de(m / sub[2], 4)} mol / ${de(V / 1000, 3)} L = ${de(cOH, 4)} mol/L`, { rel: 0.02 });
+      addQ(qa, rows, 'pH', '', pH, [{ v: -lg(cOH), why: 'Das ist der pOH. pH = 14 − pOH.' }, { v: 14 + lg(c), why: sub[3] === 2 ? 'Doppelte OH⁻-Konzentration berücksichtigen.' : '' }].filter(a => a.why), `pOH = −lg ${de(cOH, 4)} = ${de(-lg(cOH), 2)};  pH = 14 − pOH = ${de(pH, 2)}`, { rel: 0, abs: 0.05 });
+    } else {
+      const c = pick([0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001]);
+      const base = kind === 'NaOH' || kind === 'KOH' || kind === 'CaOH2', f = kind === 'CaOH2' ? 2 : 1;
+      const name = { HCl: 'Salzsäure', HNO3: 'Salpetersäure', NaOH: 'Natronlauge', KOH: 'Kalilauge', CaOH2: 'Calciumhydroxid-Lösung (Kalkwasser)' }[kind];
+      const pH = base ? 14 + lg(f * c) : -lg(c);
+      text = `Berechne den pH-Wert von ${name} mit c₀ = ${de(c, 3).replace(/0+$/, '').replace(/,$/, '')} mol/L (vollständige Protolyse).`;
+      addQ(qa, rows, 'pH', '', pH, [{ v: -lg(f * c), why: 'Bei Basen erhältst du so den pOH: pH = 14 − pOH.' }, { v: 14 + lg(c), why: f === 2 ? 'Ca(OH)₂ liefert 2 OH⁻ je Formeleinheit: c(OH⁻) = 2 · c₀.' : '' }, { v: -Math.log(base ? f * c : c), why: 'lg (Zehnerlogarithmus) verwenden, nicht ln.' }].filter(a => a.why),
+        base ? `c(OH⁻) = ${f === 2 ? '2 · ' : ''}${de(c, 3)} mol/L;  pOH = ${de(-lg(f * c), 2)};  pH = 14 − pOH = ${de(pH, 2)}` : `pH = −lg ${de(c, 3)} = ${de(pH, 2)}`, { rel: 0, abs: 0.05 });
+    }
+  } else if (LEVEL === 'mittel') {
+    const [k, name, pKs, typ] = pick(WEAK);
+    const c = pick([1, 0.5, 0.2, 0.1, 0.05, 0.01]);
+    if (typ === 'acid') {
+      const pH = 0.5 * (pKs - lg(c)), Ks = 10 ** -pKs, ex = -lg(-Ks / 2 + Math.sqrt(Ks * Ks / 4 + Ks * c));
+      text = `Berechne den pH-Wert einer ${name}-Lösung mit c₀ = ${cTxt(c)} mol/L (pKS = ${de(pKs, 2)}).`;
+      addQ(qa, rows, 'pH', '', pH, [{ v: pKs - lg(c), why: 'Den Faktor ½ nicht vergessen: pH = ½ (pKS − lg c₀).' }, { v: -lg(c), why: 'Schwache Säure: nicht vollständig protolysiert – die Näherung für unvollständige Protolyse verwenden.' }],
+        `pH = ½ (pKS − lg c₀) = ½ (${de(pKs, 2)} − (${de(lg(c), 2)})) = ${de(pH, 2)}` + (Math.abs(ex - pH) > 0.03 ? `  (exakt: ${de(ex, 2)})` : ''), { rel: 0, abs: Math.max(0.05, Math.abs(ex - pH) + 0.02) });
+    } else {
+      const pKb = 14 - pKs, pOH = 0.5 * (pKb - lg(c)), pH = 14 - pOH;
+      const what = k === 'NH3' ? 'Ammoniak-Lösung' : name + '-Lösung';
+      text = `Berechne den pH-Wert einer ${what} mit c₀ = ${cTxt(c)} mol/L. pKS der korrespondierenden Säure: ${de(pKs, 2)}.`;
+      addQ(qa, rows, 'pK<sub>B</sub>', '', pKb, [{ v: pKs, why: 'Das ist der pKS der korrespondierenden Säure. pKB = 14 − pKS.' }], `pKB = 14 − pKS = 14 − ${de(pKs, 2)} = ${de(pKb, 2)}`, { rel: 0, abs: 0.02 });
+      addQ(qa, rows, 'pH', '', pH, [{ v: pOH, why: 'Das ist der pOH. pH = 14 − pOH.' }, { v: 0.5 * (pKs - lg(c)), why: 'Mit pKB rechnen (Base), nicht mit pKS.' }, { v: 14 - (pKb - lg(c)), why: 'Faktor ½ nicht vergessen.' }],
+        `pOH = ½ (pKB − lg c₀) = ½ (${de(pKb, 2)} − (${de(lg(c), 2)})) = ${de(pOH, 2)};  pH = 14 − pOH = ${de(pH, 2)}`, { rel: 0, abs: 0.05 });
+    }
+  } else {
+    const kind = pick(['puffer', 'puffer', 'aep', 'c0']);
+    if (kind === 'puffer') {
+      const P = pick([['Essigsäure', 'Natriumacetat', 4.75], ['Ameisensäure', 'Natriumformiat', 3.75], ['Ammonium-Ionen (Ammoniumchlorid)', 'Ammoniak', 9.25], ['Dihydrogenphosphat', 'Hydrogenphosphat', 7.21]]);
+      const nA = pick([0.5, 1, 2, 5]) / 1000 * pick([10, 20, 50]), ratio = pick([0.2, 0.5, 1, 2, 4, 5, 0.25]);
+      const nB = rnd(nA * ratio, 5); const pH = P[2] + lg(nB / nA);
+      const Va = pick([20, 50, 100]), Vb = pick([20, 50, 100]);
+      text = `Eine Pufferlösung enthält ${de(nA * 1000, 2)} mmol ${P[0]} (in ${Va} mL) und ${de(nB * 1000, 2)} mmol ${P[1]} (in ${Vb} mL); die Lösungen werden gemischt. pKS = ${de(P[2], 2)}. Berechne den pH-Wert.`;
+      addQ(qa, rows, 'pH', '', pH, [{ v: P[2] + lg(nA / nB), why: 'Im Bruch steht die Base oben: pH = pKS + lg (c(A⁻)/c(HA)).' }, { v: P[2] + lg((nB / Vb) / (nA / Va)), why: 'Nach dem Mischen haben beide dasselbe Volumen – das Stoffmengenverhältnis zählt.' }],
+        `pH = pKS + lg (n(Base) / n(Säure)) = ${de(P[2], 2)} + lg (${de(nB * 1000, 2)} / ${de(nA * 1000, 2)}) = ${de(pH, 2)}  (gleiches Volumen nach dem Mischen)`, { rel: 0, abs: 0.05 });
+    } else if (kind === 'aep') {
+      const [k, name, pKs] = pick([['CH3COOH', 'Essigsäure', 4.75], ['HCOOH', 'Ameisensäure', 3.75]]);
+      const c0 = pick([0.1, 0.2]), V0 = pick([20, 50]), ct = pick([0.1, 0.2]);
+      const Ve = c0 * V0 / ct, cB = c0 * V0 / (V0 + Ve), pKb = 14 - pKs, pH = 14 - 0.5 * (pKb - lg(cB));
+      text = `${V0} mL ${name} (c₀ = ${cTxt(c0)} mol/L, pKS = ${de(pKs, 2)}) werden mit Natronlauge (c = ${cTxt(ct)} mol/L) bis zum Äquivalenzpunkt titriert. Berechne den pH-Wert am Äquivalenzpunkt.`;
+      addQ(qa, rows, 'V<sub>ÄP</sub>', 'mL', Ve, [], `V_ÄP = c₀ · V₀ / c(NaOH) = ${de(Ve, 1)} mL`, { rel: 0.01 });
+      addQ(qa, rows, 'c(Anion) am ÄP', 'mol/L', cB, [{ v: c0, why: 'Verdünnung beachten: Gesamtvolumen V₀ + V_ÄP.' }], `c = ${de(c0 * V0 / 1000, 4)} mol / ${de((V0 + Ve) / 1000, 3)} L = ${de(cB, 4)} mol/L`, { rel: 0.02 });
+      addQ(qa, rows, 'pH am ÄP', '', pH, [{ v: 7, why: 'Am ÄP liegt die korrespondierende Base vor – die Lösung reagiert alkalisch.' }, { v: 14 - 0.5 * (pKb - lg(c0)), why: 'Mit der verdünnten Konzentration rechnen.' }, { v: 0.5 * (pKb - lg(cB)), why: 'Das ist der pOH.' }],
+        `pKB = ${de(pKb, 2)};  pOH = ½ (pKB − lg c) = ${de(0.5 * (pKb - lg(cB)), 2)};  pH = 14 − pOH = ${de(pH, 2)}`, { rel: 0, abs: 0.05 });
+    } else {
+      const [k, name, pKs] = pick([['CH3COOH', 'Essigsäure', 4.75], ['HCOOH', 'Ameisensäure', 3.75], ['HF', 'Flusssäure', 3.20]]);
+      const pH = rnd(RF(2.3, 3.4), 2), c0 = 10 ** (pKs - 2 * pH);
+      text = `Eine ${name}-Lösung (pKS = ${de(pKs, 2)}) hat den pH-Wert ${de(pH, 2)}. Berechne die Anfangskonzentration c₀ (Näherung für unvollständige Protolyse).`;
+      addQ(qa, rows, 'c<sub>0</sub>', 'mol/L', c0, [{ v: 10 ** -pH, why: 'Das ist c(H₃O⁺), nicht c₀. Aus pH = ½ (pKS − lg c₀) folgt lg c₀ = pKS − 2 pH.' }, { v: 10 ** (pKs - pH), why: 'lg c₀ = pKS − 2 · pH (Faktor 2).' }],
+        `lg c₀ = pKS − 2 · pH = ${de(pKs, 2)} − ${de(2 * pH, 2)} = ${de(pKs - 2 * pH, 2)};  c₀ = ${de(c0, 4)} mol/L`, { rel: 0.03 });
+    }
+  }
+  card.append(el('p', { class: 'task-text' }, text), qa, ...checkButton(card, rows, 'ph'));
+}
+
+// =====================================================================
+function show() {
+  const main = document.getElementById('main'); main.innerHTML = '';
+  main.append(terms());
+  const card = el('section', { class: 'card' });
+  ({ labor: modeLabor, kurve: modeKurve, zuordnen: modeZuordnen, ph: modePH }[MODE] || modeLabor)(card);
+  main.append(card);
+  window.__card = card;
+}
+document.getElementById('btn-new').addEventListener('click', show);
+if (!MODES.some(m => m.id === MODE)) MODE = 'labor';
+renderLevels(); renderModes(); show();
+window.__ti = { titration, solvePH, conductivity, suitableIndicators, IND, AN, LAB, setLevel: l => { LEVEL = l; renderLevels(); }, setMode: m => { MODE = m; renderModes(); show(); } };
+})();
+</script>
+</body>
+</html>

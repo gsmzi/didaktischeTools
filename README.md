@@ -26,6 +26,7 @@ Die HTML-Tools sind eigenständige Dateien ohne Abhängigkeiten. Man kann sie di
 |---|---|---|---|---|
 | Energetik | [Energetik-Rechentrainer](chemie/energetik/rechentrainer/) | Kursstufe (LF) | Übungsaufgaben (zufällig erzeugt): Kalorimetrie, Satz von Hess | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/chemie/energetik/rechentrainer/) |
 | Energetik | [Gibbs-Helmholtz-Explorer](chemie/energetik/gibbs-helmholtz/) | Kursstufe (LF) | Interaktive Visualisierung + Übungsaufgaben | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/chemie/energetik/gibbs-helmholtz/) |
+| Säure-Base | [Titrations-Simulator](chemie/saeure-base/titration/) | Kursstufe (LF) | Simulation + Übungsaufgaben (zufällig erzeugt) | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/chemie/saeure-base/titration/) |
 
 ### Mathematik
 
