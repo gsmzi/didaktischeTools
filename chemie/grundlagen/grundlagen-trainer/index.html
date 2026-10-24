@@ -486,16 +486,16 @@ const RX = [
   { d: 'Natriumacetat wird in Wasser gelöst; die Lösung reagiert schwach alkalisch.', L: [[1, 'CH3COO^-'], [1, 'H2O']], R: [[1, 'CH3COOH'], [1, 'OH^-']], t: 'P', s: 1, b: 0, ps: 1, pb: 0, eqm: true },
   { d: 'Natriumhydrogensulfat wird in Wasser gelöst; die Lösung reagiert sauer.', L: [[1, 'HSO4^-'], [1, 'H2O']], R: [[1, 'SO4^2-'], [1, 'H3O^+']], t: 'P', s: 0, b: 1, ps: 0, pb: 1, eqm: true },
   { d: 'Soda (Natriumcarbonat) wird in Wasser gelöst; die Lösung reagiert alkalisch.', L: [[1, 'CO3^2-'], [1, 'H2O']], R: [[1, 'HCO3^-'], [1, 'OH^-']], t: 'P', s: 1, b: 0, ps: 1, pb: 0, eqm: true },
-  { d: 'Zink reagiert mit Salzsäure (ohne Cl⁻).', L: [[1, 'Zn'], [2, 'H3O^+']], R: [[1, 'Zn^2+'], [1, 'H2'], [2, 'H2O']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Zn: 0 → +II; H: +I → 0' },
-  { d: 'Lithium reagiert mit Wasser unter Wasserstoffentwicklung.', L: [[2, 'Li'], [2, 'H2O']], R: [[2, 'Li^+'], [2, 'OH^-'], [1, 'H2']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Li: 0 → +I; H: +I → 0' },
-  { d: 'Wasserstoff reagiert mit Chlor (Chlorknallgas).', L: [[1, 'H2'], [1, 'Cl2']], R: [[2, 'HCl']], t: 'R', ox: 0, red: 1, ne: 2, on: 'H: 0 → +I; Cl: 0 → −I' },
-  { d: 'Hoch erhitztes Calcium reagiert mit Luftstickstoff zu Calciumnitrid.', L: [[3, 'Ca'], [1, 'N2']], R: [[1, 'Ca3N2']], t: 'R', ox: 0, red: 1, ne: 6, on: 'Ca: 0 → +II; N: 0 → −III' },
-  { d: 'Weißer Phosphor verbrennt zu Phosphorpentoxid.', L: [[1, 'P4'], [5, 'O2']], R: [[1, 'P4O10']], t: 'R', ox: 0, red: 1, ne: 20, on: 'P: 0 → +V; O: 0 → −II' },
-  { d: 'Magnesium reagiert mit Salzsäure (ohne Cl⁻).', L: [[1, 'Mg'], [2, 'H3O^+']], R: [[1, 'Mg^2+'], [1, 'H2'], [2, 'H2O']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Mg: 0 → +II; H: +I → 0' },
-  { d: 'Ein Eisennagel wird in Kupfersulfatlösung gestellt (ohne SO₄²⁻).', L: [[1, 'Fe'], [1, 'Cu^2+']], R: [[1, 'Fe^2+'], [1, 'Cu']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Fe: 0 → +II; Cu: +II → 0' },
-  { d: 'Natrium reagiert mit Chlor.', L: [[2, 'Na'], [1, 'Cl2']], R: [[2, 'NaCl']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Na: 0 → +I; Cl: 0 → −I' },
-  { d: 'Ein Kupferblech wird in Silbernitratlösung gestellt (ohne NO₃⁻).', L: [[1, 'Cu'], [2, 'Ag^+']], R: [[1, 'Cu^2+'], [2, 'Ag']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Cu: 0 → +II; Ag: +I → 0' },
-  { d: 'Magnesium verbrennt an der Luft.', L: [[2, 'Mg'], [1, 'O2']], R: [[2, 'MgO']], t: 'R', ox: 0, red: 1, ne: 4, on: 'Mg: 0 → +II; O: 0 → −II' },
+  { d: 'Zink reagiert mit Salzsäure (ohne Cl⁻).', L: [[1, 'Zn'], [2, 'H3O^+']], R: [[1, 'Zn^2+'], [1, 'H2'], [2, 'H2O']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Zn: 0 → +II; H: +I → 0', oz: [['Zn', 'Zn', 0], ['H3O^+', 'H', 1], ['Zn^2+', 'Zn', 2], ['H2', 'H', 0]] },
+  { d: 'Lithium reagiert mit Wasser unter Wasserstoffentwicklung.', L: [[2, 'Li'], [2, 'H2O']], R: [[2, 'Li^+'], [2, 'OH^-'], [1, 'H2']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Li: 0 → +I; H: +I → 0', oz: [['Li', 'Li', 0], ['H2O', 'H', 1], ['Li^+', 'Li', 1], ['H2', 'H', 0]] },
+  { d: 'Wasserstoff reagiert mit Chlor (Chlorknallgas).', L: [[1, 'H2'], [1, 'Cl2']], R: [[2, 'HCl']], t: 'R', ox: 0, red: 1, ne: 2, on: 'H: 0 → +I; Cl: 0 → −I', oz: [['H2', 'H', 0], ['Cl2', 'Cl', 0], ['HCl', 'H', 1], ['HCl', 'Cl', -1]] },
+  { d: 'Hoch erhitztes Calcium reagiert mit Luftstickstoff zu Calciumnitrid.', L: [[3, 'Ca'], [1, 'N2']], R: [[1, 'Ca3N2']], t: 'R', ox: 0, red: 1, ne: 6, on: 'Ca: 0 → +II; N: 0 → −III', oz: [['Ca', 'Ca', 0], ['N2', 'N', 0], ['Ca3N2', 'Ca', 2], ['Ca3N2', 'N', -3]] },
+  { d: 'Weißer Phosphor verbrennt zu Phosphorpentoxid.', L: [[1, 'P4'], [5, 'O2']], R: [[1, 'P4O10']], t: 'R', ox: 0, red: 1, ne: 20, on: 'P: 0 → +V; O: 0 → −II', oz: [['P4', 'P', 0], ['O2', 'O', 0], ['P4O10', 'P', 5], ['P4O10', 'O', -2]] },
+  { d: 'Magnesium reagiert mit Salzsäure (ohne Cl⁻).', L: [[1, 'Mg'], [2, 'H3O^+']], R: [[1, 'Mg^2+'], [1, 'H2'], [2, 'H2O']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Mg: 0 → +II; H: +I → 0', oz: [['Mg', 'Mg', 0], ['H3O^+', 'H', 1], ['Mg^2+', 'Mg', 2], ['H2', 'H', 0]] },
+  { d: 'Ein Eisennagel wird in Kupfersulfatlösung gestellt (ohne SO₄²⁻).', L: [[1, 'Fe'], [1, 'Cu^2+']], R: [[1, 'Fe^2+'], [1, 'Cu']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Fe: 0 → +II; Cu: +II → 0', oz: [['Fe', 'Fe', 0], ['Cu^2+', 'Cu', 2], ['Fe^2+', 'Fe', 2], ['Cu', 'Cu', 0]] },
+  { d: 'Natrium reagiert mit Chlor.', L: [[2, 'Na'], [1, 'Cl2']], R: [[2, 'NaCl']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Na: 0 → +I; Cl: 0 → −I', oz: [['Na', 'Na', 0], ['Cl2', 'Cl', 0], ['NaCl', 'Na', 1], ['NaCl', 'Cl', -1]] },
+  { d: 'Ein Kupferblech wird in Silbernitratlösung gestellt (ohne NO₃⁻).', L: [[1, 'Cu'], [2, 'Ag^+']], R: [[1, 'Cu^2+'], [2, 'Ag']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Cu: 0 → +II; Ag: +I → 0', oz: [['Cu', 'Cu', 0], ['Ag^+', 'Ag', 1], ['Cu^2+', 'Cu', 2], ['Ag', 'Ag', 0]] },
+  { d: 'Magnesium verbrennt an der Luft.', L: [[2, 'Mg'], [1, 'O2']], R: [[2, 'MgO']], t: 'R', ox: 0, red: 1, ne: 4, on: 'Mg: 0 → +II; O: 0 → −II', oz: [['Mg', 'Mg', 0], ['O2', 'O', 0], ['MgO', 'Mg', 2], ['MgO', 'O', -2]] },
   { d: 'Silbernitratlösung wird zu Kochsalzlösung gegeben; ein weißer Niederschlag entsteht.', L: [[1, 'Ag^+'], [1, 'Cl^-']], R: [[1, 'AgCl']], t: 'A', why: 'Fällungsreaktion: weder Elektronen- noch Protonenübergang.' },
   { d: 'Phosphorpentoxid wird in Wasser gelöst; es entsteht Phosphorsäure.', L: [[1, 'P4O10'], [6, 'H2O']], R: [[4, 'H3PO4']], t: 'A', why: 'Addition von Wasser: keine Änderung der Oxidationszahlen, kein Protonenübergang (erst danach protolysiert die Phosphorsäure).' },
   { d: 'Kochsalz löst sich in Wasser.', L: [[1, 'NaCl']], R: [[1, 'Na^+'], [1, 'Cl^-']], t: 'A', why: 'Lösungsvorgang: Das Ionengitter wird aufgelöst, die Ionen werden hydratisiert – kein Protonen- oder Elektronenübergang.' },
@@ -504,6 +504,32 @@ const RX = [
   { d: 'Silber wird in Salzsäure gegeben.', L: [[1, 'Ag'], [1, 'H3O^+']], R: null, t: 'K', why: 'Keine Reaktion: Silber ist edler als Wasserstoff.' },
   { d: 'Ein Kupferblech wird in Zinksulfatlösung gestellt.', L: [[1, 'Cu'], [1, 'Zn^2+']], R: null, t: 'K', why: 'Keine Reaktion: Kupfer ist edler als Zink; Zn²⁺ kann Kupfer nicht oxidieren.' }
 ];
+// Oxidationszahlen: Eingabe als +II, −I, 0 oder +2, -1
+const romOz = n => n === 0 ? '0' : (n > 0 ? '+' : '−') + ROM[Math.abs(n)];
+function readOz(str) {
+  const m = /^([+-]?)(\d+|[IVX]+)$/i.exec(str.replace(/[−–]/g, '-').replace(/\s/g, ''));
+  if (!m) return NaN;
+  const a = /\d/.test(m[2]) ? +m[2] : ROM.indexOf(m[2].toUpperCase());
+  return a < 0 ? NaN : (m[1] === '-' ? -a : a);
+}
+function ozItem(qa, f, e, want) {
+  const inp = el('input', { class: 'num', type: 'text', 'aria-label': `Oxidationszahl von ${e} in ${fmtU(f)}` });
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: `Oxidationszahl von <b>${e}</b> in <b>${fmt(f)}</b>` }), inp, why);
+  const c = parseFormula(f), ch = f.split('^')[1];
+  const rule = Object.keys(c).length > 1 ? 'In Verbindungen ist die Summe der Oxidationszahlen gleich der Ladung; O meist −II, H meist +I.'
+    : ch ? 'Bei Atom-Ionen entspricht die Oxidationszahl der Ionenladung.' : 'Elemente haben die Oxidationszahl 0.';
+  return { solve: () => { inp.value = romOz(want); },
+    check() {
+      const v = readOz(inp.value);
+      if (isNaN(v)) { inp.className = 'num'; why.className = 'why hidden'; return { empty: true }; }
+      const good = v === want;
+      inp.className = 'num ' + (good ? 'right' : 'wrong');
+      why.className = 'why ' + (good ? 'ok' : 'err');
+      why.textContent = good ? `${e}: ${romOz(want)}` : rule + ' Richtig: ' + romOz(want) + '.';
+      return { ok: good };
+    } };
+}
 const CATS = [['R', 'Redoxreaktion'], ['P', 'Säure-Base-Reaktion (Protolyse)'], ['A', 'andere Reaktion (z. B. Fällung, Lösen, Addition)'], ['K', 'keine Reaktion']];
 function modeProtolyse(card) {
   card.append(el('h2', null, 'Protolyse oder nicht?'));
@@ -516,7 +542,9 @@ function modeProtolyse(card) {
   const qa1 = el('div', { class: 'qa' });
   const it1 = selItem(qa1, 'Um welche Art von Reaktion handelt es sich?', CATS.map(([v, t]) => ({ v, t })), rx.t, (v, good) => {
     if (rx.t === 'P') return good ? 'Ein Proton (H⁺) wird übertragen.' : 'Die Oxidationszahlen ändern sich nicht, aber ein Teilchen gibt ein Proton (H⁺) an ein anderes ab.';
-    if (rx.t === 'R') return (good ? 'Elektronen werden übertragen: ' : 'Die Oxidationszahlen ändern sich – Elektronenübergang: ') + rx.on + '.';
+    // ab mittel werden die Oxidationszahlen im zweiten Teil selbst bestimmt
+    if (rx.t === 'R') return LEVEL === 'leicht' ? (good ? 'Elektronen werden übertragen: ' : 'Die Oxidationszahlen ändern sich – Elektronenübergang: ') + rx.on + '.'
+      : good ? 'Elektronen werden übertragen.' : 'Es handelt sich um eine Redoxreaktion – das zeigen die Oxidationszahlen, die du gleich bestimmst.';
     return rx.why;
   });
   card.append(qa1);
@@ -534,6 +562,8 @@ function modeProtolyse(card) {
       items2.push(selItem(qa2, `korrespondierende Säure zur Base ${B}`, rp, String(rx.pb), (v, g) => `Säure-Base-Paar ${fmtU(rx.R[rx.pb][1])} / ${B}`));
     }
   } else if (LEVEL !== 'leicht' && rx.t === 'R') {
+    qa2.append(el('div', { class: 'why' },'Bestimme die Oxidationszahlen (Eingabe z. B. +II, −I oder 0):'));
+    for (const [f, e, z] of rx.oz) items2.push(ozItem(qa2, f, e, z));
     items2.push(selItem(qa2, 'Welches Teilchen wird oxidiert (gibt Elektronen ab)?', lp, String(rx.ox), () => rx.on));
     items2.push(selItem(qa2, 'Welches Teilchen wird reduziert (nimmt Elektronen auf)?', lp, String(rx.red), () => rx.on));
     if (LEVEL === 'schwer') items2.push(numItem(qa2, 'Anzahl der übertragenen Elektronen (für die Gleichung, wie sie dasteht)', '', rx.ne, [{ v: rx.ne / rx.L[rx.ox][0], why: 'Das gilt für ein Teilchen – die Gleichung enthält mehrere.' }], `${rx.on}; mit den Koeffizienten: ${rx.ne} e⁻.`, { rel: 0, abs: 0.01 }));
@@ -764,7 +794,7 @@ function modeStoich(card) {
 const LEVEL_TXT = {
   ionen: { leicht: 'Stufe leicht: Hauptgruppen-Ionen (Oktettregel).', mittel: 'Stufe mittel: auch mehratomige Ionen (Hydroxid, Nitrat, Sulfat, Carbonat, Phosphat, Ammonium …).', schwer: 'Stufe schwer: auch Nebengruppen-Ionen mit römischen Zahlen und Hydrogen-Ionen; Ladung aus der Formel bestimmen.' },
   paare: { leicht: 'Stufe leicht: einprotonige Säuren, Wasser und Ammoniak.', mittel: 'Stufe mittel: auch mehrprotonige Säuren (Schwefel-, Kohlen-, Phosphorsäure).', schwer: 'Stufe schwer: alle Paare und Ampholyte erkennen.' },
-  protolyse: { leicht: 'Stufe leicht: Reaktionsart bestimmen.', mittel: 'Stufe mittel: zusätzlich Säure und Base bzw. oxidiertes und reduziertes Teilchen benennen.', schwer: 'Stufe schwer: zusätzlich korrespondierende Paare bzw. Zahl der übertragenen Elektronen.' },
+  protolyse: { leicht: 'Stufe leicht: Reaktionsart bestimmen.', mittel: 'Stufe mittel: zusätzlich Säure und Base benennen bzw. Oxidationszahlen bestimmen und oxidiertes und reduziertes Teilchen benennen.', schwer: 'Stufe schwer: zusätzlich korrespondierende Paare bzw. Zahl der übertragenen Elektronen.' },
   stoich: { leicht: 'Stufe leicht: Grundgrößen – M, n = m/M, c = n/V, V = n · Vm.', mittel: 'Stufe mittel: Rechnen über die Reaktionsgleichung, Ionenkonzentrationen, Neutralisation.', schwer: 'Stufe schwer: Massenanteil und Dichte, Überschuss, Ausbeute, Rücktitration.' }
 };
 const lvlNote = mode => el('div', { class: 'lvl' }, LEVEL_TXT[mode][LEVEL]);
