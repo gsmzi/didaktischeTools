@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="M. Zimmer">
+<title>Gibbs-Helmholtz-Explorer</title>
+<style>
+  :root {
+    --bg: #eef3f2; --panel: #ffffff; --ink: #1d2330; --muted: #5b6475; --line: #c3cfcd;
+    --accent: #0f7a6a; --accent-soft: #e2f3f0;
+    --ok: #1e8e44; --ok-soft: #e5f5ea; --err: #c62828; --err-soft: #fdecea; --warn-soft: #fff6dc;
+    --exer: #2e7d32; --exer-soft: rgba(46,125,50,.10); --ender: #c62828; --ender-soft: rgba(198,40,40,.08);
+    --h: #1f6fd1; --s: #b26a00;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #0b6356; }
+  button:disabled { opacity: .55; cursor: default; }
+  .mono { font-family: var(--mono); }
+
+  .topbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 20px; background: linear-gradient(180deg, #2a9d8a, #0d5f53); color: #fff; }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; align-items: center; }
+  .levels span { font-size: 13px; padding: 0 6px 0 4px; opacity: .9; }
+  .levels button { background: transparent; color: #fff; border: none; border-radius: 6px; padding: 4px 11px; }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #0d5f53; font-weight: 600; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .modes button { display: flex; align-items: baseline; gap: 7px; border-radius: 8px; padding: 6px 12px; }
+  .modes button .nr { font-weight: 700; color: var(--accent); }
+  .modes button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .modes button.on .nr { color: #fff; }
+  .modes .cnt { font-size: 12px; color: var(--ok); font-weight: 600; }
+  .modes button.on .cnt { color: #d9ffe3; }
+
+  main { padding: 14px 20px 30px; max-width: 1250px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card h2 { margin: 0 0 6px; font-size: 18px; }
+  .card h3 { margin: 14px 0 6px; font-size: 15px; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .grow { flex: 1 1 520px; }
+  .task-text { margin: 4px 0 10px; }
+  .bar { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .note { font-size: 13.5px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 5px 10px; border-radius: 0 6px 6px 0; margin: 6px 0; }
+  .lvl { font-size: 13px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 4px 10px; border-radius: 0 6px 6px 0; margin: 0 0 8px; }
+  .lbl-small { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  details.terms { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.terms summary { cursor: pointer; font-weight: 600; }
+  details.terms dl { margin: 8px 0 4px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+  details.terms dt { font-weight: 600; } details.terms dd { margin: 0; }
+
+  .eq { font-size: 17px; padding: 8px 12px; background: #f7faf9; border: 1px solid var(--line); border-radius: 8px; display: inline-block; }
+  .formula { font-family: Cambria, "Times New Roman", serif; font-size: 18px; font-weight: 600; }
+  .vals { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 15px; }
+  .vals b.h { color: var(--h); } .vals b.s { color: var(--s); }
+
+  /* Diagramm */
+  .chart { width: 100%; max-width: 760px; }
+  .chart svg { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px; touch-action: pan-y; }
+  .chart .axis { stroke: #333; stroke-width: 1.2; }
+  .chart .gridl { stroke: #e3e8e7; stroke-width: 1; }
+  .chart .zero { stroke: #333; stroke-width: 1.6; }
+  .chart text { font: 12px var(--sans); fill: #444; }
+  .chart .tlabel { font-weight: 600; }
+  .readout { font: 14px var(--mono); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin-top: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; }
+  input[type=range] { width: min(100%, 420px); accent-color: var(--accent); }
+
+  /* Vier-Felder-Tafel */
+  table.cases { border-collapse: collapse; font-size: 13.5px; max-width: 520px; }
+  table.cases th, table.cases td { border: 1px solid var(--line); padding: 6px 8px; vertical-align: top; }
+  table.cases th { background: #f1f5f4; }
+  table.cases td.on { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: -2px; font-weight: 600; }
+
+  /* Tabellenwerte */
+  table.data { border-collapse: collapse; font-size: 14px; }
+  table.data th, table.data td { border: 1px solid var(--line); padding: 3px 9px; text-align: center; }
+  table.data th { background: #f1f5f4; font-weight: 600; }
+  .scroll { overflow-x: auto; max-width: 100%; }
+
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+  .choice { text-align: left; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice.right { border-color: var(--ok); background: var(--ok-soft); }
+  .choice.wrong { border-color: var(--err); background: var(--err-soft); }
+  .choice .why { font-size: 13px; }
+
+  .fb { margin-top: 10px; padding: 8px 12px; border-radius: 8px; display: none; white-space: pre-line; }
+  .fb.show { display: block; }
+  .fb.ok { background: var(--ok-soft); color: #145c2e; border: 1px solid #9fd8b2; }
+  .fb.err { background: var(--err-soft); color: #8c1c1c; border: 1px solid #f0b4b0; }
+  .fb.info { background: var(--warn-soft); color: #6b5100; border: 1px solid #ecd58c; }
+  .calc { font: 14px/1.6 var(--mono); background: #fbfcfc; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; overflow-x: auto; white-space: pre; margin-top: 8px; }
+  .qa { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; max-width: 760px; }
+  .qa .why { grid-column: 1 / -1; font-size: 13.5px; margin: -4px 0 4px; white-space: pre-line; }
+  .qa .why.ok { color: #145c2e; } .qa .why.err { color: #8c1c1c; }
+  input.num { width: 110px; font: 15px var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; text-align: center; }
+  input.num.right { background: var(--ok-soft); border-color: var(--ok); } input.num.wrong { background: var(--err-soft); border-color: var(--err); }
+  select { font: 15px var(--sans); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
+  select.right { background: var(--ok-soft); border-color: var(--ok); } select.wrong { background: var(--err-soft); border-color: var(--err); }
+  .unit { color: var(--muted); }
+
+  .hidden { display: none !important; }
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; max-width: 1250px; }
+  @media (max-width: 700px) {
+    .topbar, .modes, main { padding-left: 12px; padding-right: 12px; }
+    .qa { grid-template-columns: minmax(0, 1fr); }
+    .eq { font-size: 15px; }
+  }
+  @media print { .topbar, .modes, .bar, footer { display: none; } body { background: #fff; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>ENERGETIK <small>Gibbs-Helmholtz-Gleichung</small></h1>
+  <span class="spacer"></span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <button id="btn-new" type="button">Neue Aufgabe</button>
+</header>
+
+<nav class="modes" id="modes" aria-label="Aufgabentypen"></nav>
+
+<main id="main"></main>
+
+<footer>
+  Leistungsfach Chemie, Kapitel 1.5 Gibbs-Helmholtz-Gleichung (Buch S. 280/281). Tabellenwerte wie auf dem Arbeitsblatt „Gibbs-Helmholtz-Gleichung“ bzw. dem Unterrichtsverlauf;
+  andere Tafelwerke weichen um wenige Einheiten ab. Δ<sub>r</sub>H und Δ<sub>r</sub>S werden näherungsweise als temperaturunabhängig behandelt. Der Fortschritt wird nur in diesem Browser gespeichert. · M. Zimmer
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+//  Hilfsfunktionen
+// =====================================================================
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; } return a; }
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+// deutsche Zahldarstellung
+function de(v, d = 0) {
+  const s = (Math.round(v * 10 ** d) / 10 ** d).toFixed(d).replace('.', ',').replace('-', '−');
+  return s;
+}
+const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '') + de(Math.abs(v), Number.isInteger(v) ? 0 : 1);
+function readNum(s) {
+  const t = String(s).trim().replace(/\s/g, '').replace('−', '-').replace(',', '.');
+  if (t === '' || !/^[-+]?\d+(\.\d+)?$/.test(t)) return NaN;
+  return Number(t);
+}
+// Toleranz: 1 % bzw. mindestens abs
+const close = (a, b, abs = 0.6) => Math.abs(a - b) <= Math.max(abs, Math.abs(b) * 0.01);
+
+const STORE = 'ghTraining.score';
+let SCORE = {};
+try { SCORE = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { SCORE = {}; }
+function addScore(id) { SCORE[id] = (SCORE[id] || 0) + 1; try { localStorage.setItem(STORE, JSON.stringify(SCORE)); } catch (e) {} renderModes(); }
+let LEVEL = 'leicht'; try { LEVEL = localStorage.getItem('ghTraining.level') || 'leicht'; } catch (e) {}
+let MODE = 'erkunden'; try { MODE = localStorage.getItem('ghTraining.mode') || 'erkunden'; } catch (e) {}
+
+// =====================================================================
+//  Tabellenwerte: Δf H° in kJ/mol, S° in J/(mol·K)
+// =====================================================================
+const SP = {
+  H2:    { f: 'H<sub>2</sub>(g)', H: 0, S: 131 },
+  O2:    { f: 'O<sub>2</sub>(g)', H: 0, S: 205 },
+  N2:    { f: 'N<sub>2</sub>(g)', H: 0, S: 191 },
+  Cl2:   { f: 'Cl<sub>2</sub>(g)', H: 0, S: 223 },
+  H2Og:  { f: 'H<sub>2</sub>O(g)', H: -242, S: 189 },
+  H2Ol:  { f: 'H<sub>2</sub>O(l)', H: -286, S: 70 },
+  NH3:   { f: 'NH<sub>3</sub>(g)', H: -46, S: 193 },
+  C:     { f: 'C(Graphit)', H: 0, S: 6 },
+  CO:    { f: 'CO(g)', H: -111, S: 198 },
+  CO2:   { f: 'CO<sub>2</sub>(g)', H: -393, S: 214 },
+  HCl:   { f: 'HCl(g)', H: -92, S: 187 },
+  CaCO3: { f: 'CaCO<sub>3</sub>(s)', H: -1207, S: 93 },
+  CaO:   { f: 'CaO(s)', H: -635, S: 38 },
+  Fe:    { f: 'Fe(s)', H: 0, S: 27 },
+  Fe2O3: { f: 'Fe<sub>2</sub>O<sub>3</sub>(s)', H: -824, S: 87 },
+  Mg:    { f: 'Mg(s)', H: 0, S: 33 },
+  MgO:   { f: 'MgO(s)', H: -601, S: 27 },
+  H2O2:  { f: 'H<sub>2</sub>O<sub>2</sub>(l)', H: -188, S: 110 },
+  Glc:   { f: 'C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>(s)', H: -1273, S: 212 },
+  CH4:   { f: 'CH<sub>4</sub>(g)', H: -75, S: 186 },
+  NO2:   { f: 'NO<sub>2</sub>(g)', H: 33, S: 240 },
+  N2O4:  { f: 'N<sub>2</sub>O<sub>4</sub>(g)', H: 9, S: 304 },
+  SO2:   { f: 'SO<sub>2</sub>(g)', H: -297, S: 248 },
+  SO3:   { f: 'SO<sub>3</sub>(g)', H: -396, S: 257 }
+};
+const ELEMENTS = new Set(['H2', 'O2', 'N2', 'Cl2', 'C', 'Fe', 'Mg']);
+const RX = [
+  { id: 'knallgas', name: 'Knallgasreaktion', e: [[2, 'H2'], [1, 'O2']], p: [[2, 'H2Og']] },
+  { id: 'knallgasl', name: 'Knallgasreaktion (Wasser flüssig)', e: [[2, 'H2'], [1, 'O2']], p: [[2, 'H2Ol']] },
+  { id: 'ammoniak', name: 'Ammoniaksynthese', e: [[1, 'N2'], [3, 'H2']], p: [[2, 'NH3']] },
+  { id: 'kalk', name: 'Kalkbrennen', e: [[1, 'CaCO3']], p: [[1, 'CaO'], [1, 'CO2']] },
+  { id: 'hochofenA', name: 'Hochofen (A): Graphit → CO₂', e: [[1, 'C'], [1, 'O2']], p: [[1, 'CO2']] },
+  { id: 'hochofenB', name: 'Hochofen (B): Graphit → CO', e: [[2, 'C'], [1, 'O2']], p: [[2, 'CO']] },
+  { id: 'hochofenC', name: 'Hochofen (C): CO → Graphit + CO₂', e: [[2, 'CO']], p: [[1, 'C'], [1, 'CO2']] },
+  { id: 'hcl', name: 'Chlorknallgas', e: [[1, 'H2'], [1, 'Cl2']], p: [[2, 'HCl']] },
+  { id: 'rost', name: 'Rosten', e: [[4, 'Fe'], [3, 'O2']], p: [[2, 'Fe2O3']] },
+  { id: 'photo', name: 'Photosynthese', e: [[6, 'H2Ol'], [6, 'CO2']], p: [[1, 'Glc'], [6, 'O2']] },
+  { id: 'h2o2', name: 'Zersetzung von Wasserstoffperoxid', e: [[2, 'H2O2']], p: [[2, 'H2Ol'], [1, 'O2']] },
+  { id: 'no2', name: 'Dimerisierung von NO₂', e: [[2, 'NO2']], p: [[1, 'N2O4']] },
+  { id: 'so3', name: 'Kontaktverfahren (SO₃)', e: [[2, 'SO2'], [1, 'O2']], p: [[2, 'SO3']] },
+  { id: 'mg', name: 'Verbrennung von Magnesium', e: [[2, 'Mg'], [1, 'O2']], p: [[2, 'MgO']] },
+  { id: 'methan', name: 'Verbrennung von Methan', e: [[1, 'CH4'], [2, 'O2']], p: [[1, 'CO2'], [2, 'H2Og']] }
+];
+const sideHTML = side => side.map(([n, s]) => (n > 1 ? n + ' ' : '') + SP[s].f).join(' + ');
+const eqHTML = r => sideHTML(r.e) + ' → ' + sideHTML(r.p);
+function thermo(r, opts = {}) {
+  const sum = (side, k) => side.reduce((a, [n, s]) => a + (opts.noCoeff ? 1 : n) * ((opts.noElemS && k === 'S' && ELEMENTS.has(s)) ? 0 : SP[s][k]), 0);
+  const H = sum(r.p, 'H') - sum(r.e, 'H'), S = sum(r.p, 'S') - sum(r.e, 'S');
+  return { H, S };
+}
+// Gasteilchen (für die Abschätzung von ΔrS)
+const gasCount = side => side.reduce((a, [n, s]) => a + (SP[s].f.includes('(g)') ? n : 0), 0);
+// Fall nach Vorzeichen
+function caseOf(H, S) {
+  if (H < 0 && S > 0) return 'immer';
+  if (H > 0 && S < 0) return 'nie';
+  if (H < 0 && S < 0) return 'tief';
+  if (H > 0 && S > 0) return 'hoch';
+  if (S === 0) return H < 0 ? 'immer' : 'nie';
+  return H === 0 ? (S > 0 ? 'immer' : 'nie') : 'immer';
+}
+const CASE_TXT = {
+  immer: 'bei allen Temperaturen exergonisch',
+  hoch:  'nur bei hohen Temperaturen exergonisch',
+  tief:  'nur bei tiefen Temperaturen exergonisch',
+  nie:   'bei keiner Temperatur exergonisch (immer endergonisch)'
+};
+const tGrenz = (H, S) => H * 1000 / S;   // in K
+const dG = (H, S, T) => H - T * S / 1000;  // kJ
+
+function feedback() {
+  const box = el('div', { class: 'fb', role: 'status' });
+  box.set = (kind, text) => { box.className = 'fb show ' + kind; box.textContent = text; };
+  return box;
+}
+const LEVEL_TXT = {
+  leicht: 'Stufe leicht: Δ<sub>r</sub>H und Δ<sub>r</sub>S sind gegeben, Temperaturen in Kelvin.',
+  mittel: 'Stufe mittel: Δ<sub>r</sub>H und Δ<sub>r</sub>S sind gegeben, Temperaturen teils in °C – umrechnen nicht vergessen (T in K = ϑ in °C + 273).',
+  schwer: 'Stufe schwer: Δ<sub>r</sub>H und Δ<sub>r</sub>S selbst aus den Tabellenwerten berechnen.'
+};
+const lvlNote = () => el('div', { class: 'lvl', html: LEVEL_TXT[LEVEL] });
+
+// =====================================================================
+//  Diagramm Δr G(T)
+// =====================================================================
+const COLORS = ['#0f7a6a', '#1f6fd1', '#b26a00', '#8e3fa8', '#c0392b'];
+function makeChart(lines, opts = {}) {
+  // lines: [{H, S, label, color}]
+  const Wd = 720, Ht = 360, L = 64, Rr = 18, Tp = 16, B = 46;
+  const Tmax = opts.Tmax || 2000;
+  let ymin = 0, ymax = 0;
+  for (const l of lines) for (const T of [0, Tmax]) { const g = dG(l.H, l.S, T); ymin = Math.min(ymin, g); ymax = Math.max(ymax, g); }
+  const pad = Math.max(20, (ymax - ymin) * 0.08); ymin -= pad; ymax += pad;
+  const step = niceStep((ymax - ymin) / 6), tstep = niceStep(Tmax / 8);
+  ymin = Math.floor(ymin / step) * step; ymax = Math.ceil(ymax / step) * step;
+  const X = T => L + (T / Tmax) * (Wd - L - Rr), Y = g => Tp + (ymax - g) / (ymax - ymin) * (Ht - Tp - B);
+  const svg = svgEl('svg', { viewBox: `0 0 ${Wd} ${Ht}`, role: 'img', 'aria-label': 'Diagramm: freie Reaktionsenthalpie in Abhängigkeit von der Temperatur' });
+  // Bereiche
+  svg.append(svgEl('rect', { x: L, y: Tp, width: Wd - L - Rr, height: Math.max(0, Y(0) - Tp), fill: 'var(--ender-soft)' }));
+  svg.append(svgEl('rect', { x: L, y: Y(0), width: Wd - L - Rr, height: Math.max(0, Ht - B - Y(0)), fill: 'var(--exer-soft)' }));
+  // Gitter + Achsenbeschriftung
+  for (let g = ymin; g <= ymax + 1e-9; g += step) {
+    svg.append(svgEl('line', { x1: L, x2: Wd - Rr, y1: Y(g), y2: Y(g), class: 'gridl' }));
+    const t = svgEl('text', { x: L - 6, y: Y(g) + 4, 'text-anchor': 'end' }); t.textContent = de(g); svg.append(t);
+  }
+  for (let T = 0; T <= Tmax + 1e-9; T += tstep) {
+    svg.append(svgEl('line', { x1: X(T), x2: X(T), y1: Tp, y2: Ht - B, class: 'gridl' }));
+    const t = svgEl('text', { x: X(T), y: Ht - B + 16, 'text-anchor': 'middle' }); t.textContent = de(T); svg.append(t);
+  }
+  svg.append(svgEl('line', { x1: L, x2: L, y1: Tp, y2: Ht - B, class: 'axis' }));
+  svg.append(svgEl('line', { x1: L, x2: Wd - Rr, y1: Y(0), y2: Y(0), class: 'zero' }));
+  const xl = svgEl('text', { x: (L + Wd - Rr) / 2, y: Ht - 8, 'text-anchor': 'middle', class: 'tlabel' }); xl.textContent = 'T in K'; svg.append(xl);
+  const yl = svgEl('text', { x: 14, y: (Tp + Ht - B) / 2, 'text-anchor': 'middle', transform: `rotate(-90 14 ${(Tp + Ht - B) / 2})`, class: 'tlabel' }); yl.textContent = 'ΔrG in kJ'; svg.append(yl);
+  const lab = (x, y, txt, col, anchor = 'start') => { const t = svgEl('text', { x, y, 'text-anchor': anchor, fill: col, style: `fill:${col};font-weight:600` }); t.textContent = txt; svg.append(t); };
+  lab(Wd - Rr - 6, Tp + 14, 'endergonisch (ΔrG > 0)', 'var(--ender)', 'end');
+  lab(Wd - Rr - 6, Ht - B - 6, 'exergonisch (ΔrG < 0)', 'var(--exer)', 'end');
+  // Linien + Grenztemperaturen
+  lines.forEach((l, k) => {
+    const col = l.color || COLORS[k % COLORS.length];
+    svg.append(svgEl('line', { x1: X(0), y1: Y(dG(l.H, l.S, 0)), x2: X(Tmax), y2: Y(dG(l.H, l.S, Tmax)), stroke: col, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    if (l.S !== 0) { const Tg = tGrenz(l.H, l.S); if (Tg > 0 && Tg <= Tmax) {
+      svg.append(svgEl('circle', { cx: X(Tg), cy: Y(0), r: 5, fill: '#fff', stroke: col, 'stroke-width': 2.5 }));
+      if (lines.length === 1) { svg.append(svgEl('line', { x1: X(Tg), x2: X(Tg), y1: Y(0), y2: Ht - B, stroke: col, 'stroke-dasharray': '4 4' })); lab(X(Tg) + 6, Y(0) - 8, `T = ${de(Tg)} K`, col); }
+    } }
+  });
+  // Cursor
+  const cur = svgEl('line', { y1: Tp, y2: Ht - B, stroke: '#333', 'stroke-width': 1, 'stroke-dasharray': '2 3' });
+  const dots = lines.map((l, k) => svgEl('circle', { r: 5, fill: l.color || COLORS[k % COLORS.length] }));
+  if (opts.cursor != null) { svg.append(cur); dots.forEach(d => svg.append(d)); }
+  svg.setCursor = T => { cur.setAttribute('x1', X(T)); cur.setAttribute('x2', X(T)); dots.forEach((d, k) => { d.setAttribute('cx', X(T)); d.setAttribute('cy', Y(dG(lines[k].H, lines[k].S, T))); }); };
+  svg.toT = clientX => { const r = svg.getBoundingClientRect(); const x = (clientX - r.left) / r.width * Wd; return Math.max(0, Math.min(Tmax, (x - L) / (Wd - L - Rr) * Tmax)); };
+  if (opts.cursor != null) svg.setCursor(opts.cursor);
+  return svg;
+}
+function niceStep(raw) { const p = 10 ** Math.floor(Math.log10(raw)); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+
+function casesTable(active) {
+  const td = (k, html) => el('td', { class: k === active ? 'on' : '', html });
+  return el('div', { class: 'scroll' }, el('table', { class: 'cases', 'aria-label': 'Vier Fälle der Gibbs-Helmholtz-Gleichung' },
+    el('tr', null, el('th'), el('th', { html: 'Δ<sub>r</sub>H &lt; 0 (exotherm)' }), el('th', { html: 'Δ<sub>r</sub>H &gt; 0 (endotherm)' })),
+    el('tr', null, el('th', { html: 'Δ<sub>r</sub>S &gt; 0' }), td('immer', 'Δ<sub>r</sub>G &lt; 0 bei <b>allen</b> Temperaturen'), td('hoch', 'exergonisch bei <b>hohen</b> Temperaturen: −T·Δ<sub>r</sub>S überwiegt')),
+    el('tr', null, el('th', { html: 'Δ<sub>r</sub>S &lt; 0' }), td('tief', 'exergonisch bei <b>tiefen</b> Temperaturen: Δ<sub>r</sub>H überwiegt'), td('nie', 'Δ<sub>r</sub>G &gt; 0 bei <b>keiner</b> Temperatur exergonisch'))));
+}
+
+function dataTable(ids) {
+  const tb = el('table', { class: 'data', 'aria-label': 'Standardwerte' });
+  tb.append(el('tr', null, el('th', null, 'Stoff'), ...ids.map(s => el('th', { html: SP[s].f }))));
+  tb.append(el('tr', null, el('th', { html: 'Δ<sub>f</sub>H° in kJ/mol' }), ...ids.map(s => el('td', null, de(SP[s].H)))));
+  tb.append(el('tr', null, el('th', { html: 'S° in J/(mol·K)' }), ...ids.map(s => el('td', null, de(SP[s].S)))));
+  return el('div', { class: 'scroll' }, tb);
+}
+const speciesOf = r => [...new Set([...r.e, ...r.p].map(x => x[1]))];
+function thermoCalc(r) {
+  const t = (side, k) => side.map(([n, s]) => (n > 1 ? n + '·' : '') + '(' + de(SP[s][k]) + ')').join(' + ');
+  const { H, S } = thermo(r);
+  return `ΔrH° = Σ ν·ΔfH°(Produkte) − Σ ν·ΔfH°(Edukte)\n      = [${t(r.p, 'H')}] − [${t(r.e, 'H')}] kJ\n      = ${de(H)} kJ\n\nΔrS° = Σ ν·S°(Produkte) − Σ ν·S°(Edukte)\n      = [${t(r.p, 'S')}] − [${t(r.e, 'S')}] J/K\n      = ${de(S)} J/K`;
+}
+
+// =====================================================================
+//  Aufgabentypen
+// =====================================================================
+const MODES = [
+  { id: 'erkunden', nr: 1, title: 'Erkunden', count: false },
+  { id: 'faelle', nr: 2, title: 'Vier Fälle' },
+  { id: 'dg', nr: 3, title: 'ΔrG berechnen' },
+  { id: 'grenz', nr: 4, title: 'Grenztemperatur' }
+];
+function renderLevels() {
+  const nav = document.getElementById('levels'); nav.innerHTML = '';
+  nav.append(el('span', null, 'Stufe'));
+  for (const l of ['leicht', 'mittel', 'schwer']) nav.append(el('button', { type: 'button', class: l === LEVEL ? 'on' : '', 'aria-pressed': String(l === LEVEL),
+    onclick: () => { LEVEL = l; try { localStorage.setItem('ghTraining.level', l); } catch (e) {} renderLevels(); show(); } }, l));
+}
+function renderModes() {
+  const nav = document.getElementById('modes'); nav.innerHTML = '';
+  for (const m of MODES) {
+    const n = SCORE[m.id] || 0;
+    nav.append(el('button', { type: 'button', class: m.id === MODE ? 'on' : '', 'aria-pressed': String(m.id === MODE),
+      onclick: () => { MODE = m.id; try { localStorage.setItem('ghTraining.mode', m.id); } catch (e) {} renderModes(); show(); } },
+      el('span', { class: 'nr' }, String(m.nr)), m.title, m.count === false || !n ? null : el('span', { class: 'cnt' }, '✓ ' + n)));
+  }
+}
+function terms() {
+  return el('details', { class: 'terms' }, el('summary', null, 'Begriffe und Formeln'),
+    el('dl', null,
+      el('dt', { html: 'Gibbs-Helmholtz' }), el('dd', { html: '<span class="formula">Δ<sub>r</sub>G = Δ<sub>r</sub>H − T · Δ<sub>r</sub>S</span>' }),
+      el('dt', null, 'exergonisch'), el('dd', { html: 'Δ<sub>r</sub>G &lt; 0: Die Reaktion kann freiwillig ablaufen und Arbeit liefern. (Ob sie schnell abläuft, ist eine Frage der Kinetik.)' }),
+      el('dt', null, 'endergonisch'), el('dd', { html: 'Δ<sub>r</sub>G &gt; 0: Die Reaktion läuft nicht freiwillig ab.' }),
+      el('dt', null, 'Einheiten'), el('dd', { html: 'Δ<sub>r</sub>H in kJ, Δ<sub>r</sub>S in J/K → vor dem Einsetzen in kJ/K umrechnen (durch 1000 teilen). T immer in Kelvin: T = ϑ + 273.' }),
+      el('dt', null, 'Grenztemperatur'), el('dd', { html: 'Bei Δ<sub>r</sub>G = 0 gilt <span class="formula">T = Δ<sub>r</sub>H / Δ<sub>r</sub>S</span>. Nur sinnvoll, wenn Δ<sub>r</sub>H und Δ<sub>r</sub>S dasselbe Vorzeichen haben.' }),
+      el('dt', null, 'Tabellenwerte'), el('dd', { html: 'Δ<sub>r</sub>H° = Σ ν·Δ<sub>f</sub>H°(Produkte) − Σ ν·Δ<sub>f</sub>H°(Edukte); für Elemente ist Δ<sub>f</sub>H° = 0, ihre Entropie S° aber <b>nicht</b> 0.' })));
+}
+
+// ---------------------------------------------------------------------
+// 1 Erkunden
+// ---------------------------------------------------------------------
+let EXP = { rx: 'kalk', own: false, H: -100, S: -100, T: 298, Tmax: 2000, cmp: [] };
+function modeErkunden(card) {
+  card.append(el('h2', null, 'Erkunden'),
+    el('p', { class: 'task-text', html: 'Wähle eine Reaktion aus dem Unterricht oder stelle Δ<sub>r</sub>H und Δ<sub>r</sub>S selbst ein. Verschiebe die Temperatur oder fahre über das Diagramm. Für Aufgabe 3 des Arbeitsblatts (Hochofen) kannst du mehrere Reaktionen gemeinsam anzeigen.' }));
+  const sel = el('select', { 'aria-label': 'Reaktion' }, ...RX.map(r => el('option', { value: r.id }, r.name)), el('option', { value: 'eigen' }, 'Eigene Werte einstellen …'));
+  sel.value = EXP.own ? 'eigen' : EXP.rx;
+  const eq = el('div', { class: 'eq' });
+  const own = el('div', { class: 'col' });
+  const hR = el('input', { type: 'range', min: -600, max: 600, step: 1, value: EXP.H, 'aria-label': 'Reaktionsenthalpie' });
+  const sR = el('input', { type: 'range', min: -400, max: 400, step: 1, value: EXP.S, 'aria-label': 'Reaktionsentropie' });
+  const hV = el('span', { class: 'mono' }), sV = el('span', { class: 'mono' });
+  own.append(el('label', { html: 'Δ<sub>r</sub>H = ' }, hV, ' kJ'), hR, el('label', { html: 'Δ<sub>r</sub>S = ' }, sV, ' J/K'), sR);
+  const tR = el('input', { type: 'range', min: 0, max: EXP.Tmax, step: 1, value: EXP.T, 'aria-label': 'Temperatur' });
+  const tmaxSel = el('select', { 'aria-label': 'Temperaturbereich' }, ...[1000, 2000, 4000, 6000].map(v => el('option', { value: v }, '0 … ' + de(v) + ' K')));
+  tmaxSel.value = EXP.Tmax;
+  const vals = el('div', { class: 'vals' }), readout = el('div', { class: 'readout' }), verdict = el('div', { class: 'note' });
+  const chartBox = el('div', { class: 'chart' }), legend = el('div', { class: 'legend' });
+  const cmpBox = el('div', { class: 'bar' });
+  const calcBox = el('details', null, el('summary', null, 'Rechenweg aus den Tabellenwerten'), el('div', { class: 'calc' }));
+  const casesBox = el('div');
+  const cmpSel = el('select', { 'aria-label': 'Vergleichsreaktion' }, el('option', { value: '' }, 'Reaktion zum Vergleich hinzufügen …'), ...RX.map(r => el('option', { value: r.id }, r.name)));
+  cmpSel.addEventListener('change', () => { if (cmpSel.value && !EXP.cmp.includes(cmpSel.value) && EXP.cmp.length < 4) EXP.cmp.push(cmpSel.value); cmpSel.value = ''; update(); });
+  const hochofen = el('button', { type: 'button', onclick: () => { EXP.own = false; EXP.rx = 'hochofenA'; EXP.cmp = ['hochofenB', 'hochofenC']; sel.value = 'hochofenA'; update(); } }, 'Hochofen A, B, C zeigen');
+  const clear = el('button', { type: 'button', onclick: () => { EXP.cmp = []; update(); } }, 'Vergleich entfernen');
+  function current() { if (EXP.own) return { H: EXP.H, S: EXP.S, label: 'eigene Werte' }; const r = RX.find(q => q.id === EXP.rx); return Object.assign(thermo(r), { label: r.name, r }); }
+  function update() {
+    EXP.own = sel.value === 'eigen'; if (!EXP.own) EXP.rx = sel.value;
+    EXP.H = Number(hR.value); EXP.S = Number(sR.value); EXP.Tmax = Number(tmaxSel.value); tR.max = EXP.Tmax; EXP.T = Math.min(Number(tR.value), EXP.Tmax);
+    own.classList.toggle('hidden', !EXP.own); calcBox.classList.toggle('hidden', EXP.own);
+    hV.textContent = sgn(EXP.H); sV.textContent = sgn(EXP.S);
+    const c = current();
+    eq.innerHTML = EXP.own ? 'eigene Reaktion' : eqHTML(c.r);
+    if (!EXP.own) calcBox.querySelector('.calc').textContent = thermoCalc(c.r);
+    vals.innerHTML = `<span>Δ<sub>r</sub>H° = <b class="h">${sgn(c.H)} kJ</b></span><span>Δ<sub>r</sub>S° = <b class="s">${sgn(c.S)} J/K</b></span>`;
+    const lines = [Object.assign({ color: COLORS[0] }, c)].concat(EXP.cmp.filter(id => EXP.own || id !== EXP.rx).map((id, k) => { const r = RX.find(q => q.id === id); return Object.assign(thermo(r), { label: r.name, color: COLORS[(k + 1) % COLORS.length] }); }));
+    const svg = makeChart(lines, { Tmax: EXP.Tmax, cursor: EXP.T });
+    const move = ev => { const T = Math.round(svg.toT(ev.clientX)); tR.value = T; EXP.T = T; svg.setCursor(T); out(); };
+    svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move);
+    chartBox.innerHTML = ''; chartBox.append(svg);
+    legend.innerHTML = ''; lines.forEach(l => legend.append(el('span', null, el('i', { style: 'background:' + l.color }), l.label)));
+    cmpBox.innerHTML = ''; cmpBox.append(cmpSel, hochofen); if (EXP.cmp.length) cmpBox.append(clear);
+    casesBox.innerHTML = ''; casesBox.append(casesTable(caseOf(c.H, c.S)));
+    const Tg = c.S !== 0 ? tGrenz(c.H, c.S) : null;
+    verdict.innerHTML = `<b>${CASE_TXT[caseOf(c.H, c.S)][0].toUpperCase() + CASE_TXT[caseOf(c.H, c.S)].slice(1)}.</b> ` +
+      (Tg != null && Tg > 0 ? `Grenztemperatur T = Δ<sub>r</sub>H / Δ<sub>r</sub>S = ${de(c.H)} kJ / ${de(c.S / 1000, 3)} kJ/K ≈ <b>${de(Tg)} K</b> (≈ ${de(Tg - 273)} °C).` : 'Δ<sub>r</sub>H und Δ<sub>r</sub>S haben verschiedene Vorzeichen – es gibt keine Grenztemperatur.') +
+      (c.r && c.r.id === 'h2o2' ? ' Trotzdem zerfällt H<sub>2</sub>O<sub>2</sub> bei Raumtemperatur kaum: Es ist <b>metastabil</b> (kinetisch gehemmt).' : '') +
+      (c.r && c.r.id.startsWith('knallgas') ? ' Bei 298 K ist das Gemisch trotz Δ<sub>r</sub>G &lt; 0 beständig: kinetische Hemmung, erst Zünden oder ein Katalysator startet die Reaktion.' : '');
+    out();
+    function out() { const g = dG(c.H, c.S, EXP.T); readout.innerHTML = `T = ${de(EXP.T)} K (${de(EXP.T - 273)} °C):  Δ<sub>r</sub>G = ${de(c.H)} kJ − ${de(EXP.T)} K · ${de(c.S / 1000, 3)} kJ/K = <b style="color:${g < 0 ? 'var(--exer)' : 'var(--ender)'}">${de(g, 1)} kJ</b> → ${g < 0 ? 'exergonisch' : g > 0 ? 'endergonisch' : 'Gleichgewicht'}`; }
+  }
+  [sel, tmaxSel].forEach(i => i.addEventListener('change', update));
+  [hR, sR].forEach(i => i.addEventListener('input', update));
+  tR.addEventListener('input', update);
+  card.append(el('div', { class: 'bar' }, el('label', null, 'Reaktion: ', sel)), el('div', { class: 'row' }, eq), own, vals, calcBox,
+    el('div', { class: 'row' }, el('div', { class: 'col grow' }, chartBox, legend, cmpBox,
+      el('div', { class: 'bar' }, el('label', null, 'Temperatur: '), tR, tmaxSel), readout),
+      el('div', { class: 'col' }, verdict, el('span', { class: 'lbl-small' }, 'Die vier Fälle'), casesBox)));
+  update();
+}
+
+// ---------------------------------------------------------------------
+// 2 Vier Fälle
+// ---------------------------------------------------------------------
+function modeFaelle(card) {
+  const r = pick(RX.filter(q => !['knallgasl', 'methan'].includes(q.id)));
+  const { H, S } = thermo(r), want = caseOf(H, S);
+  const fb = feedback();
+  card.append(el('h2', null, 'Vier Fälle'));
+  if (LEVEL === 'leicht') card.append(el('div', { class: 'lvl' }, 'Stufe leicht: Vorzeichen von ΔrH und ΔrS sind gegeben.'),
+    el('p', { class: 'task-text', html: `${r.name}: <span class="eq">${eqHTML(r)}</span><br>Δ<sub>r</sub>H ${H < 0 ? '&lt;' : '&gt;'} 0 und Δ<sub>r</sub>S ${S < 0 ? '&lt;' : '&gt;'} 0. Bei welchen Temperaturen ist die Reaktion exergonisch?` }));
+  else if (LEVEL === 'mittel') card.append(el('div', { class: 'lvl' }, 'Stufe mittel: ΔrH ist gegeben, das Vorzeichen von ΔrS schätzt du selbst ab (Teilchen in gasförmigem Zustand, Aggregatzustände).'),
+    el('p', { class: 'task-text', html: `${r.name}: <span class="eq">${eqHTML(r)}</span> &nbsp; Δ<sub>r</sub>H° = ${sgn(H)} kJ<br>Schätze das Vorzeichen von Δ<sub>r</sub>S ab und entscheide, bei welchen Temperaturen die Reaktion exergonisch ist.` }));
+  else card.append(lvlNote(), el('p', { class: 'task-text', html: `${r.name}: <span class="eq">${eqHTML(r)}</span><br>Berechne Δ<sub>r</sub>H° und Δ<sub>r</sub>S° aus den Tabellenwerten (oder schätze sie sicher ab) und entscheide.` }), dataTable(speciesOf(r)));
+  let sSel = null;
+  if (LEVEL === 'mittel') {
+    sSel = el('select', { 'aria-label': 'Vorzeichen der Reaktionsentropie' }, el('option', { value: '' }, 'ΔrS ist …'), el('option', { value: '+' }, 'positiv (ΔrS > 0)'), el('option', { value: '-' }, 'negativ (ΔrS < 0)'));
+    card.append(el('div', { class: 'bar' }, el('label', { html: 'Vorzeichen von Δ<sub>r</sub>S: ' }, sSel)));
+  }
+  const choices = el('div', { class: 'choices' });
+  const gE = gasCount(r.e), gP = gasCount(r.p);
+  const sHint = `Teilchen in gasförmigem Zustand: links ${gE}, rechts ${gP}` + (gE === gP ? ' – hier entscheiden die Tabellenwerte' : gP > gE ? ' → ΔrS > 0' : ' → ΔrS < 0') + `. Tabellenwert: ΔrS° = ${sgn(S)} J/K.`;
+  const why = {
+    immer: 'Exotherm und Entropie nimmt zu: beide Terme machen ΔrG negativ.',
+    hoch: 'Endotherm, aber Entropie nimmt zu: erst wenn T·ΔrS größer als ΔrH ist, wird ΔrG negativ.',
+    tief: 'Exotherm, aber Entropie nimmt ab: bei hohen Temperaturen überwiegt −T·ΔrS, dann wird ΔrG positiv.',
+    nie: 'Endotherm und Entropie nimmt ab: beide Terme machen ΔrG positiv.'
+  };
+  for (const k of ['immer', 'hoch', 'tief', 'nie']) {
+    const b = el('button', { class: 'choice', type: 'button', onclick: () => {
+      if (card.done) return;
+      if (sSel && !sSel.value) { fb.set('info', 'Wähle zuerst das Vorzeichen von ΔrS.'); return; }
+      const sOk = !sSel || (sSel.value === '+') === (S > 0);
+      if (sSel) sSel.className = sOk ? 'right' : 'wrong';
+      if (k === want && sOk) {
+        b.classList.add('right'); b.append(el('span', { class: 'why' }, why[k]));
+        const Tg = tGrenz(H, S);
+        fb.set('ok', `Richtig! ΔrH° = ${sgn(H)} kJ, ΔrS° = ${sgn(S)} J/K.` + ((want === 'hoch' || want === 'tief') ? ` Grenztemperatur ≈ ${de(Tg)} K.` : ''));
+        card.classList.add('solved'); card.done = true; addScore('faelle');
+      } else if (k === want) { fb.set('err', 'Die Wirkung stimmt, aber das Vorzeichen von ΔrS nicht. ' + sHint); }
+      else { b.classList.add('wrong'); b.disabled = true; b.append(el('span', { class: 'why' }, 'Das gilt, wenn: ' + why[k])); fb.set('err', 'Noch nicht. ' + (LEVEL === 'leicht' ? 'Nutze die Vier-Felder-Tafel in den Begriffen.' : sHint)); }
+    } }, el('b', null, CASE_TXT[k][0].toUpperCase() + CASE_TXT[k].slice(1)));
+    choices.append(b);
+  }
+  card.append(el('h3', null, 'Die Reaktion ist …'), choices, fb);
+}
+
+// ---------------------------------------------------------------------
+// Aufgabe erzeugen (für 3 und 4): Werte je Stufe
+// ---------------------------------------------------------------------
+function makeValues(needGrenz) {
+  if (LEVEL === 'schwer') {
+    const pool = RX.filter(r => { const { H, S } = thermo(r); if (!needGrenz) return true; const T = tGrenz(H, S); return T > 0 && T < 7000; });
+    const r = pick(pool); return Object.assign(thermo(r), { r });
+  }
+  if (Math.random() < 0.5) { const pool = RX.filter(r => { const { H, S } = thermo(r); const T = tGrenz(H, S); return !needGrenz || (T > 0 && T < 7000); }); const r = pick(pool); return Object.assign(thermo(r), { r, given: true }); }
+  for (;;) {
+    const H = R(-60, 60) * 5, S = R(-60, 60) * 5;
+    if (!H || !S) continue;
+    if (needGrenz && (H > 0) !== (S > 0)) continue;
+    if (needGrenz && (tGrenz(H, S) < 150 || tGrenz(H, S) > 5000)) continue;
+    return { H, S, given: true };
+  }
+}
+function valuesBlock(v) {
+  const box = el('div', { class: 'col' });
+  if (v.r) box.append(el('div', { class: 'eq', html: `${v.r.name}: ${eqHTML(v.r)}` }));
+  if (LEVEL === 'schwer') box.append(dataTable(speciesOf(v.r)));
+  else box.append(el('div', { class: 'vals', html: `<span>Δ<sub>r</sub>H° = <b class="h">${sgn(v.H)} kJ</b></span><span>Δ<sub>r</sub>S° = <b class="s">${sgn(v.S)} J/K</b></span>` }));
+  return box;
+}
+// Teilaufgaben Δr H und Δr S aus Tabelle (schwer)
+function tableQuestions(v, qa, rows) {
+  const altH = [{ v: thermo(v.r, { noCoeff: true }).H, why: 'Koeffizienten ν nicht vergessen: jeder Wert wird mit der Zahl vor dem Stoff multipliziert.' }, { v: -v.H, why: 'Reihenfolge: Produkte minus Edukte.' }];
+  const altS = [{ v: thermo(v.r, { noElemS: true }).S, why: 'Elemente haben ΔfH° = 0, aber ihre Standardentropie S° ist nicht 0 – sie muss mitgerechnet werden.' }, { v: thermo(v.r, { noCoeff: true }).S, why: 'Koeffizienten ν nicht vergessen.' }, { v: -v.S, why: 'Reihenfolge: Produkte minus Edukte.' }];
+  addQ(qa, rows, 'Δ<sub>r</sub>H° in kJ', v.H, altH, `ΔrH° = Σ ν·ΔfH°(Produkte) − Σ ν·ΔfH°(Edukte) = ${de(v.H)} kJ`, 0.5);
+  addQ(qa, rows, 'Δ<sub>r</sub>S° in J/K', v.S, altS, `ΔrS° = Σ ν·S°(Produkte) − Σ ν·S°(Edukte) = ${de(v.S)} J/K`, 0.5);
+}
+function addQ(qa, rows, label, want, alts, expl, abs) {
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', 'aria-label': label.replace(/<[^>]+>/g, '') });
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: label }), inp, why);
+  rows.push({ inp, why, want, alts: alts.filter(a => !close(a.v, want, abs)), expl, abs });
+}
+function checkRows(rows) {
+  let ok = 0, empty = 0;
+  for (const q of rows) {
+    const v = readNum(q.inp.value);
+    if (isNaN(v)) { empty++; q.inp.className = 'num'; q.why.className = 'why hidden'; continue; }
+    const good = close(v, q.want, q.abs);
+    if (good) ok++;
+    q.inp.className = 'num ' + (good ? 'right' : 'wrong');
+    const a = good ? null : q.alts.find(x => close(v, x.v, q.abs));
+    q.why.className = 'why ' + (good ? 'ok' : 'err');
+    q.why.textContent = good ? q.expl : (a ? a.why + '\n' : 'Noch nicht. ') + q.expl;
+  }
+  return { ok, empty };
+}
+
+// ---------------------------------------------------------------------
+// 3 Δr G bei einer Temperatur berechnen
+// ---------------------------------------------------------------------
+function modeDG(card) {
+  const v = makeValues(false);
+  const useC = LEVEL !== 'leicht';
+  const theta = pick([0, 25, 100, 200, 500, 800, 1000, 1200, R(1, 30) * 50]);
+  const TK = useC ? theta + 273 : pick([298, 400, 500, 800, 1000, 1500, 2000, R(3, 40) * 50]);
+  const g = dG(v.H, v.S, TK);
+  card.append(el('h2', null, 'Δ', el('sub', null, 'r'), 'G berechnen'), lvlNote(),
+    el('p', { class: 'task-text', html: `Berechne die freie Reaktionsenthalpie bei <b>${useC ? de(theta) + ' °C' : de(TK) + ' K'}</b> und entscheide, ob die Reaktion dann exergonisch ist.` }),
+    valuesBlock(v));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  if (LEVEL === 'schwer') tableQuestions(v, qa, rows);
+  if (useC) addQ(qa, rows, 'Temperatur T in K', TK, [{ v: theta, why: 'In die Gibbs-Helmholtz-Gleichung gehört die absolute Temperatur in Kelvin.' }, { v: theta - 273, why: 'Umgekehrt: T in K = ϑ in °C + 273.' }], `T = ${de(theta)} + 273 = ${de(TK)} K`, 0.6);
+  const alts = [
+    { v: v.H - TK * v.S, why: 'Einheiten: ΔrS steht in J/K, ΔrH in kJ. Teile ΔrS durch 1000, bevor du einsetzt.' },
+    { v: v.H + TK * v.S / 1000, why: 'Vorzeichen: Es heißt ΔrH − T·ΔrS.' }
+  ];
+  if (useC) alts.push({ v: dG(v.H, v.S, theta), why: 'Die Temperatur muss in Kelvin eingesetzt werden, nicht in °C.' });
+  addQ(qa, rows, 'Δ<sub>r</sub>G in kJ', g, alts, `ΔrG = ${de(v.H)} kJ − ${de(TK)} K · ${de(v.S / 1000, 3)} kJ/K = ${de(g, 1)} kJ`, 0.6);
+  const ex = el('select', { 'aria-label': 'exergonisch oder endergonisch' }, el('option', { value: '' }, 'Die Reaktion ist bei dieser Temperatur …'), el('option', { value: 'ex' }, 'exergonisch'), el('option', { value: 'en' }, 'endergonisch'));
+  qa.append(el('div', null, 'Entscheidung'), ex);
+  const fb = feedback();
+  const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+    const { ok, empty } = checkRows(rows);
+    const exOk = ex.value === (g < 0 ? 'ex' : 'en'); if (ex.value) ex.className = exOk ? 'right' : 'wrong';
+    if (empty || !ex.value) { fb.set('info', 'Fülle alle Felder aus.'); return; }
+    if (ok === rows.length && exOk) { fb.set('ok', 'Richtig!' + (v.r && v.r.id === 'h2o2' ? ' Hinweis: Trotz ΔrG < 0 ist H₂O₂ metastabil – die Reaktion ist kinetisch gehemmt.' : '')); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('dg'); } }
+    else fb.set('err', `${ok} von ${rows.length} Werten richtig` + (exOk ? '.' : '; die Entscheidung folgt aus dem Vorzeichen von ΔrG.'));
+  } }, 'Prüfen');
+  card.append(el('h3', null, 'Deine Rechnung'), qa, el('div', { class: 'bar' }, check), fb);
+}
+
+// ---------------------------------------------------------------------
+// 4 Grenztemperatur
+// ---------------------------------------------------------------------
+function modeGrenz(card) {
+  const v = makeValues(true);
+  const Tg = tGrenz(v.H, v.S), cs = caseOf(v.H, v.S);
+  card.append(el('h2', null, 'Grenztemperatur'), lvlNote(),
+    el('p', { class: 'task-text', html: 'Berechne die Temperatur, bei der Δ<sub>r</sub>G = 0 ist, und gib an, in welchem Temperaturbereich die Reaktion exergonisch ist.' }),
+    valuesBlock(v));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  if (LEVEL === 'schwer') tableQuestions(v, qa, rows);
+  addQ(qa, rows, 'Grenztemperatur T in K', Tg,
+    [{ v: v.H / v.S, why: 'Einheiten: ΔrS in kJ/K umrechnen (durch 1000 teilen) – sonst ist das Ergebnis 1000-mal zu klein.' },
+     { v: v.S / v.H * 1000, why: 'Aus 0 = ΔrH − T·ΔrS folgt T = ΔrH / ΔrS (nicht umgekehrt).' },
+     { v: Tg - 273, why: 'Gefragt ist T in Kelvin, nicht in °C.' }],
+    `0 = ΔrH − T·ΔrS  →  T = ΔrH / ΔrS = ${de(v.H)} kJ / ${de(v.S / 1000, 3)} kJ/K ≈ ${de(Tg)} K`, 2);
+  if (LEVEL !== 'leicht') addQ(qa, rows, 'Grenztemperatur ϑ in °C', Tg - 273, [{ v: Tg + 273, why: 'ϑ in °C = T in K − 273.' }], `ϑ = ${de(Tg)} − 273 ≈ ${de(Tg - 273)} °C`, 2);
+  const range = el('select', { 'aria-label': 'Temperaturbereich' }, el('option', { value: '' }, 'exergonisch …'), el('option', { value: 'hoch' }, 'oberhalb der Grenztemperatur'), el('option', { value: 'tief' }, 'unterhalb der Grenztemperatur'));
+  qa.append(el('div', null, 'Die Reaktion ist'), range);
+  const fb = feedback();
+  const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+    const { ok, empty } = checkRows(rows);
+    const rOk = range.value === cs; if (range.value) range.className = rOk ? 'right' : 'wrong';
+    if (empty || !range.value) { fb.set('info', 'Fülle alle Felder aus.'); return; }
+    if (ok === rows.length && rOk) { fb.set('ok', `Richtig! ${cs === 'hoch' ? 'Endotherm mit Entropiezunahme: Oberhalb von ' + de(Tg) + ' K überwiegt −T·ΔrS.' : 'Exotherm mit Entropieabnahme: Unterhalb von ' + de(Tg) + ' K überwiegt ΔrH.'}`); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('grenz'); } }
+    else fb.set('err', `${ok} von ${rows.length} Werten richtig.` + (rOk ? '' : ' Für den Bereich: Setze z. B. T = 0 K ein – dann ist ΔrG = ΔrH. Ist das negativ, ist die Reaktion bei tiefen Temperaturen exergonisch.'));
+  } }, 'Prüfen');
+  card.append(el('h3', null, 'Deine Rechnung'), qa, el('div', { class: 'bar' }, check), fb);
+}
+
+// =====================================================================
+function show() {
+  const main = document.getElementById('main'); main.innerHTML = '';
+  main.append(terms());
+  const card = el('section', { class: 'card' });
+  ({ erkunden: modeErkunden, faelle: modeFaelle, dg: modeDG, grenz: modeGrenz }[MODE] || modeErkunden)(card);
+  main.append(card);
+}
+document.getElementById('btn-new').addEventListener('click', show);
+if (!MODES.some(m => m.id === MODE)) MODE = 'erkunden';
+renderLevels(); renderModes(); show();
+window.__gh = { RX, SP, thermo, dG, tGrenz, caseOf, setLevel: l => { LEVEL = l; renderLevels(); }, setMode: m => { MODE = m; renderModes(); show(); } };
+})();
+</script>
+</body>
+</html>

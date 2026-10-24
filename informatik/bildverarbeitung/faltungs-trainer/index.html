@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="M. Zimmer">
+<title>Faltungs-Trainer</title>
+<style>
+  :root {
+    --bg: #eef1f5; --panel: #ffffff; --ink: #1d2330; --muted: #5b6475; --line: #c3cad6;
+    --accent: #1f6fd1; --accent-soft: #e6f0fc;
+    --ok: #1e8e44; --ok-soft: #e5f5ea; --err: #c62828; --err-soft: #fdecea; --warn-soft: #fff6dc;
+    --hl: #ffd34d; --hl-soft: #fff3c4;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #185fb5; }
+  button:disabled { opacity: .55; cursor: default; }
+  code, .mono { font-family: var(--mono); }
+  p code, li code, .fb code, .task-text code, dd code { background: #f2f4f8; padding: 0 4px; border-radius: 3px; }
+
+  .topbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 20px; background: linear-gradient(180deg, #4a90dd, #1259a8); color: #fff; }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; align-items: center; }
+  .levels span { font-size: 13px; padding: 0 6px 0 4px; opacity: .9; }
+  .levels button { background: transparent; color: #fff; border: none; border-radius: 6px; padding: 4px 11px; }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #12457f; font-weight: 600; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .modes button { display: flex; align-items: baseline; gap: 7px; border-radius: 8px; padding: 6px 12px; }
+  .modes button .nr { font-weight: 700; color: var(--accent); }
+  .modes button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .modes button.on .nr { color: #fff; }
+  .modes .cnt { font-size: 12px; color: var(--ok); font-weight: 600; }
+  .modes button.on .cnt { color: #d9ffe3; }
+
+  main { padding: 14px 20px 30px; max-width: 1250px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card h2 { margin: 0 0 6px; font-size: 18px; }
+  .card h3 { margin: 14px 0 6px; font-size: 15px; }
+  .intro p { margin: 4px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .task-text { margin: 4px 0 10px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .note { font-size: 13.5px; color: var(--muted); background: #f4f6f9; border-left: 3px solid #9fb6d8; padding: 5px 10px; border-radius: 0 6px 6px 0; margin: 6px 0; }
+  .lvl { font-size: 13px; color: var(--muted); background: #f4f6f9; border-left: 3px solid #9fb6d8; padding: 4px 10px; border-radius: 0 6px 6px 0; margin: 0 0 8px; }
+  details.terms { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.terms summary { cursor: pointer; font-weight: 600; }
+  details.terms dl { margin: 8px 0 4px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+  details.terms dt { font-weight: 600; } details.terms dd { margin: 0; }
+  .lbl-small { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  /* Pixel- und Filtertabellen */
+  .scroll { overflow-x: auto; max-width: 100%; }
+  table.grid { align-self: flex-start; border-collapse: collapse; font-family: var(--mono); font-size: 15px; }
+  table.grid th { font: 600 12px var(--sans); color: var(--muted); padding: 2px 6px; }
+  table.grid td { border: 1px solid #9aa3b2; width: 42px; height: 36px; text-align: center; padding: 0; background: #fff; }
+  table.grid td.edge { background: #eceff3; color: var(--muted); }
+  table.grid td.nb { background: var(--hl-soft); }
+  table.grid td.ctr { background: var(--hl); font-weight: 700; }
+  table.grid td.ask { background: var(--accent-soft); }
+  table.grid td input { width: 100%; height: 100%; border: none; background: transparent; font: 15px var(--mono); text-align: center; padding: 0; }
+  table.grid td.right { background: var(--ok-soft); } table.grid td.wrong { background: var(--err-soft); }
+  table.grid.big td { width: 52px; }
+  table.filter td { background: #f7f3ff; border-color: #9d8bd0; width: 48px; }
+  table.filter td.zero { color: #9aa3b2; }
+  table.filter td.neg { color: #b3261e; font-weight: 600; }
+  table.filter td input { color: inherit; }
+  .fsum { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .gray { display: inline-block; width: 12px; height: 12px; border: 1px solid #888; vertical-align: -1px; margin-right: 3px; }
+
+  /* Bilder */
+  .pic { display: flex; flex-direction: column; gap: 4px; }
+  .pic canvas { image-rendering: pixelated; border: 1.5px solid #222; background: #fff; width: 256px; max-width: 100%; height: auto; }
+  .pic .cap { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .hover { font: 12.5px var(--mono); color: var(--accent); min-height: 18px; }
+
+  /* Auswahl */
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+  .choice { text-align: left; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; background: #fff; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .choice:hover { border-color: var(--accent); }
+  .choice.right { border-color: var(--ok); background: var(--ok-soft); }
+  .choice.wrong { border-color: var(--err); background: var(--err-soft); }
+  .choice .why { font-size: 13px; }
+
+  /* Feedback */
+  .fb { margin-top: 10px; padding: 8px 12px; border-radius: 8px; display: none; white-space: pre-line; }
+  .fb.show { display: block; }
+  .fb.ok { background: var(--ok-soft); color: #145c2e; border: 1px solid #9fd8b2; }
+  .fb.err { background: var(--err-soft); color: #8c1c1c; border: 1px solid #f0b4b0; }
+  .fb.info { background: var(--warn-soft); color: #6b5100; border: 1px solid #ecd58c; }
+  .calc { font: 14px/1.6 var(--mono); background: #fbfcfe; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; overflow-x: auto; white-space: pre; margin-top: 8px; }
+
+  input.num { width: 84px; font: 15px var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; text-align: center; }
+  input.num.right { background: var(--ok-soft); border-color: var(--ok); } input.num.wrong { background: var(--err-soft); border-color: var(--err); }
+  select { font: 15px var(--sans); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--line); background: #fff; }
+  .qa { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; max-width: 720px; }
+  .qa .q { min-width: 0; }
+  .qa .why { grid-column: 1 / -1; font-size: 13.5px; margin: -4px 0 4px; }
+  .qa .why.ok { color: #145c2e; } .qa .why.err { color: #8c1c1c; }
+
+  pre.code { margin: 0; font-family: var(--mono); font-size: 14px; line-height: 1.45; background: #fbfcfe; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; overflow-x: auto; }
+  .k { color: #1fae35; } .t { color: #f07800; } .f { color: #1a7fe8; } .cm { color: #8a93a3; }
+
+  .hidden { display: none !important; }
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; max-width: 1250px; }
+  @media (max-width: 700px) {
+    .topbar, .modes, main { padding-left: 12px; padding-right: 12px; }
+    table.grid td { width: 36px; height: 32px; } table.grid.big td { width: 44px; }
+    .qa { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media print {
+    .topbar, .modes, .bar, footer { display: none; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>ALGORITHMEN <small>Training: Faltung (Mehrpixeloperationen)</small></h1>
+  <span class="spacer"></span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <button id="btn-new" type="button">Neue Aufgabe</button>
+</header>
+
+<nav class="modes" id="modes" aria-label="Aufgabentypen"></nav>
+
+<main id="main"></main>
+
+<footer>
+  Übungen zu I01_alg, Blätter 03 „Faltung“ und 04 „Faltung – Puzzle“ (IMP 10). Die Aufgaben werden zufällig erzeugt; mit „Neue Aufgabe“ gibt es jederzeit eine weitere.
+  Der Lernfortschritt wird nur in diesem Browser gespeichert. · M. Zimmer
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+//  Hilfsfunktionen
+// =====================================================================
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; } return a; }
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+const clamp = v => Math.max(0, Math.min(255, v));
+// Zahl wie in Processing/Java nach (int): Nachkommastellen abschneiden
+const toInt = v => Math.trunc(v);
+function fmt(v) {
+  if (Number.isInteger(v)) return String(v);
+  const s = (Math.round(v * 1000) / 1000).toString().replace('.', ',');
+  return s;
+}
+// Eingabe lesen: akzeptiert -3, 4,5 und 4.5
+function readNum(s) {
+  const t = String(s).trim().replace(',', '.').replace(/\s/g, '').replace('−', '-');
+  if (t === '' || !/^-?\d+(\.\d+)?$/.test(t)) return NaN;
+  return Number(t);
+}
+// Brucheingabe für das Labor: 1/9, -2, 0,5
+function readFrac(s) {
+  const t = String(s).trim().replace(',', '.').replace('−', '-');
+  const m = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if (m) return Number(m[2]) === 0 ? NaN : Number(m[1]) / Number(m[2]);
+  return readNum(t);
+}
+const near = (a, b) => Math.abs(a - b) < 1e-9;
+
+const STORE = 'faltTraining.score';
+let SCORE = {};
+try { SCORE = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { SCORE = {}; }
+function addScore(id) { SCORE[id] = (SCORE[id] || 0) + 1; try { localStorage.setItem(STORE, JSON.stringify(SCORE)); } catch (e) {} renderModes(); }
+let LEVEL = 'leicht';
+try { LEVEL = localStorage.getItem('faltTraining.level') || 'leicht'; } catch (e) {}
+let MODE = 'labor';
+try { MODE = localStorage.getItem('faltTraining.mode') || 'labor'; } catch (e) {}
+
+// =====================================================================
+//  Filter-Katalog  (Anzeige: Zeile = y-Richtung, Spalte = x-Richtung,
+//  wie auf Blatt 03: die obere Zeile gehört zu den Pixeln über dem Pixel)
+// =====================================================================
+const N9 = 1 / 9, N16 = 1 / 16;
+const FILTERS = {
+  ident:   { name: 'Keine Änderung (Identität)', m: [[0,0,0],[0,1,0],[0,0,0]], txt: ['0','0','0','0','1','0','0','0','0'],
+             eff: 'Das Bild bleibt gleich: nur das Pixel selbst zählt, mit Faktor 1.' },
+  blur:    { name: 'Weichzeichnen (Mittelwert)', m: [[N9,N9,N9],[N9,N9,N9],[N9,N9,N9]], txt: Array(9).fill('1/9'),
+             eff: 'Jedes Pixel wird zum Mittelwert seiner 9 Pixel – Kanten und Rauschen werden weich. Summe 1: Flächen behalten ihre Helligkeit.' },
+  gauss:   { name: 'Weichzeichnen (gewichtet)', m: [[1,2,1],[2,4,2],[1,2,1]].map(r => r.map(v => v * N16)), txt: ['1/16','2/16','1/16','2/16','4/16','2/16','1/16','2/16','1/16'],
+             eff: 'Wie der Mittelwert, aber nahe Pixel zählen stärker (Idee des Gaußfilters). Summe 1.' },
+  sharpen: { name: 'Schärfen', m: [[0,-1,0],[-1,5,-1],[0,-1,0]],
+             eff: 'Das Pixel zählt fünffach, die vier Nachbarn werden abgezogen: Unterschiede zu den Nachbarn werden verstärkt. Summe 1: Flächen bleiben gleich hell.' },
+  laplace: { name: 'Kanten finden (alle Richtungen)', m: [[0,-1,0],[-1,4,-1],[0,-1,0]],
+             eff: 'Summe 0: In einfarbigen Flächen heben sich die Werte auf – dort wird es schwarz. Nur wo sich die Helligkeit ändert (Kanten), bleibt etwas übrig.' },
+  sobelH:  { name: 'Kanten finden (waagerechte Kanten)', m: [[-1,-2,-1],[0,0,0],[1,2,1]],
+             eff: 'Zeile darunter minus Zeile darüber, Summe 0: Hell wird es nur, wo es nach unten heller wird – also an waagerechten Kanten. (Filter von Blatt 03.)' },
+  sobelV:  { name: 'Kanten finden (senkrechte Kanten)', m: [[-1,0,1],[-2,0,2],[-1,0,1]],
+             eff: 'Spalte rechts minus Spalte links, Summe 0: Hell wird es nur, wo es nach rechts heller wird – also an senkrechten Kanten.' },
+  relief:  { name: 'Relief', m: [[-2,-1,0],[-1,1,1],[0,1,2]],
+             eff: 'Unten rechts positiv, oben links negativ, Summe 1: Kanten wirken wie von schräg beleuchtet, Flächen bleiben erhalten.' },
+  bright:  { name: 'Aufhellen', m: [[0,0,0],[0,2,0],[0,0,0]],
+             eff: 'Summe 2: Jede Intensität wird verdoppelt (und bei 255 abgeschnitten).' },
+  dark:    { name: 'Abdunkeln', m: [[0,0,0],[0,0.5,0],[0,0,0]], txt: ['0','0','0','0','1/2','0','0','0','0'],
+             eff: 'Summe 1/2: Jede Intensität wird halbiert.' }
+};
+function ftxt(F) { return F.txt || F.m.flat().map(v => fmt(v)); }
+function fsum(m) { return m.flat().reduce((a, b) => a + b, 0); }
+
+// =====================================================================
+//  Faltung (wie Methode faltung auf Blatt 04: Randpixel bleiben)
+// =====================================================================
+// img: {w, h, d: Float/Int-Array Graustufen}  oder  {w,h,r,g,b}
+function convGray(img, m, opts = {}) {
+  const n = m.length, half = Math.floor(n / 2), out = img.d.slice();
+  for (let x = half; x < img.w - half; x++) for (let y = half; y < img.h - half; y++) {
+    let s = 0;
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) s += m[r][c] * img.d[(y - half + r) * img.w + (x - half + c)];
+    out[y * img.w + x] = opts.raw ? s : toInt(clamp(s));
+  }
+  return { w: img.w, h: img.h, d: out };
+}
+function convRGB(img, m) {
+  const g = ch => convGray({ w: img.w, h: img.h, d: img[ch] }, m).d;
+  return { w: img.w, h: img.h, r: g('r'), g: g('g'), b: g('b') };
+}
+// Wert eines einzelnen Pixels
+function pixelValue(G, m, x, y) {
+  const n = m.length, half = Math.floor(n / 2); let s = 0;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) s += m[r][c] * G[y - half + r][x - half + c];
+  return s;
+}
+const transpose = m => m[0].map((_, c) => m.map(r => r[c]));
+const rot180 = m => m.slice().reverse().map(r => r.slice().reverse());
+
+// =====================================================================
+//  Beispielbilder (werden gezeichnet, keine externen Dateien)
+// =====================================================================
+const IMG_W = 128, IMG_H = 96;
+function makeImage(kind) {
+  const cv = document.createElement('canvas'); cv.width = IMG_W; cv.height = IMG_H;
+  const c = cv.getContext('2d');
+  if (kind === 'haus') {
+    const sky = c.createLinearGradient(0, 0, 0, 60); sky.addColorStop(0, '#5b9be0'); sky.addColorStop(1, '#cfe5fb');
+    c.fillStyle = sky; c.fillRect(0, 0, IMG_W, 62);
+    c.fillStyle = '#ffd23a'; c.beginPath(); c.arc(104, 18, 10, 0, 7); c.fill();
+    c.fillStyle = '#4c9a3f'; c.fillRect(0, 62, IMG_W, 34);
+    c.fillStyle = '#3a7d31'; for (let i = 0; i < 8; i++) c.fillRect(0, 66 + i * 4, IMG_W, 2);
+    c.fillStyle = '#d9c7a3'; c.fillRect(24, 38, 46, 36);
+    c.fillStyle = '#b3402e'; c.beginPath(); c.moveTo(18, 40); c.lineTo(47, 16); c.lineTo(76, 40); c.closePath(); c.fill();
+    c.fillStyle = '#6b4a2b'; c.fillRect(42, 54, 11, 20);
+    c.fillStyle = '#2d4f7a'; c.fillRect(29, 45, 9, 8); c.fillRect(57, 45, 9, 8);
+    c.fillStyle = '#6b4a2b'; c.fillRect(92, 48, 5, 22); c.fillStyle = '#2f7a35'; c.beginPath(); c.arc(94.5, 44, 12, 0, 7); c.fill();
+  } else if (kind === 'schach') {
+    for (let x = 0; x < IMG_W; x += 16) for (let y = 0; y < IMG_H; y += 16) { c.fillStyle = ((x + y) / 16) % 2 ? '#202020' : '#e8e8e8'; c.fillRect(x, y, 16, 16); }
+    c.fillStyle = '#d23c3c'; c.beginPath(); c.arc(64, 48, 22, 0, 7); c.fill();
+  } else if (kind === 'text') {
+    c.fillStyle = '#f2f2f2'; c.fillRect(0, 0, IMG_W, IMG_H);
+    c.fillStyle = '#1a1a1a'; c.font = 'bold 44px Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('IMP', 64, 50);
+    c.strokeStyle = '#1f6fd1'; c.lineWidth = 3; c.strokeRect(8, 8, 112, 80);
+  }
+  const id = c.getImageData(0, 0, IMG_W, IMG_H).data;
+  const r = new Array(IMG_W * IMG_H), g = r.slice(), b = r.slice();
+  for (let i = 0; i < IMG_W * IMG_H; i++) { r[i] = id[i * 4]; g[i] = id[i * 4 + 1]; b[i] = id[i * 4 + 2]; }
+  if (kind === 'rauschen') {
+    for (let i = 0; i < IMG_W * IMG_H; i++) { const x = i % IMG_W, y = Math.floor(i / IMG_W); const base = x < 64 ? 70 : 190; const v = clamp(base + R(-45, 45)); r[i] = g[i] = b[i] = v; }
+  }
+  return { w: IMG_W, h: IMG_H, r, g, b };
+}
+const toGray = img => ({ w: img.w, h: img.h, d: img.r.map((v, i) => toInt(0.299 * v + 0.587 * img.g[i] + 0.114 * img.b[i])) });
+const IMAGES = { haus: 'Haus', schach: 'Schachbrett', text: 'Schrift', rauschen: 'Rauschen' };
+const IMGCACHE = {};
+function getImage(kind) { return IMGCACHE[kind] || (IMGCACHE[kind] = makeImage(kind)); }
+
+function drawPic(img, caption, opts = {}) {
+  const cv = el('canvas', { width: img.w, height: img.h, 'aria-label': caption });
+  const ctx = cv.getContext('2d'), id = ctx.createImageData(img.w, img.h);
+  for (let i = 0; i < img.w * img.h; i++) {
+    const r = img.d ? img.d[i] : img.r[i], g = img.d ? img.d[i] : img.g[i], b = img.d ? img.d[i] : img.b[i];
+    id.data[i * 4] = r; id.data[i * 4 + 1] = g; id.data[i * 4 + 2] = b; id.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(id, 0, 0);
+  const hov = el('div', { class: 'hover' }, ' ');
+  cv.addEventListener('mousemove', ev => {
+    const rc = cv.getBoundingClientRect();
+    const x = Math.floor((ev.clientX - rc.left) / rc.width * img.w), y = Math.floor((ev.clientY - rc.top) / rc.height * img.h);
+    if (x < 0 || y < 0 || x >= img.w || y >= img.h) return;
+    const i = y * img.w + x;
+    hov.textContent = img.d ? `(${x}|${y})  Intensität ${img.d[i]}` : `(${x}|${y})  R ${img.r[i]}  G ${img.g[i]}  B ${img.b[i]}`;
+  });
+  cv.addEventListener('mouseleave', () => { hov.textContent = ' '; });
+  if (opts.width) cv.style.width = opts.width + 'px';
+  return el('div', { class: 'pic' }, el('span', { class: 'cap' }, caption), cv, opts.noHover ? null : hov);
+}
+
+// Filtertabelle (nur Anzeige)
+function filterTable(F, label) {
+  const t = ftxt(F); const n = F.m.length;
+  const tb = el('table', { class: 'grid filter', 'aria-label': label || 'Filtermatrix' });
+  for (let r = 0; r < n; r++) {
+    const tr = el('tr');
+    for (let c = 0; c < n; c++) {
+      const v = F.m[r][c];
+      tr.append(el('td', { class: v === 0 ? 'zero' : v < 0 ? 'neg' : '' }, t[r * n + c]));
+    }
+    tb.append(tr);
+  }
+  return el('div', { class: 'col' }, el('span', { class: 'lbl-small' }, label || 'Filtermatrix'), tb,
+    el('div', { class: 'fsum' }, 'Summe der Einträge: ' + fmt(Math.round(fsum(F.m) * 1e9) / 1e9)));
+}
+
+// Pixelausschnitt mit Koordinaten
+function pixelTable(G, opts = {}) {
+  const h = G.length, w = G[0].length;
+  const tb = el('table', { class: 'grid' + (opts.big ? ' big' : ''), 'aria-label': opts.label || 'Intensitäten' });
+  const head = el('tr', null, el('th', null, 'y\\x')); for (let x = 0; x < w; x++) head.append(el('th', null, String(x)));
+  tb.append(head);
+  const cells = [];
+  for (let y = 0; y < h; y++) {
+    const tr = el('tr', null, el('th', null, String(y)));
+    cells.push([]);
+    for (let x = 0; x < w; x++) {
+      const td = el('td');
+      const cls = opts.cls ? opts.cls(x, y) : '';
+      if (cls) td.className = cls;
+      if (opts.input && opts.input(x, y)) {
+        const inp = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': `neue Intensität bei (${x}|${y})` });
+        td.append(inp); td.classList.add('ask'); td.inp = inp;
+      } else td.textContent = opts.val ? opts.val(x, y) : String(G[y][x]);
+      tr.append(td); cells[y].push(td);
+    }
+    tb.append(tr);
+  }
+  tb.cells = cells;
+  return el('div', { class: 'scroll' }, tb);
+}
+
+// Rechenweg wie auf Blatt 03
+function calcText(G, F, x, y, opts = {}) {
+  const n = F.m.length, half = Math.floor(n / 2), t = ftxt(F);
+  const lines = []; const terms = [];
+  for (let r = 0; r < n; r++) {
+    const parts = [];
+    for (let c = 0; c < n; c++) {
+      const xx = x - half + c, yy = y - half + r;
+      parts.push(`(${t[r * n + c]})·I(${xx}|${yy})`);
+      terms.push({ f: F.m[r][c], v: G[yy][xx], ft: t[r * n + c] });
+    }
+    lines.push((r === 0 ? `I_neu(${x}|${y}) =  ` : '               + ') + parts.join(' + '));
+  }
+  const nz = terms.filter(q => q.f !== 0);
+  const prod = nz.map(q => `(${q.ft})·${q.v}`).join(' + ') || '0';
+  const s = pixelValue(G, F.m, x, y);
+  lines.push('');
+  lines.push('             = ' + prod);
+  lines.push('             = ' + fmt(Math.round(s * 1e6) / 1e6));
+  if (opts.clampInt) {
+    const c = clamp(s);
+    if (c !== s) lines.push(`  begrenzen auf 0…255 → ${fmt(c)}`);
+    if (!Number.isInteger(c)) lines.push(`  (int) schneidet die Nachkommastellen ab → ${toInt(c)}`);
+  }
+  return lines.join('\n');
+}
+
+function feedback() {
+  const box = el('div', { class: 'fb', role: 'status' });
+  box.set = (kind, text, html) => { box.className = 'fb show ' + kind; if (html) box.innerHTML = text; else box.textContent = text; };
+  box.clear = () => { box.className = 'fb'; box.textContent = ''; };
+  return box;
+}
+const LEVEL_TXT = {
+  leicht: 'Stufe leicht: Filter mit Werten 0, 1 und 2, kleine Intensitäten wie auf Blatt 03, ohne Begrenzung.',
+  mittel: 'Stufe mittel: Filter auch mit negativen Werten (Kanten, Schärfen, Relief), kleine Intensitäten, ohne Begrenzung – auch negative Ergebnisse sind möglich.',
+  schwer: 'Stufe schwer: Intensitäten 0…255 und Begrenzung wie in der Methode faltung: Ergebnis auf 0…255 begrenzen, dann mit (int) die Nachkommastellen abschneiden.'
+};
+const lvlNote = () => el('div', { class: 'lvl' }, LEVEL_TXT[LEVEL]);
+
+// zufällige Filter je Stufe
+function randomTaskFilter() {
+  if (LEVEL === 'leicht') {
+    if (Math.random() < 0.4) return FILTERS[pick(['ident', 'bright'])];
+    const m = [[0,0,0],[0,0,0],[0,0,0]]; const k = R(2, 4);
+    for (let i = 0; i < k; i++) m[R(0, 2)][R(0, 2)] = R(1, 2);
+    return { name: 'Filter', m };
+  }
+  if (LEVEL === 'mittel') {
+    if (Math.random() < 0.7) return FILTERS[pick(['sobelH', 'sobelV', 'laplace', 'sharpen', 'relief'])];
+    const m = [[0,0,0],[0,0,0],[0,0,0]]; for (let i = 0; i < 4; i++) m[R(0, 2)][R(0, 2)] = R(-2, 2);
+    m[1][1] = R(1, 3); return { name: 'Filter', m };
+  }
+  return FILTERS[pick(['blur', 'gauss', 'sharpen', 'laplace', 'sobelH', 'sobelV', 'relief', 'bright', 'dark'])];
+}
+function randomPatch(w, h) {
+  const G = [];
+  if (LEVEL === 'schwer') {
+    // Bildausschnitt mit Kante, damit Begrenzung und Kanten sichtbar werden
+    const base = R(40, 120), step = R(60, 120), vert = Math.random() < 0.5, pos = R(1, (vert ? w : h) - 2);
+    for (let y = 0; y < h; y++) { G.push([]); for (let x = 0; x < w; x++) G[y].push(clamp(base + ((vert ? x : y) >= pos ? step : 0) + R(-12, 12))); }
+  } else for (let y = 0; y < h; y++) { G.push([]); for (let x = 0; x < w; x++) G[y].push(R(1, 9)); }
+  return G;
+}
+const expectedValue = (s) => LEVEL === 'schwer' ? toInt(clamp(s)) : s;
+
+// =====================================================================
+//  Aufgabentypen
+// =====================================================================
+const MODES = [
+  { id: 'labor', nr: 1, title: 'Ausprobieren', count: false },
+  { id: 'pixel', nr: 2, title: 'Ein Pixel berechnen' },
+  { id: 'patch', nr: 3, title: 'Ausschnitt falten' },
+  { id: 'erkennen', nr: 4, title: 'Filter erkennen' },
+  { id: 'summe', nr: 5, title: 'Summe der Einträge' },
+  { id: 'code', nr: 6, title: 'Methode faltung verstehen' }
+];
+
+function renderLevels() {
+  const nav = document.getElementById('levels'); nav.innerHTML = '';
+  nav.append(el('span', null, 'Stufe'));
+  for (const l of ['leicht', 'mittel', 'schwer']) nav.append(el('button', { type: 'button', class: l === LEVEL ? 'on' : '', 'aria-pressed': String(l === LEVEL),
+    onclick: () => { LEVEL = l; try { localStorage.setItem('faltTraining.level', l); } catch (e) {} renderLevels(); show(); } }, l));
+}
+function renderModes() {
+  const nav = document.getElementById('modes'); nav.innerHTML = '';
+  for (const m of MODES) {
+    const n = SCORE[m.id] || 0;
+    nav.append(el('button', { type: 'button', class: m.id === MODE ? 'on' : '', 'aria-pressed': String(m.id === MODE),
+      onclick: () => { MODE = m.id; try { localStorage.setItem('faltTraining.mode', m.id); } catch (e) {} renderModes(); show(); } },
+      el('span', { class: 'nr' }, String(m.nr)), m.title, m.count === false || !n ? null : el('span', { class: 'cnt' }, '✓ ' + n)));
+  }
+}
+
+function terms() {
+  return el('details', { class: 'terms' }, el('summary', null, 'Begriffe zur Faltung'),
+    el('dl', null,
+      el('dt', null, 'Intensität'), el('dd', null, 'Helligkeit eines Graustufen-Pixels von 0 (schwarz) bis 255 (weiß). Bei Farbbildern wird jeder Farbkanal (rot, grün, blau) einzeln gefaltet.'),
+      el('dt', null, 'Filtermatrix'), el('dd', { html: 'Quadratische Tabelle mit ungerader Seitenlänge (3×3, 5×5 …). Ihre <b>Mitte</b> liegt auf dem Pixel, das neu berechnet wird; die obere Zeile gehört zu den Pixeln <b>darüber</b>, die linke Spalte zu den Pixeln <b>links</b> davon.' }),
+      el('dt', null, 'Faltung'), el('dd', null, 'Jede Intensität unter der Matrix wird mit dem Eintrag darüber multipliziert, alle Produkte werden addiert. Das Ergebnis ist die neue Intensität des mittleren Pixels.'),
+      el('dt', null, 'Randpixel'), el('dd', null, 'Am Rand ragt die Matrix über das Bild hinaus. Wie auf Blatt 03 bleiben die Randpixel daher unverändert (bei 3×3 ein Pixel breit, bei 5×5 zwei).'),
+      el('dt', null, 'Begrenzung'), el('dd', { html: 'Ergebnisse unter 0 werden 0, über 255 werden 255. Danach schneidet <code>(int)</code> die Nachkommastellen ab: <code>(int) 57.9</code> ergibt 57.' }),
+      el('dt', null, 'Summe der Einträge'), el('dd', null, 'Summe 1: einfarbige Flächen bleiben gleich hell. Summe 0: einfarbige Flächen werden schwarz, nur Kanten bleiben. Summe > 1 hellt auf, Summe zwischen 0 und 1 dunkelt ab.')));
+}
+
+// ---------------------------------------------------------------------
+// 1 Ausprobieren (Labor) – wie die Tabelle 03_faltung.ods, aber mit Bildern
+// ---------------------------------------------------------------------
+let LAB = { kind: 'haus', gray: false, txt: FILTERS.sobelH.m.flat().map(v => fmt(v)) };
+function modeLabor(card) {
+  card.append(el('h2', null, 'Ausprobieren'),
+    el('p', { class: 'task-text', html: 'Trage eine Filtermatrix ein oder wähle eine Vorlage. Brüche wie <code>1/9</code> sind erlaubt. Rechts siehst du sofort das gefaltete Bild – fahre mit der Maus über die Bilder, um Intensitäten zu vergleichen. Probiere wie auf Blatt 03 auch aus, was passiert, wenn du jeden Wert verdoppelst.' }));
+  const sel = el('select', { 'aria-label': 'Vorlage' }, el('option', { value: '' }, 'Vorlage wählen …'),
+    ...Object.entries(FILTERS).map(([k, F]) => el('option', { value: k }, F.name)));
+  const imgSel = el('select', { 'aria-label': 'Bild' }, ...Object.entries(IMAGES).map(([k, n]) => el('option', { value: k }, n)));
+  imgSel.value = LAB.kind;
+  const grayBox = el('input', { type: 'checkbox', id: 'graybox' }); grayBox.checked = LAB.gray;
+  const tb = el('table', { class: 'grid filter', 'aria-label': 'Filtermatrix bearbeiten' });
+  const inputs = [];
+  for (let r = 0; r < 3; r++) { const tr = el('tr'); for (let c = 0; c < 3; c++) { const inp = el('input', { type: 'text', 'aria-label': `Filter Zeile ${r + 1} Spalte ${c + 1}` }); inp.value = LAB.txt[r * 3 + c]; inputs.push(inp); tr.append(el('td', null, inp)); } tb.append(tr); }
+  const sum = el('div', { class: 'fsum' });
+  const pics = el('div', { class: 'row' });
+  const msg = el('div', { class: 'note hidden' });
+  function update() {
+    LAB.txt = inputs.map(i => i.value);
+    const vals = LAB.txt.map(readFrac);
+    inputs.forEach((inp, i) => { inp.parentElement.className = isNaN(vals[i]) ? 'wrong' : vals[i] === 0 ? 'zero' : vals[i] < 0 ? 'neg' : ''; });
+    if (vals.some(isNaN)) { sum.textContent = 'Bitte in jedes Feld eine Zahl oder einen Bruch eintragen.'; return; }
+    const m = [vals.slice(0, 3), vals.slice(3, 6), vals.slice(6, 9)];
+    const s = Math.round(fsum(m) * 1e9) / 1e9;
+    sum.textContent = 'Summe der Einträge: ' + fmt(s) + (near(s, 1) ? '  → Flächen bleiben gleich hell' : near(s, 0) ? '  → Flächen werden schwarz' : s > 1 ? '  → hellt auf' : s > 0 ? '  → dunkelt ab' : '  → Flächen werden schwarz (negativ wird 0)');
+    const img = getImage(LAB.kind), src = LAB.gray ? toGray(img) : img;
+    const res = LAB.gray ? convGray(src, m) : convRGB(src, m);
+    pics.innerHTML = '';
+    pics.append(drawPic(src, 'Original'), drawPic(res, 'Nach der Faltung'));
+    const known = Object.values(FILTERS).find(F => F.m.flat().every((v, i) => near(v, m.flat()[i])));
+    msg.classList.toggle('hidden', !known);
+    if (known) msg.textContent = known.name + ': ' + known.eff;
+  }
+  inputs.forEach(i => i.addEventListener('input', update));
+  sel.addEventListener('change', () => { const F = FILTERS[sel.value]; if (!F) return; ftxt(F).forEach((t, i) => { inputs[i].value = t; }); update(); });
+  imgSel.addEventListener('change', () => { LAB.kind = imgSel.value; update(); });
+  grayBox.addEventListener('change', () => { LAB.gray = grayBox.checked; update(); });
+  const dbl = el('button', { type: 'button', onclick: () => { inputs.forEach(inp => { const v = readFrac(inp.value); if (!isNaN(v)) inp.value = fmt(Math.round(2 * v * 1e6) / 1e6); }); update(); } }, 'Alle Werte verdoppeln');
+  card.append(el('div', { class: 'row' },
+    el('div', { class: 'col' }, el('span', { class: 'lbl-small' }, 'Filtermatrix'), tb, sum,
+      el('div', { class: 'bar' }, sel, dbl),
+      el('div', { class: 'bar' }, el('label', null, 'Bild: ', imgSel), el('label', { for: 'graybox' }, grayBox, ' in Graustufen'))),
+    el('div', { class: 'col' }, pics, msg)));
+  update();
+}
+
+// ---------------------------------------------------------------------
+// 2 Ein Pixel berechnen
+// ---------------------------------------------------------------------
+function modePixel(card) {
+  const W = 6, H = 5, G = randomPatch(W, H);
+  const F = randomTaskFilter();
+  const x = R(1, W - 2), y = R(1, H - 2);
+  const raw = pixelValue(G, F.m, x, y), want = expectedValue(raw);
+  card.append(el('h2', null, 'Ein Pixel berechnen'), lvlNote(),
+    el('p', { class: 'task-text', html: `Berechne die neue Intensität des Pixels an Position <b>(${x}|${y})</b>, wenn die Filtermatrix angewendet wird. Das Pixel ist gelb markiert, die Pixel unter der Matrix hellgelb.` }));
+  const pt = pixelTable(G, { cls: (cx, cy) => cx === x && cy === y ? 'ctr' : Math.abs(cx - x) <= 1 && Math.abs(cy - y) <= 1 ? 'nb' : '' });
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', 'aria-label': 'neue Intensität' });
+  const fb = feedback(); const calc = el('div', { class: 'calc hidden' });
+  // typische Fehler
+  const alts = [];
+  const add = (v, why) => { const e = expectedValue(v); if (!near(e, want) && !alts.some(a => near(a.v, e))) alts.push({ v: e, why }); };
+  add(pixelValue(G, transpose(F.m), x, y), 'Du hast die Matrix gekippt: Ihre Zeilen gehören zur y-Richtung (oben/unten), ihre Spalten zur x-Richtung (links/rechts).');
+  add(pixelValue(G, rot180(F.m), x, y), 'Du hast die Matrix verkehrt herum angelegt: Die obere Zeile gehört zu den Pixeln darüber (y−1), die linke Spalte zu den Pixeln links (x−1).');
+  if (x !== y && y >= 1 && y <= W - 2 && x >= 1 && x <= H - 2) add(pixelValue(G, F.m, y, x), `Du hast x und y vertauscht: (${x}|${y}) heißt Spalte ${x}, Zeile ${y}.`);
+  add(pixelValue(G, F.m.map(r => r.map(Math.abs)), x, y), 'Achte auf die Vorzeichen: Negative Einträge werden abgezogen.');
+  if (LEVEL === 'schwer') {
+    if (clamp(raw) !== raw) alts.push({ v: raw, why: 'Richtig gerechnet – aber in der Methode faltung wird das Ergebnis noch auf den Bereich 0…255 begrenzt.', partial: true });
+    if (!Number.isInteger(clamp(raw))) alts.push({ v: Math.round(clamp(raw)), why: '(int) rundet nicht, sondern schneidet die Nachkommastellen ab.', partial: true });
+  }
+  const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+    const v = readNum(inp.value);
+    if (isNaN(v)) { fb.set('info', 'Trage eine Zahl ein.'); return; }
+    calc.textContent = calcText(G, F, x, y, { clampInt: LEVEL === 'schwer' }); calc.classList.remove('hidden');
+    if (near(v, want)) { inp.className = 'num right'; fb.set('ok', 'Richtig! So sieht der Rechenweg aus:'); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('pixel'); } return; }
+    inp.className = 'num wrong';
+    const a = alts.find(q => q.partial ? Math.abs(q.v - v) < 0.01 : near(q.v, v));
+    fb.set('err', (a ? a.why : 'Noch nicht richtig. Vergleiche Schritt für Schritt mit dem Rechenweg.') + '\nRichtig wäre ' + fmt(want) + '.');
+  } }, 'Prüfen');
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') check.click(); });
+  card.append(el('div', { class: 'row' }, el('div', { class: 'col' }, el('span', { class: 'lbl-small' }, 'Intensitäten des Originalbildes'), pt), filterTable(F)),
+    el('div', { class: 'bar' }, el('label', { html: `I<sub>neu</sub>(${x}|${y}) = ` }, inp), check), fb, calc);
+}
+
+// ---------------------------------------------------------------------
+// 3 Ausschnitt falten (alle inneren Pixel, Rand bleibt)
+// ---------------------------------------------------------------------
+function modePatch(card) {
+  const W = 5, H = 5, G = randomPatch(W, H), F = randomTaskFilter();
+  const res = G.map((row, y) => row.map((v, x) => (x === 0 || y === 0 || x === W - 1 || y === H - 1) ? v : expectedValue(pixelValue(G, F.m, x, y))));
+  card.append(el('h2', null, 'Ausschnitt falten'), lvlNote(),
+    el('p', { class: 'task-text', html: 'Berechne die Intensitäten des neuen Bildes. Die <b>Randpixel</b> (grau) bleiben wie auf Blatt 03 unverändert – trage nur die inneren Pixel ein. Tipp: Klicke auf ein Feld, dann wird links markiert, welche Pixel dazu gehören.' }));
+  const left = pixelTable(G, { label: 'Original' });
+  const right = pixelTable(G, { label: 'neues Bild', cls: (x, y) => (x === 0 || y === 0 || x === W - 1 || y === H - 1) ? 'edge' : '',
+    input: (x, y) => !(x === 0 || y === 0 || x === W - 1 || y === H - 1) });
+  const lt = left.firstChild, rt = right.firstChild;
+  const mark = (x, y) => { for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) lt.cells[yy][xx].className = (xx === x && yy === y) ? 'ctr' : (x != null && Math.abs(xx - x) <= 1 && Math.abs(yy - y) <= 1) ? 'nb' : ''; };
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { const inp = rt.cells[y][x].inp; inp.addEventListener('focus', () => mark(x, y)); }
+  const fb = feedback(); const calc = el('div', { class: 'calc hidden' });
+  const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+    let wrong = 0, empty = 0, firstWrong = null;
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      const td = rt.cells[y][x], v = readNum(td.inp.value);
+      td.classList.remove('right', 'wrong');
+      if (isNaN(v)) { empty++; continue; }
+      if (near(v, res[y][x])) td.classList.add('right'); else { td.classList.add('wrong'); wrong++; if (!firstWrong) firstWrong = [x, y]; }
+    }
+    if (empty) { fb.set('info', `Es fehlen noch ${empty} Werte.`); return; }
+    if (!wrong) { fb.set('ok', 'Alle 9 Werte stimmen!'); calc.classList.add('hidden'); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('patch'); } return; }
+    const [x, y] = firstWrong;
+    fb.set('err', `${wrong} ${wrong === 1 ? 'Wert ist' : 'Werte sind'} noch falsch (rot). Rechenweg für das erste falsche Pixel (${x}|${y}):`);
+    calc.textContent = calcText(G, F, x, y, { clampInt: LEVEL === 'schwer' }); calc.classList.remove('hidden'); mark(x, y);
+  } }, 'Prüfen');
+  card.append(el('div', { class: 'row' },
+    el('div', { class: 'col' }, el('span', { class: 'lbl-small' }, 'Original'), left),
+    filterTable(F),
+    el('div', { class: 'col' }, el('span', { class: 'lbl-small' }, 'Neues Bild'), right)),
+    el('div', { class: 'bar' }, check), fb, calc);
+}
+
+// ---------------------------------------------------------------------
+// 4 Filter erkennen
+// ---------------------------------------------------------------------
+const EFFECT_KEYS = ['blur', 'sharpen', 'laplace', 'sobelH', 'sobelV', 'relief', 'ident', 'bright', 'dark', 'gauss'];
+const SHORT = { blur: 'Weichzeichnen', gauss: 'Weichzeichnen', sharpen: 'Schärfen', laplace: 'Kanten (alle Richtungen)', sobelH: 'Kanten (waagerecht)', sobelV: 'Kanten (senkrecht)', relief: 'Relief', ident: 'keine Änderung', bright: 'Aufhellen', dark: 'Abdunkeln' };
+function modeErkennen(card) {
+  const pool = LEVEL === 'leicht' ? ['blur', 'sharpen', 'laplace', 'ident', 'bright', 'dark'] : LEVEL === 'mittel' ? ['blur', 'gauss', 'sharpen', 'laplace', 'sobelH', 'sobelV', 'relief'] : EFFECT_KEYS;
+  const key = pick(pool), F = FILTERS[key];
+  // Weichzeichnen/Schärfen sieht man an scharfen Kanten (Schrift) am besten
+  const imgKind = ['blur', 'gauss', 'sharpen', 'ident'].includes(key) ? 'text' : pick(['haus', 'schach', 'text']);
+  const fb = feedback();
+  card.append(el('h2', null, 'Filter erkennen'), lvlNote());
+  if (LEVEL !== 'schwer') {
+    // Matrix gegeben → Wirkung wählen
+    card.append(el('p', { class: 'task-text' }, 'Welche Wirkung hat diese Filtermatrix? Überlege zuerst mit der Summe der Einträge und den Vorzeichen, dann wähle.'));
+    const optsKeys = shuffle([key, ...shuffle(pool.filter(k => k !== key && SHORT[k] !== SHORT[key])).slice(0, 3)]);
+    const preview = el('div', { class: 'row hidden' });
+    const choices = el('div', { class: 'choices' });
+    for (const k of optsKeys) {
+      const b = el('button', { class: 'choice', type: 'button', onclick: () => {
+        if (card.done) return;
+        if (k === key) {
+          b.classList.add('right'); b.append(el('span', { class: 'why' }, F.eff));
+          fb.set('ok', 'Richtig! Unten siehst du die Wirkung an einem Bild.'); card.classList.add('solved'); card.done = true; addScore('erkennen');
+          const img = getImage(imgKind); preview.append(drawPic(img, 'Original'), drawPic(convRGB(img, F.m), 'Mit diesem Filter')); preview.classList.remove('hidden');
+        } else {
+          b.classList.add('wrong'); b.disabled = true;
+          b.append(el('span', { class: 'why' }, 'Diese Wirkung hätte z. B. eine andere Matrix: ' + FILTERS[k].eff));
+          fb.set('err', 'Noch nicht. Tipp: Summe ' + fmt(Math.round(fsum(F.m) * 1e9) / 1e9) + (fsum(F.m) === 0 ? ' – was passiert dann mit einfarbigen Flächen?' : near(fsum(F.m), 1) ? ' – Flächen bleiben gleich hell. Was passiert an Kanten?' : ' – wird das Bild heller oder dunkler?'));
+        }
+      } }, el('b', null, SHORT[k]));
+      choices.append(b);
+    }
+    card.append(el('div', { class: 'row' }, filterTable(F)), el('h3', null, 'Wirkung'), choices, fb, preview);
+  } else {
+    // Bilder gegeben → Matrix wählen
+    card.append(el('p', { class: 'task-text' }, 'Links das Original, rechts nach der Faltung. Welche Filtermatrix wurde verwendet?'));
+    const img = getImage(imgKind);
+    card.append(el('div', { class: 'row' }, drawPic(img, 'Original', { width: 384 }), drawPic(convRGB(img, F.m), 'Ergebnis', { width: 384 })),
+      el('div', { class: 'note' }, 'Tipp: Vergleiche die Ränder der Buchstaben bzw. Formen und die einfarbigen Flächen. Fährst du mit der Maus über die Bilder, siehst du die Werte.'));
+    const optsKeys = shuffle([key, ...shuffle(EFFECT_KEYS.filter(k => k !== key && SHORT[k] !== SHORT[key])).slice(0, 3)]);
+    const choices = el('div', { class: 'choices' });
+    for (const k of optsKeys) {
+      const b = el('button', { class: 'choice', type: 'button', 'aria-label': 'Matrix ' + (optsKeys.indexOf(k) + 1), onclick: () => {
+        if (card.done) return;
+        if (k === key) { b.classList.add('right'); b.append(el('span', { class: 'why' }, F.name + ': ' + F.eff)); fb.set('ok', 'Richtig!'); card.classList.add('solved'); card.done = true; addScore('erkennen'); }
+        else { b.classList.add('wrong'); b.disabled = true; b.append(el('span', { class: 'why' }, 'Das wäre: ' + FILTERS[k].name + '. ' + FILTERS[k].eff)); fb.set('err', 'Noch nicht – vergleiche einfarbige Flächen und Kanten im Ergebnis.'); }
+      } }, filterTable(FILTERS[k], 'Matrix ' + (optsKeys.indexOf(k) + 1)));
+      choices.append(b);
+    }
+    card.append(el('h3', null, 'Welche Matrix?'), choices, fb);
+  }
+}
+
+// ---------------------------------------------------------------------
+// 5 Summe der Einträge (Blatt 03, Aufgabe 6)
+// ---------------------------------------------------------------------
+function modeSumme(card) {
+  let F;
+  if (LEVEL === 'leicht') F = FILTERS[pick(['ident', 'bright', 'laplace', 'blur', 'dark'])];
+  else if (LEVEL === 'mittel') F = FILTERS[pick(['sharpen', 'sobelH', 'sobelV', 'relief', 'gauss', 'laplace', 'bright'])];
+  else { const m = [[0,0,0],[0,0,0],[0,0,0]]; for (let i = 0; i < 5; i++) m[R(0, 2)][R(0, 2)] += R(-2, 3); F = { name: 'Filter', m }; }
+  const v = LEVEL === 'leicht' ? pick([40, 60, 80, 100, 120]) : R(30, 200);
+  const s = Math.round(fsum(F.m) * 1e9) / 1e9, want = toInt(clamp(s * v));
+  card.append(el('h2', null, 'Summe der Einträge'), lvlNote(),
+    el('p', { class: 'task-text', html: `Ein <b>einfarbiges</b> Graustufenbild hat überall die Intensität <b>${v}</b> <span class="gray" style="background:rgb(${v},${v},${v})"></span>. Welche Intensität haben die inneren Pixel nach der Faltung mit dieser Matrix? (Ergebnis wie in der Methode faltung: begrenzt auf 0…255, Nachkommastellen abgeschnitten.)` }));
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'numeric', 'aria-label': 'neue Intensität' });
+  const sel = el('select', { 'aria-label': 'Wirkung' }, el('option', { value: '' }, 'Das Bild wird …'),
+    ...[['heller', 'heller'], ['gleich', 'gleich hell'], ['dunkler', 'dunkler'], ['schwarz', 'schwarz']].map(([k, t]) => el('option', { value: k }, t)));
+  const wantEff = want === 0 ? 'schwarz' : want === v ? 'gleich' : want > v ? 'heller' : 'dunkler';
+  const fb = feedback();
+  const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+    const a = readNum(inp.value);
+    if (isNaN(a) || !sel.value) { fb.set('info', 'Trage die Intensität ein und wähle die Wirkung.'); return; }
+    const okV = near(a, want), okE = sel.value === wantEff;
+    inp.className = 'num ' + (okV ? 'right' : 'wrong'); sel.style.borderColor = okE ? 'var(--ok)' : 'var(--err)';
+    const expl = `Alle 9 Pixel haben ${v}. Also ist die Summe der Produkte ${v} · (Summe der Einträge) = ${v} · ${fmt(s)} = ${fmt(Math.round(v * s * 1e6) / 1e6)}` + (clamp(v * s) !== v * s ? `, begrenzt auf ${fmt(clamp(v * s))}` : '') + (!Number.isInteger(clamp(v * s)) ? `, (int) → ${want}` : '') + '.';
+    if (okV && okE) { fb.set('ok', 'Richtig! ' + expl); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('summe'); } }
+    else fb.set('err', (okV ? 'Die Zahl stimmt, die Wirkung nicht. ' : '') + 'Tipp: Bei einem einfarbigen Bild musst du nicht jedes Produkt einzeln rechnen. ' + expl);
+  } }, 'Prüfen');
+  card.append(el('div', { class: 'row' }, filterTable(F)),
+    el('div', { class: 'bar' }, el('label', null, 'neue Intensität: ', inp), sel, check), fb);
+}
+
+// ---------------------------------------------------------------------
+// 6 Methode faltung verstehen (Blatt 04)
+// ---------------------------------------------------------------------
+const CODE = `<span class="t">public</span> PImage <span class="f">faltung</span>(PImage originalbild, <span class="t">double</span>[][] filter) {
+  <span class="t">int</span> laenge = filter.length;
+  <span class="t">int</span> halb   = laenge / 2;
+  PImage neuesBild = <span class="f">createImage</span>(originalbild.width, originalbild.height, RGB);
+  <span class="cm">// (Kopie des Bildes in pixelAlt, pixelNeu – wie in der Vorlage)</span>
+  <span class="k">for</span> (<span class="t">int</span> x = halb; x &lt; originalbild.width - halb; x++) {
+    <span class="k">for</span> (<span class="t">int</span> y = halb; y &lt; originalbild.height - halb; y++) {
+      <span class="t">double</span> rot = 0.0; <span class="t">double</span> gruen = 0.0; <span class="t">double</span> blau = 0.0;
+      <span class="t">int</span> xx = x - halb;
+      <span class="t">int</span> yy = y - halb;
+      <span class="k">for</span> (<span class="t">int</span> i = 0; i &lt; laenge; i++) {
+        <span class="k">for</span> (<span class="t">int</span> j = 0; j &lt; laenge; j++) {
+          rot   += filter[i][j] * <span class="f">red</span>(pixelAlt[xx+i][yy+j]);
+          gruen += filter[i][j] * <span class="f">green</span>(pixelAlt[xx+i][yy+j]);
+          blau  += filter[i][j] * <span class="f">blue</span>(pixelAlt[xx+i][yy+j]);
+        }
+      }
+      <span class="k">if</span> (rot &lt; 0.0) rot = 0.0;   <span class="k">if</span> (rot &gt; 255.0) rot = 255.0;   <span class="cm">// ebenso gruen, blau</span>
+      pixelNeu[x][y] = <span class="f">color</span>((<span class="t">int</span>) rot, (<span class="t">int</span>) gruen, (<span class="t">int</span>) blau);
+      neuesBild.<span class="f">set</span>(x, y, pixelNeu[x][y]);
+    }
+  }
+  <span class="k">return</span> neuesBild;
+}`;
+function modeCode(card) {
+  const n = LEVEL === 'leicht' ? 3 : pick([3, 5, 7, LEVEL === 'schwer' ? 9 : 5]);
+  const half = Math.floor(n / 2);
+  const Wd = pick([200, 320, 400, 640]), Ht = pick([150, 240, 300, 480]);
+  const x = R(half, Wd - half - 1), y = R(half, Ht - half - 1);
+  const i = R(0, n - 1), j = R(0, n - 1);
+  const codeLvl = { leicht: 'Stufe leicht: Filtermatrix 3 × 3.', mittel: 'Stufe mittel: Filtermatrix 3 × 3 bis 7 × 7, dazu die Zahl der Randpixel.', schwer: 'Stufe schwer: Filtermatrix bis 9 × 9, dazu die Zahl der Randpixel.' }[LEVEL];
+  card.append(el('h2', null, 'Methode faltung verstehen'), el('div', { class: 'lvl' }, codeLvl),
+    el('p', { class: 'task-text', html: `Die Methode aus dem Puzzle (Blatt 04) wird mit einem Bild der Größe <b>${Wd} × ${Ht}</b> und einer Filtermatrix der Größe <b>${n} × ${n}</b> aufgerufen. Beantworte die Fragen – denk an die ganzzahlige Division: <code>${n} / 2</code> ergibt ${half}.` }),
+    el('pre', { class: 'code', html: CODE }));
+  const Q = [
+    { q: `Welchen Wert hat <code>laenge</code>?`, a: n, why: `laenge = filter.length ist die Seitenlänge der Matrix: ${n}.` },
+    { q: `Welchen Wert hat <code>halb</code>?`, a: half, why: `halb = ${n} / 2 = ${half}, weil bei ganzen Zahlen die Nachkommastellen abgeschnitten werden. So viele Pixel ragt die Matrix links, rechts, oben und unten über das mittlere Pixel hinaus.` },
+    { q: `Mit welchem x-Wert beginnt die äußere Schleife?`, a: half, why: `x startet bei halb = ${half}. Die Pixel x = 0 … ${half - 1} sind Randpixel, für sie würde die Matrix über das Bild hinausragen.` },
+    { q: `Welches ist der <b>letzte</b> x-Wert, für den die Schleife noch läuft?`, a: Wd - half - 1, why: `Bedingung x < ${Wd} - ${half} = ${Wd - half}, also ist der letzte Wert ${Wd - half - 1}.` },
+    { q: `Für das Pixel <b>(${x}|${y})</b>: Welchen Wert hat <code>xx</code>?`, a: x - half, why: `xx = x - halb = ${x} - ${half} = ${x - half}. (xx|yy) ist die linke obere Ecke des Bereichs unter der Matrix.` },
+    { q: `Für das Pixel <b>(${x}|${y})</b>: Welchen Wert hat <code>yy</code>?`, a: y - half, why: `yy = y - halb = ${y} - ${half} = ${y - half}.` },
+    { q: `Mit <code>filter[${i}][${j}]</code> wird ein Pixel multipliziert. Welche <b>x-Koordinate</b> hat es?`, a: x - half + i, why: `pixelAlt[xx+i][yy+j]: x-Koordinate = xx + i = ${x - half} + ${i} = ${x - half + i}.` },
+    { q: `… und welche <b>y-Koordinate</b>?`, a: y - half + j, why: `y-Koordinate = yy + j = ${y - half} + ${j} = ${y - half + j}.` }
+  ];
+  if (LEVEL !== 'leicht') Q.push({ q: `Wie viele Pixel des Bildes werden <b>nicht</b> verändert (Randpixel insgesamt)?`, a: Wd * Ht - (Wd - 2 * half) * (Ht - 2 * half),
+    why: `Verändert werden (${Wd} − 2·${half}) · (${Ht} − 2·${half}) = ${(Wd - 2 * half) * (Ht - 2 * half)} Pixel, unverändert bleiben ${Wd * Ht} − ${(Wd - 2 * half) * (Ht - 2 * half)} = ${Wd * Ht - (Wd - 2 * half) * (Ht - 2 * half)}.` });
+  const qa = el('div', { class: 'qa' }); const rows = [];
+  for (const it of Q) {
+    const inp = el('input', { class: 'num', type: 'text', inputmode: 'numeric', 'aria-label': it.q.replace(/<[^>]+>/g, '') });
+    const why = el('div', { class: 'why hidden' });
+    qa.append(el('div', { class: 'q', html: it.q }), inp, why); rows.push({ it, inp, why });
+  }
+  const fb = feedback();
+  const check = el('button', { class: 'primary', type: 'button', onclick: () => {
+    let ok = 0;
+    for (const r of rows) {
+      const v = readNum(r.inp.value);
+      if (isNaN(v)) { r.inp.className = 'num'; r.why.className = 'why hidden'; continue; }
+      const good = near(v, r.it.a); if (good) ok++;
+      r.inp.className = 'num ' + (good ? 'right' : 'wrong');
+      r.why.className = 'why ' + (good ? 'ok' : 'err'); r.why.textContent = (good ? '' : 'Noch nicht. ') + r.it.why;
+    }
+    if (ok === rows.length) { fb.set('ok', 'Alles richtig!'); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('code'); } }
+    else fb.set('info', `${ok} von ${rows.length} richtig.` + (LEVEL === 'schwer' ? '\nHinweis: In diesem Code gehört i zur x-Richtung (pixelAlt[xx+i]…). Schreibt man die Matrix in Java als {{…},{…},{…}}, ist filter[0] daher die linke Spalte, nicht die obere Zeile – bei Kantenfiltern macht das einen Unterschied.' : ''));
+  } }, 'Prüfen');
+  card.append(el('h3', null, 'Fragen'), qa, el('div', { class: 'bar' }, check), fb);
+}
+
+// =====================================================================
+function show() {
+  const main = document.getElementById('main'); main.innerHTML = '';
+  main.append(terms());
+  const card = el('section', { class: 'card' });
+  ({ labor: modeLabor, pixel: modePixel, patch: modePatch, erkennen: modeErkennen, summe: modeSumme, code: modeCode }[MODE] || modeLabor)(card);
+  main.append(card);
+}
+document.getElementById('btn-new').addEventListener('click', show);
+if (!MODES.some(m => m.id === MODE)) MODE = 'labor';
+renderLevels(); renderModes(); show();
+// für automatische Tests
+window.__falt = { FILTERS, pixelValue, convGray, transpose, rot180, setLevel: l => { LEVEL = l; renderLevels(); }, setMode: m => { MODE = m; renderModes(); show(); } };
+})();
+</script>
+</body>
+</html>

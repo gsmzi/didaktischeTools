@@ -824,7 +824,7 @@ mode('bild', 'Was wird gezeichnet?',
     });
     const pre = PREDICT ? predictBox('Erst vorhersagen: Was zeichnet das Programm? Danach siehst du die Bilder.', () => { choices.classList.remove('hidden'); pre.compare(opts.find(o => o.ok).res); }) : null;
     if (pre) choices.classList.add('hidden');
-    card.append(el('div', { class: 'row' }, codeBox(programLines(s, W, H))), pre, el('h3', null, 'Wähle das passende Bild:'), choices, fb);
+    card.append(el('div', { class: 'row' }, codeBox(programLines(s, W, H))), pre || '', el('h3', null, 'Wähle das passende Bild:'), choices, fb);
   });
 
 // ---------- 2  Was wäre, wenn …? ----------
@@ -861,7 +861,7 @@ mode('wenn', 'Was passiert, wenn …?',
     });
     const pre = PREDICT ? predictBox('Erst vorhersagen: Was wird nach der Änderung gezeichnet? Danach siehst du die Bilder.', () => { choices.classList.remove('hidden'); pre.compare(opts.find(o => o.ok).res); }) : null;
     if (pre) choices.classList.add('hidden');
-    card.append(pre, choices, fb);
+    card.append(pre || '', choices, fb);
   });
 
 // ---------- 3  Zuordnen ----------

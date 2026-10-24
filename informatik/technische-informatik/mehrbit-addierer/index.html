@@ -722,6 +722,14 @@
         grid-template-columns: repeat(var(--bit-count), minmax(140px, 1fr));
       }
     }
+
+    /* Handy-Layout: Spalten duerfen schmaler als ihr Inhalt werden; breite Teile scrollen innerhalb ihres Panels */
+    @media (max-width: 960px) {
+      .topbar, .shell { grid-template-columns: minmax(0, 1fr); }
+      .shell > *, .panel { min-width: 0; }
+      .section-title { flex-wrap: wrap; }
+      .section-title > .segmented { flex: 1 1 260px; }
+    }
   </style>
 </head>
 <body>
