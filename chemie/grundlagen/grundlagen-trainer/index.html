@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="M. Zimmer">
+<title>Grundlagen-Trainer Chemie</title>
+<style>
+  :root {
+    --bg: #eef3f2; --panel: #ffffff; --ink: #1d2330; --muted: #5b6475; --line: #c3cfcd;
+    --accent: #0f7a6a; --accent-soft: #e2f3f0;
+    --ok: #1e8e44; --ok-soft: #e5f5ea; --err: #c62828; --err-soft: #fdecea; --warn-soft: #fff6dc;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #0b6356; }
+
+  .topbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 20px; background: linear-gradient(180deg, #2a9d8a, #0d5f53); color: #fff; }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; align-items: center; }
+  .levels span { font-size: 13px; padding: 0 6px 0 4px; opacity: .9; }
+  .levels button { background: transparent; color: #fff; border: none; border-radius: 6px; padding: 4px 11px; }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #0d5f53; font-weight: 600; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .modes button { display: flex; align-items: baseline; gap: 7px; border-radius: 8px; padding: 6px 12px; }
+  .modes button .nr { font-weight: 700; color: var(--accent); }
+  .modes button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .modes button.on .nr { color: #fff; }
+  .modes .cnt { font-size: 12px; color: var(--ok); font-weight: 600; }
+  .modes button.on .cnt { color: #d9ffe3; }
+
+  main { padding: 14px 20px 30px; max-width: 1100px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card h2 { margin: 0 0 6px; font-size: 18px; }
+  .card h3 { margin: 14px 0 6px; font-size: 15px; }
+  .task-text { margin: 4px 0 10px; }
+  .bar { display: flex; gap: 8px 10px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .lvl { font-size: 13px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 4px 10px; border-radius: 0 6px 6px 0; margin: 0 0 8px; }
+  .note { font-size: 13.5px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 5px 10px; border-radius: 0 6px 6px 0; margin: 6px 0; }
+  details.terms { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.terms summary { cursor: pointer; font-weight: 600; }
+  details.terms dl { margin: 8px 0 4px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+  details.terms dt { font-weight: 600; } details.terms dd { margin: 0; }
+  .eq { font-family: Cambria, "Times New Roman", serif; font-size: 20px; padding: 8px 12px; background: #f6faf9; border: 1px solid var(--line); border-radius: 8px; margin: 6px 0 10px; overflow-x: auto; }
+  .given { font-size: 13.5px; color: var(--muted); margin: 0 0 8px; }
+
+  .qa { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; max-width: 820px; }
+  .qa > .why { grid-column: 1 / -1; font-size: 13.5px; margin: -4px 0 4px; white-space: pre-line; }
+  .why.ok { color: #145c2e; } .why.err { color: #8c1c1c; }
+  .unitbox { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .unit { color: var(--muted); }
+  input.num, input.txt { width: 120px; font: 15px var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; text-align: center; }
+  input.txt { width: 150px; }
+  input.right, select.right { background: var(--ok-soft); border-color: var(--ok); } input.wrong, select.wrong { background: var(--err-soft); border-color: var(--err); }
+  select { font: 15px var(--sans); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
+  .checks { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+  .checks label { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; font-family: Cambria, "Times New Roman", serif; font-size: 17px; }
+  .checks label.right { background: var(--ok-soft); border-color: var(--ok); } .checks label.wrong { background: var(--err-soft); border-color: var(--err); }
+  .fb { margin-top: 10px; padding: 8px 12px; border-radius: 8px; display: none; white-space: pre-line; }
+  .fb.show { display: block; }
+  .fb.ok { background: var(--ok-soft); color: #145c2e; border: 1px solid #9fd8b2; }
+  .fb.err { background: var(--err-soft); color: #8c1c1c; border: 1px solid #f0b4b0; }
+  .fb.info { background: var(--warn-soft); color: #6b5100; border: 1px solid #ecd58c; }
+  .hidden { display: none !important; }
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; max-width: 1100px; }
+  @media (max-width: 700px) {
+    .topbar, .modes, main { padding-left: 12px; padding-right: 12px; }
+    .qa { grid-template-columns: minmax(0, 1fr); }
+    .eq { font-size: 17px; }
+  }
+  @media print { .topbar, .modes, .bar, footer { display: none; } body { background: #fff; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>GRUNDLAGEN <small>Ionen · Säure-Base · Stöchiometrie</small></h1>
+  <span class="spacer"></span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <button id="btn-new" type="button">Neue Aufgabe</button>
+</header>
+
+<nav class="modes" id="modes" aria-label="Aufgabentypen"></nav>
+
+<main id="main"></main>
+
+<footer>
+  Leistungsfach Chemie, Wiederholung zu Beginn der Kursstufe: „Übersicht über die wichtigsten Ionen“, „Protolysen oder nicht?“, „Stöchiometrische Grundbegriffe“ und „Stöchiometrie – Übungen“.
+  Molare Massen gerundet; die Aufgaben werden zufällig erzeugt. Der Fortschritt wird nur in diesem Browser gespeichert. · M. Zimmer
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+//  Hilfsfunktionen
+// =====================================================================
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; } return a; }
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+const add = (parent, ...kids) => { for (const k of kids.flat()) if (k != null && k !== false) parent.append(k); return parent; };
+const rnd = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
+function de(v, d = 0) { return rnd(v, d).toFixed(d).replace('.', ',').replace('-', '−'); }
+// signifikante Stellen, ohne überflüssige Nullen
+function sig(v, s = 3) {
+  if (v === 0) return '0';
+  const d = Math.max(0, s - 1 - Math.floor(Math.log10(Math.abs(v))));
+  let t = de(v, Math.min(d, 6)); if (t.includes(',')) t = t.replace(/0+$/, '').replace(/,$/, '');
+  return t;
+}
+function readNum(s) {
+  const t = String(s).trim().replace(/\s/g, '').replace(/−/g, '-').replace(',', '.');
+  if (t === '' || !/^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$/i.test(t)) return NaN;
+  return Number(t);
+}
+const close = (a, b, rel = 0.02, abs = 0) => Math.abs(a - b) <= Math.max(abs, Math.abs(b) * rel);
+
+// Formeln: "Ca(NO3)2", "SO4^2-", "H3O^+"
+function fmt(s) {
+  const [base, ch] = s.split('^');
+  let h = base.replace(/([A-Za-z)])(\d+)/g, '$1<sub>$2</sub>');
+  if (ch) h += '<sup>' + ch.replace('-', '−') + '</sup>';
+  return h;
+}
+const SUBS = '₀₁₂₃₄₅₆₇₈₉', SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+function fmtU(s) {
+  const [base, ch] = s.split('^');
+  let h = base.replace(/([A-Za-z)])(\d+)/g, (m, a, d) => a + [...d].map(x => SUBS[+x]).join(''));
+  if (ch) h += [...ch].map(c => c === '+' ? '⁺' : c === '-' ? '⁻' : SUPS[+c]).join('');
+  return h;
+}
+// Gleichung aus [[k, f], ...]
+const side = (arr, u) => arr.map(([k, f]) => (k > 1 ? k + ' ' : '') + (u ? fmtU(f) : fmt(f))).join(' + ');
+
+// Atommassen (g/mol, gerundet)
+const AM = { H: 1, Li: 6.9, C: 12, N: 14, O: 16, F: 19, Na: 23, Mg: 24.3, Al: 27, P: 31, S: 32.1, Cl: 35.5, K: 39.1, Ca: 40.1, Cr: 52, Mn: 54.9, Fe: 55.8, Cu: 63.5, Zn: 65.4, Br: 79.9, Ag: 107.9, Sn: 118.7, I: 126.9, Ba: 137.3, Hg: 200.6, Pb: 207.2, V: 50.9, W: 183.8 };
+function parseFormula(str) {
+  const s = str.split('^')[0]; let i = 0;
+  function group() {
+    const counts = {};
+    while (i < s.length && s[i] !== ')') {
+      let part;
+      if (s[i] === '(') { i++; part = group(); i++; }
+      else { const m = /^[A-Z][a-z]?/.exec(s.slice(i)); if (!m) return null; i += m[0].length; part = { [m[0]]: 1 }; }
+      if (!part) return null;
+      const d = /^\d+/.exec(s.slice(i)); const k = d ? +d[0] : 1; if (d) i += d[0].length;
+      for (const e in part) counts[e] = (counts[e] || 0) + part[e] * k;
+    }
+    return counts;
+  }
+  const c = group(); return i === s.length ? c : null;
+}
+const molar = f => { const c = parseFormula(f); let m = 0; for (const e in c) m += AM[e] * c[e]; return m; };
+const elementsOf = fs => { const set = new Set(); fs.forEach(f => Object.keys(parseFormula(f)).forEach(e => set.add(e))); return [...set]; };
+const massLine = fs => 'Molare Massen in g/mol: ' + elementsOf(fs).map(e => `${e} ${de(AM[e], AM[e] % 1 ? 1 : 0)}`).join(', ');
+const sameCounts = (a, b) => { if (!a || !b) return false; const k = new Set([...Object.keys(a), ...Object.keys(b)]); for (const e of k) if ((a[e] || 0) !== (b[e] || 0)) return false; return true; };
+
+const STORE = 'grTraining.score';
+let SCORE = {};
+try { SCORE = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { SCORE = {}; }
+function addScore(id) { SCORE[id] = (SCORE[id] || 0) + 1; try { localStorage.setItem(STORE, JSON.stringify(SCORE)); } catch (e) {} renderModes(); }
+let LEVEL = 'leicht'; try { LEVEL = localStorage.getItem('grTraining.level') || 'leicht'; } catch (e) {}
+let MODE = 'ionen'; try { MODE = localStorage.getItem('grTraining.mode') || 'ionen'; } catch (e) {}
+
+function feedback() {
+  const box = el('div', { class: 'fb', role: 'status' });
+  box.set = (kind, text) => { box.className = 'fb show ' + kind; box.textContent = text; };
+  return box;
+}
+
+// ---------------------------------------------------------------------
+// Aufgaben-Bausteine: jedes Item hat check() → {ok, empty}
+// ---------------------------------------------------------------------
+function numItem(qa, label, unit, want, alts, expl, tol = {}) {
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', 'aria-label': label.replace(/<[^>]+>/g, '') });
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: label }), el('span', { class: 'unitbox' }, inp, unit ? el('span', { class: 'unit', html: unit }) : null), why);
+  const rel = tol.rel != null ? tol.rel : 0.02, abs = tol.abs || 0;
+  alts = (alts || []).filter(a => a.why && isFinite(a.v) && !close(a.v, want, rel, abs));
+  return { inp, want, alts, solve: () => { inp.value = String(+want.toPrecision(4)).replace('.', ','); },
+    check() {
+      const v = readNum(inp.value);
+      if (isNaN(v)) { inp.className = 'num'; why.className = 'why hidden'; return { empty: true }; }
+      const good = close(v, want, rel, abs);
+      inp.className = 'num ' + (good ? 'right' : 'wrong');
+      const a = good ? null : alts.find(x => close(v, x.v, rel, abs));
+      why.className = 'why ' + (good ? 'ok' : 'err');
+      why.textContent = good ? expl : (a ? a.why + '\n' : 'Noch nicht. ') + expl;
+      return { ok: good };
+    } };
+}
+function selItem(qa, label, options, wantVal, explFn) {
+  // options: [{v, t}]
+  const s = el('select', { 'aria-label': label.replace(/<[^>]+>/g, '') }, el('option', { value: '' }, 'bitte wählen …'), ...options.map(o => el('option', { value: o.v }, o.t)));
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: label }), s, why);
+  return { sel: s, want: wantVal, solve: () => { s.value = wantVal; },
+    check() {
+      if (!s.value) { s.className = ''; why.className = 'why hidden'; return { empty: true }; }
+      const good = s.value === wantVal;
+      s.className = good ? 'right' : 'wrong';
+      const t = explFn ? explFn(s.value, good) : '';
+      why.className = 'why ' + (good ? 'ok' : 'err') + (t ? '' : ' hidden'); why.textContent = t;
+      return { ok: good };
+    } };
+}
+function runCheck(items, fb, card, scoreId, onOk) {
+  let ok = 0, empty = 0;
+  for (const it of items) { const r = it.check(); if (r.empty) empty++; else if (r.ok) ok++; }
+  if (empty) { fb.set('info', 'Fülle alle Felder aus. Dezimalzahlen mit Komma oder Punkt.'); return false; }
+  if (ok === items.length) {
+    fb.set('ok', 'Alles richtig!');
+    if (scoreId) { card.classList.add('solved'); if (!card.done) { card.done = true; addScore(scoreId); } }
+    if (onOk) onOk();
+    return true;
+  }
+  fb.set('err', `${ok} von ${items.length} richtig. Die Erklärungen stehen bei den einzelnen Antworten.`);
+  return false;
+}
+function checkBar(card, items, scoreId) {
+  const fb = feedback();
+  card.__items = items;
+  return [el('div', { class: 'bar' }, el('button', { class: 'primary', type: 'button', onclick: () => runCheck(items, fb, card, scoreId) }, 'Prüfen')), fb];
+}
+
+// =====================================================================
+//  1 Ionen und Verhältnisformeln
+// =====================================================================
+const CAT = [
+  { f: 'Li', q: 1, n: 'Lithium', l: 1, g: 'a1' }, { f: 'Na', q: 1, n: 'Natrium', l: 1, g: 'a1' }, { f: 'K', q: 1, n: 'Kalium', l: 1, g: 'a1' },
+  { f: 'Mg', q: 2, n: 'Magnesium', l: 1, g: 'a2' }, { f: 'Ca', q: 2, n: 'Calcium', l: 1, g: 'a2' }, { f: 'Ba', q: 2, n: 'Barium', l: 1, g: 'a2' },
+  { f: 'Al', q: 3, n: 'Aluminium', l: 1, g: 'a3' },
+  { f: 'NH4', q: 1, n: 'Ammonium', l: 2, poly: true, g: 'a1' }, { f: 'Zn', q: 2, n: 'Zink', l: 2, g: 'a2' }, { f: 'Ag', q: 1, n: 'Silber', l: 2, g: 'a1' },
+  { f: 'Fe', q: 2, n: 'Eisen', rn: 'II', l: 3, alt: ['III'] }, { f: 'Fe', q: 3, n: 'Eisen', rn: 'III', l: 3, alt: ['II'] },
+  { f: 'Cu', q: 1, n: 'Kupfer', rn: 'I', l: 3, alt: ['II'] }, { f: 'Cu', q: 2, n: 'Kupfer', rn: 'II', l: 3, alt: ['I'] },
+  { f: 'Cr', q: 3, n: 'Chrom', rn: 'III', l: 3, alt: ['II', 'VI'] }, { f: 'Mn', q: 4, n: 'Mangan', rn: 'IV', l: 3, alt: ['II', 'VII'], only: ['O', 'Cl'] },
+  { f: 'Pb', q: 2, n: 'Blei', rn: 'II', l: 3, alt: ['IV'] }, { f: 'Sn', q: 2, n: 'Zinn', rn: 'II', l: 3, alt: ['IV'], only: ['O', 'Cl', 'F', 'S'] }, { f: 'Sn', q: 4, n: 'Zinn', rn: 'IV', l: 3, alt: ['II'], only: ['O', 'Cl'] }
+];
+const ANI = [
+  { f: 'F', q: 1, n: 'fluorid', l: 1, rel: ['fluorat'] }, { f: 'Cl', q: 1, n: 'chlorid', l: 1, rel: ['chlorat', 'chlorit'] },
+  { f: 'Br', q: 1, n: 'bromid', l: 1, rel: ['bromat', 'bromit'] }, { f: 'I', q: 1, n: 'iodid', l: 1, rel: ['iodat', 'iodit'] },
+  { f: 'O', q: 2, n: 'oxid', l: 1, rel: ['hydroxid', 'peroxid'] }, { f: 'S', q: 2, n: 'sulfid', l: 1, rel: ['sulfat', 'sulfit'] },
+  { f: 'N', q: 3, n: 'nitrid', l: 1, rel: ['nitrat', 'nitrit'] },
+  { f: 'OH', q: 1, n: 'hydroxid', l: 2, poly: true, rel: ['oxid', 'hydrid'] }, { f: 'NO3', q: 1, n: 'nitrat', l: 2, poly: true, rel: ['nitrit', 'nitrid'] },
+  { f: 'NO2', q: 1, n: 'nitrit', l: 2, poly: true, rel: ['nitrat', 'nitrid'] }, { f: 'SO4', q: 2, n: 'sulfat', l: 2, poly: true, rel: ['sulfit', 'sulfid', 'hydrogensulfat'] },
+  { f: 'SO3', q: 2, n: 'sulfit', l: 2, poly: true, rel: ['sulfat', 'sulfid'] }, { f: 'CO3', q: 2, n: 'carbonat', l: 2, poly: true, rel: ['hydrogencarbonat', 'carbid'] },
+  { f: 'PO4', q: 3, n: 'phosphat', l: 2, poly: true, rel: ['phosphid', 'hydrogenphosphat', 'phosphit'] }, { f: 'CH3COO', q: 1, n: 'acetat', l: 2, poly: true, rel: ['formiat', 'carbonat'], altF: ['H3CCOO'] },
+  { f: 'HSO4', q: 1, n: 'hydrogensulfat', l: 3, poly: true, rel: ['sulfat', 'hydrogensulfit'] }, { f: 'HCO3', q: 1, n: 'hydrogencarbonat', l: 3, poly: true, rel: ['carbonat', 'dihydrogencarbonat'] },
+  { f: 'HPO4', q: 2, n: 'hydrogenphosphat', l: 3, poly: true, rel: ['dihydrogenphosphat', 'phosphat'] }, { f: 'H2PO4', q: 1, n: 'dihydrogenphosphat', l: 3, poly: true, rel: ['hydrogenphosphat', 'phosphat'] },
+  { f: 'HSO3', q: 1, n: 'hydrogensulfit', l: 3, poly: true, rel: ['hydrogensulfat', 'sulfit'] }
+];
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+const catName = c => c.rn ? `${c.n}(${c.rn})-` : c.n;
+const saltName = (c, a) => catName(c) + a.n;
+function saltFormula(c, a, af) {
+  const L = c.q * a.q / gcd(c.q, a.q), nc = L / c.q, na = L / a.q; af = af || a.f;
+  const part = (f, poly, k) => k === 1 ? f : (poly ? `(${f})${k}` : f + k);
+  return { f: part(c.f, c.poly, nc) + part(af, a.poly, na), nc, na };
+}
+const ionTxt = (f, q, sign) => fmtU(f + '^' + (q > 1 ? q : '') + sign);
+function okCombo(c, a) {
+  if (c.only && !c.only.includes(a.f)) return false;
+  if (c.f === 'NH4' && ['O', 'N', 'S'].includes(a.f)) return false;
+  if (c.f === 'Ag' && a.f === 'N') return false;
+  return true;
+}
+function randomSalt(lv) {
+  for (;;) {
+    let cs, as;
+    if (lv === 1) { cs = CAT.filter(c => c.l === 1); as = ANI.filter(a => a.l === 1); }
+    else if (lv === 2) { cs = CAT.filter(c => c.l <= 2); as = ANI.filter(a => a.l <= 2); }
+    else { cs = CAT; as = ANI; }
+    const c = pick(cs), a = pick(as);
+    if (!okCombo(c, a)) continue;
+    if (lv === 2 && !c.poly && !a.poly && Math.random() < 0.7) continue;
+    if (lv === 3 && c.l < 3 && a.l < 3 && Math.random() < 0.8) continue;
+    return { c, a };
+  }
+}
+function normFormula(s) {
+  let t = String(s).trim().replace(/\s+/g, '');
+  t = t.replace(/[₀-₉]/g, ch => String(SUBS.indexOf(ch)));
+  t = t.replace(/\(([^()]+)\)(?!\d)/g, '$1'); // (NH4)Cl → NH4Cl
+  return t;
+}
+function formulaItem(qa, c, a) {
+  const want = saltFormula(c, a);
+  const accept = [want.f, ...(a.altF || []).map(x => saltFormula(c, a, x).f)];
+  const label = `Verhältnisformel von <b>${saltName(c, a)}</b>`;
+  const inp = el('input', { class: 'txt', type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'Verhältnisformel von ' + saltName(c, a) });
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: label }), inp, why);
+  const expl = `Ionen: ${ionTxt(c.f, c.q, '+')} und ${ionTxt(a.f, a.q, '-')}. Ladungsausgleich: ${want.nc} · (+${c.q}) + ${want.na} · (−${a.q}) = 0  →  ${fmtU(want.f)}`;
+  return { inp, want: want.f, solve: () => { inp.value = want.f; },
+    check() {
+      const v = normFormula(inp.value);
+      if (!v) { inp.className = 'txt'; why.className = 'why hidden'; return { empty: true }; }
+      const good = accept.includes(v);
+      inp.className = 'txt ' + (good ? 'right' : 'wrong');
+      let hint = '';
+      if (!good) {
+        const pc = parseFormula(v), wc = parseFormula(want.f);
+        if (accept.some(x => x.toLowerCase() === v.toLowerCase())) hint = 'Groß- und Kleinschreibung beachten: Elementsymbole beginnen mit einem Großbuchstaben.';
+        else if (sameCounts(pc, wc)) hint = 'Die Atome sind richtig gezählt, aber mehratomige Ionen werden zusammengehalten und bei mehreren in Klammern gesetzt.';
+        else if (pc && Object.keys(pc).sort().join() === Object.keys(wc).sort().join()) hint = 'Die richtigen Elemente – aber das Zahlenverhältnis stimmt nicht. Die Ladungen müssen sich ausgleichen.';
+        else hint = 'Prüfe, welche Ionen beteiligt sind.';
+      }
+      why.className = 'why ' + (good ? 'ok' : 'err'); why.textContent = (hint ? hint + '\n' : '') + expl;
+      return { ok: good };
+    } };
+}
+function nameItem(qa, c, a) {
+  const f = saltFormula(c, a).f, right = saltName(c, a);
+  const set = new Set([right]);
+  const cands = [];
+  for (const r of shuffle(a.rel)) cands.push(catName(c) + r);
+  if (c.rn) for (const r of c.alt) cands.push(`${c.n}(${r})-${a.n}`);
+  if (c.rn && c.alt.length) cands.unshift(`${c.n}(${c.alt[0]})-${a.n}`);
+  const sib = CAT.filter(x => x.g && x.g === c.g && x.n !== c.n);
+  for (const x of shuffle(sib)) cands.push(x.n + a.n);
+  for (const x of cands) { if (set.size >= 4) break; set.add(x); }
+  const opts = shuffle([...set]).map(t => ({ v: t, t }));
+  return selItem(qa, `Name von <b>${fmt(f)}</b>`, opts, right, (v, good) => good ? `${ionTxt(c.f, c.q, '+')} + ${ionTxt(a.f, a.q, '-')}${c.rn ? ' – die Ladung des Metall-Ions steht als römische Zahl im Namen.' : ''}` :
+    `Richtig: ${right}. Es liegen ${ionTxt(c.f, c.q, '+')}- und ${ionTxt(a.f, a.q, '-')}-Ionen (${a.n}) vor.${c.rn ? ' Die Ladung des Metall-Ions ergibt sich aus dem Ladungsausgleich.' : ''}`);
+}
+const OXI = [
+  ['Cu2O', 'Kupfer', 'Cu', 1, 'oxid'], ['CuO', 'Kupfer', 'Cu', 2, 'oxid'], ['V2O5', 'Vanadium', 'V', 5, 'oxid'], ['WO3', 'Wolfram', 'W', 6, 'oxid'],
+  ['Fe2O3', 'Eisen', 'Fe', 3, 'oxid'], ['FeO', 'Eisen', 'Fe', 2, 'oxid'], ['FeCl3', 'Eisen', 'Fe', 3, 'chlorid'], ['FeCl2', 'Eisen', 'Fe', 2, 'chlorid'],
+  ['Cr2O3', 'Chrom', 'Cr', 3, 'oxid'], ['MnO2', 'Mangan', 'Mn', 4, 'oxid'], ['MnCl4', 'Mangan', 'Mn', 4, 'chlorid'], ['PbO2', 'Blei', 'Pb', 4, 'oxid'],
+  ['SnCl2', 'Zinn', 'Sn', 2, 'chlorid'], ['Fe2(SO4)3', 'Eisen', 'Fe', 3, 'sulfat'], ['CuSO4', 'Kupfer', 'Cu', 2, 'sulfat'], ['Cu(NO3)2', 'Kupfer', 'Cu', 2, 'nitrat'], ['Mn2O7', 'Mangan', 'Mn', 7, 'oxid']
+];
+const ROM = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+function oxiItems(qa) {
+  const [f, n, sym, q, an] = pick(OXI);
+  const cnt = parseFormula(f)[sym];
+  const it1 = numItem(qa, `Ladung des Metall-Ions in <b>${fmt(f)}</b>`, '', q, [{ v: cnt, why: 'Das ist die Anzahl der Metall-Ionen, nicht ihre Ladung.' }, { v: q * cnt, why: 'Das ist die Gesamtladung aller Metall-Ionen. Teile durch ihre Anzahl.' }],
+    `Die Anionen tragen zusammen ${q * cnt} negative Ladungen, verteilt auf ${cnt} Metall-Ion${cnt > 1 ? 'en' : ''}: Ladung +${q}.`, { rel: 0, abs: 0.01 });
+  const opts = new Set([`${n}(${ROM[q]})-${an}`]);
+  for (const d of shuffle([q - 1, q + 1, cnt, q * cnt, 2, 3].filter(x => x >= 1 && x <= 7 && x !== q))) { if (opts.size >= 4) break; opts.add(`${n}(${ROM[d]})-${an}`); }
+  const it2 = selItem(qa, `Name von <b>${fmt(f)}</b>`, shuffle([...opts]).map(t => ({ v: t, t })), `${n}(${ROM[q]})-${an}`, (v, good) => good ? '' : `Richtig: ${n}(${ROM[q]})-${an} – die römische Zahl gibt die Ladung (Oxidationszahl) an.`);
+  return [it1, it2];
+}
+function modeIonen(card) {
+  card.append(el('h2', null, 'Ionen und Verhältnisformeln'));
+  add(card, lvlNote('ionen'));
+  card.append(el('p', { class: 'task-text', html: 'Gib die Verhältnisformeln an (Ziffern einfach normal tippen, z. B. <code>Al2(SO4)3</code>) und wähle die Namen aus.' }));
+  const lv = LEVEL === 'leicht' ? 1 : LEVEL === 'mittel' ? 2 : 3;
+  const qa = el('div', { class: 'qa' }), items = [];
+  const used = new Set();
+  const fresh = () => { for (;;) { const s = randomSalt(lv); const k = s.c.f + s.c.q + s.a.f; if (!used.has(k)) { used.add(k); return s; } } };
+  for (let i = 0; i < 3; i++) { const s = fresh(); items.push(formulaItem(qa, s.c, s.a)); }
+  if (lv === 3) { items.push(...oxiItems(qa)); const s = fresh(); items.push(nameItem(qa, s.c, s.a)); }
+  else for (let i = 0; i < 2; i++) { const s = fresh(); items.push(nameItem(qa, s.c, s.a)); }
+  card.append(qa, ...checkBar(card, items, 'ionen'));
+}
+
+// =====================================================================
+//  2 Korrespondierende Säure-Base-Paare
+// =====================================================================
+// Familie: Formel in Abhängigkeit von der Zahl h der abgebbaren H; n0 = h des neutralen Teilchens
+const FAM = [
+  { id: 'wasser', tpl: h => ['O', 'OH', 'H2O', 'H3O'][h], n0: 2, min: 0, max: 3, l: 1 },
+  { id: 'ammoniak', tpl: h => ['N', 'NH', 'NH2', 'NH3', 'NH4'][h], n0: 3, min: 2, max: 4, real: [3, 4], l: 1 },
+  { id: 'hcl', tpl: h => ['Cl', 'HCl', 'H2Cl'][h], n0: 1, min: 0, max: 1, l: 1 },
+  { id: 'hf', tpl: h => ['F', 'HF', 'H2F'][h], n0: 1, min: 0, max: 1, l: 1 },
+  { id: 'hno3', tpl: h => ['NO3', 'HNO3', 'H2NO3'][h], n0: 1, min: 0, max: 1, l: 1 },
+  { id: 'essig', tpl: h => ['CH3COO', 'CH3COOH', 'CH3COOH2'][h], n0: 1, min: 0, max: 1, l: 1 },
+  { id: 'ameisen', tpl: h => ['HCOO', 'HCOOH', 'HCOOH2'][h], n0: 1, min: 0, max: 1, l: 2 },
+  { id: 'schwefel', tpl: h => ['SO4', 'HSO4', 'H2SO4', 'H3SO4'][h], n0: 2, min: 0, max: 2, l: 2 },
+  { id: 'schweflig', tpl: h => ['SO3', 'HSO3', 'H2SO3', 'H3SO3'][h], n0: 2, min: 0, max: 2, l: 3 },
+  { id: 'kohlen', tpl: h => ['CO3', 'HCO3', 'H2CO3', 'H3CO3'][h], n0: 2, min: 0, max: 2, l: 2 },
+  { id: 'phosphor', tpl: h => ['PO4', 'HPO4', 'H2PO4', 'H3PO4', 'H4PO4'][h], n0: 3, min: 0, max: 3, l: 2 },
+  { id: 'h2s', tpl: h => ['S', 'HS', 'H2S', 'H3S'][h], n0: 2, min: 0, max: 2, l: 3 }
+];
+function spec(fam, h) {
+  const q = h - fam.n0; const ch = q === 0 ? '' : '^' + (Math.abs(q) > 1 ? Math.abs(q) : '') + (q > 0 ? '+' : '-');
+  return fam.tpl(h) + ch;
+}
+const isReal = (fam, h) => h >= fam.min && h <= fam.max;
+function pairItem(qa, fam, h, dir) {
+  // dir 'base': gesucht korrespondierende Base zu spec(h); 'acid': Säure zu spec(h)
+  const given = spec(fam, h), wantH = dir === 'base' ? h - 1 : h + 1, want = spec(fam, wantH);
+  const opts = new Map([[want, null]]);
+  const q = h - fam.n0;
+  const wrongCharge = fam.tpl(wantH) + (q === 0 ? '' : '^' + (Math.abs(q) > 1 ? Math.abs(q) : '') + (q > 0 ? '+' : '-'));
+  const cands = [
+    [wrongCharge, 'Mit dem Proton (H⁺) wandert auch eine positive Ladung: Die Ladung ändert sich um 1.'],
+    [spec(fam, dir === 'base' ? h + 1 : h - 1), dir === 'base' ? 'Das ist die korrespondierende Säure – die Base hat ein Proton weniger.' : 'Das ist die korrespondierende Base – die Säure hat ein Proton mehr.'],
+    [spec(fam, dir === 'base' ? h - 2 : h + 2), 'Korrespondierende Teilchen unterscheiden sich um genau ein Proton.'],
+    [dir === 'base' ? 'OH^-' : 'H3O^+', dir === 'base' ? 'OH⁻ ist die Base, die bei der Reaktion mit Wasser entstehen kann – gefragt ist das Teilchen, das aus dieser Säure entsteht.' : 'H₃O⁺ entsteht aus Wasser.']
+  ];
+  for (const [f, w] of cands) {
+    if (opts.size >= 4) break;
+    if (f === given || opts.has(f) || f.startsWith('undefined')) continue;
+    if (/^undefined/.test(f) || f.includes('undefined')) continue;
+    opts.set(f, w);
+  }
+  const label = dir === 'base' ? `korrespondierende Base zu <b>${fmt(given)}</b>` : `korrespondierende Säure zu <b>${fmt(given)}</b>`;
+  return selItem(qa, label, shuffle([...opts.keys()]).map(f => ({ v: f, t: fmtU(f) })), want, (v, good) => good ? `${fmtU(dir === 'base' ? given : want)} / ${fmtU(dir === 'base' ? want : given)} – Unterschied: ein H⁺.` : (opts.get(v) || '') + ` Richtig: ${fmtU(want)}.`);
+}
+const AMPHO = [['H2O', 1], ['HSO4^-', 1], ['HCO3^-', 1], ['H2PO4^-', 1], ['HPO4^2-', 1], ['HS^-', 1], ['HSO3^-', 1], ['OH^-', 1],
+  ['Cl^-', 0], ['NH4^+', 0], ['SO4^2-', 0], ['CO3^2-', 0], ['PO4^3-', 0], ['H3O^+', 0], ['HCl', 0], ['NO3^-', 0], ['CH3COO^-', 0], ['H2SO4', 0], ['Na^+', 0], ['H3PO4', 0]];
+function amphoItem(box) {
+  const sel = shuffle([...shuffle(AMPHO.filter(a => a[1])).slice(0, 3), ...shuffle(AMPHO.filter(a => !a[1])).slice(0, 5)]);
+  const wrap = el('div', { class: 'checks' }); const list = [];
+  for (const [f, amp] of sel) { const cb = el('input', { type: 'checkbox', 'aria-label': fmtU(f) }); const lab = el('label', null, cb, el('span', { html: fmt(f) })); wrap.append(lab); list.push({ cb, lab, amp, f }); }
+  const why = el('div', { class: 'why hidden' });
+  box.append(wrap, why);
+  return { solve: () => list.forEach(x => { x.cb.checked = !!x.amp; }), check() {
+    let ok = true; for (const x of list) { const r = x.cb.checked === !!x.amp; x.lab.className = r ? 'right' : 'wrong'; if (!r) ok = false; }
+    why.className = 'why ' + (ok ? 'ok' : 'err');
+    why.textContent = 'Ampholyte können ein Proton abgeben UND aufnehmen: ' + list.filter(x => x.amp).map(x => fmtU(x.f)).join(', ') + '. ' + (list.some(x => x.f === 'OH^-') ? 'OH⁻ ist ein Ampholyt (OH⁻ → O²⁻), auch wenn es meist als Base reagiert. ' : '') + 'Ohne abgebbares H (z. B. Cl⁻, SO₄²⁻) keine Säure; H₃O⁺, HCl, H₂SO₄ und H₃PO₄ reagieren in Wasser nur als Säuren.';
+    return { ok };
+  } };
+}
+function modePaare(card) {
+  card.append(el('h2', null, 'Korrespondierende Säure-Base-Paare'));
+  add(card, lvlNote('paare'));
+  card.append(el('p', { class: 'task-text' }, 'Säure nach Brønsted: Protonendonator; Base: Protonenakzeptor. Ein korrespondierendes Säure-Base-Paar unterscheidet sich um genau ein Proton (H⁺).'));
+  const lv = LEVEL === 'leicht' ? 1 : LEVEL === 'mittel' ? 2 : 3;
+  const qa = el('div', { class: 'qa' }), items = [];
+  const used = new Set();
+  const n = lv === 3 ? 4 : 5;
+  let guard = 0;
+  while (items.length < n && guard++ < 500) {
+    const fam = pick(FAM.filter(f => f.l <= lv && (lv === 1 || f.l >= 1)));
+    const dir = pick(['base', 'acid']);
+    const h = R(fam.min, fam.max);
+    const h2 = dir === 'base' ? h - 1 : h + 1;
+    if (!isReal(fam, h) || !isReal(fam, h2)) continue;
+    if (fam.real && !(fam.real.includes(h) && fam.real.includes(h2))) continue;
+    if (lv === 1 && fam.id === 'wasser' && (h === 0 || h2 === 0)) continue;
+    const k = fam.id + h + dir; if (used.has(k)) continue; used.add(k);
+    items.push(pairItem(qa, fam, h, dir));
+  }
+  card.append(qa);
+  if (lv === 3) { const box = el('div'); card.append(el('h3', null, 'Welche dieser Teilchen sind Ampholyte? (mehrere möglich)'), box); items.push(amphoItem(box)); }
+  card.append(...checkBar(card, items, 'paare'));
+}
+
+// =====================================================================
+//  3 Protolyse oder nicht?
+// =====================================================================
+// t: P Protolyse, R Redox, A andere Reaktion, K keine Reaktion
+// P: s/b = Index links (Säure/Base); ps/pb = Index rechts (korr. Base der Säure / korr. Säure der Base)
+// R: ox/red = Index links; ne = übertragene Elektronen; on = Oxidationszahlen
+const RX = [
+  { d: 'Chlorwasserstoff löst sich in Wasser.', L: [[1, 'HCl'], [1, 'H2O']], R: [[1, 'H3O^+'], [1, 'Cl^-']], t: 'P', s: 0, b: 1, ps: 1, pb: 0 },
+  { d: 'Ammoniak löst sich in Wasser; feuchtes Universalindikatorpapier färbt sich blau.', L: [[1, 'NH3'], [1, 'H2O']], R: [[1, 'NH4^+'], [1, 'OH^-']], t: 'P', s: 1, b: 0, ps: 1, pb: 0, eqm: true },
+  { d: 'Ammoniak und Chlorwasserstoff bilden über offenen Flaschen einen weißen Rauch.', L: [[1, 'NH3'], [1, 'HCl']], R: [[1, 'NH4^+'], [1, 'Cl^-']], t: 'P', s: 1, b: 0, ps: 1, pb: 0 },
+  { d: 'Ammoniumbromid reagiert mit Kalilauge; dabei entsteht Ammoniak (Teilchengleichung ohne Br⁻ und K⁺).', L: [[1, 'NH4^+'], [1, 'OH^-']], R: [[1, 'NH3'], [1, 'H2O']], t: 'P', s: 0, b: 1, ps: 0, pb: 1 },
+  { d: 'Salzsäure wird mit Natronlauge neutralisiert (ohne Cl⁻ und Na⁺).', L: [[1, 'H3O^+'], [1, 'OH^-']], R: [[2, 'H2O']], t: 'P', s: 0, b: 1, ps: 0, pb: 0 },
+  { d: 'Magnesiumoxid reagiert mit Iodwasserstoffsäure (1. Schritt; ohne Mg²⁺ und I⁻).', L: [[1, 'O^2-'], [1, 'H3O^+']], R: [[1, 'OH^-'], [1, 'H2O']], t: 'P', s: 1, b: 0, ps: 1, pb: 0 },
+  { d: 'Zur Herstellung von Chlorwasserstoff wird konzentrierte Schwefelsäure auf Kochsalz getropft.', L: [[1, 'H2SO4'], [1, 'Cl^-']], R: [[1, 'HSO4^-'], [1, 'HCl']], t: 'P', s: 0, b: 1, ps: 0, pb: 1 },
+  { d: 'Eisen(II)-sulfid reagiert mit Salzsäure (1. Schritt; ohne Fe²⁺ und Cl⁻).', L: [[1, 'S^2-'], [1, 'H3O^+']], R: [[1, 'HS^-'], [1, 'H2O']], t: 'P', s: 1, b: 0, ps: 1, pb: 0 },
+  { d: 'Kalk (Calciumcarbonat) reagiert mit Salzsäure (1. Schritt; ohne Ca²⁺ und Cl⁻).', L: [[1, 'CO3^2-'], [1, 'H3O^+']], R: [[1, 'HCO3^-'], [1, 'H2O']], t: 'P', s: 1, b: 0, ps: 1, pb: 0 },
+  { d: 'Branntkalk (Calciumoxid) wird in Wasser gegeben (ohne Ca²⁺).', L: [[1, 'O^2-'], [1, 'H2O']], R: [[2, 'OH^-']], t: 'P', s: 1, b: 0, ps: 0, pb: 0 },
+  { d: 'Phosphorsäure gibt in Wasser ein Proton ab.', L: [[1, 'H3PO4'], [1, 'H2O']], R: [[1, 'H2PO4^-'], [1, 'H3O^+']], t: 'P', s: 0, b: 1, ps: 0, pb: 1, eqm: true },
+  { d: 'Essigsäure wird in Wasser gegeben.', L: [[1, 'CH3COOH'], [1, 'H2O']], R: [[1, 'CH3COO^-'], [1, 'H3O^+']], t: 'P', s: 0, b: 1, ps: 0, pb: 1, eqm: true },
+  { d: 'Natron (Natriumhydrogencarbonat) reagiert mit Salzsäure (ohne Na⁺ und Cl⁻).', L: [[1, 'HCO3^-'], [1, 'H3O^+']], R: [[1, 'H2CO3'], [1, 'H2O']], t: 'P', s: 1, b: 0, ps: 1, pb: 0 },
+  { d: 'Natriumacetat wird in Wasser gelöst; die Lösung reagiert schwach alkalisch.', L: [[1, 'CH3COO^-'], [1, 'H2O']], R: [[1, 'CH3COOH'], [1, 'OH^-']], t: 'P', s: 1, b: 0, ps: 1, pb: 0, eqm: true },
+  { d: 'Natriumhydrogensulfat wird in Wasser gelöst; die Lösung reagiert sauer.', L: [[1, 'HSO4^-'], [1, 'H2O']], R: [[1, 'SO4^2-'], [1, 'H3O^+']], t: 'P', s: 0, b: 1, ps: 0, pb: 1, eqm: true },
+  { d: 'Soda (Natriumcarbonat) wird in Wasser gelöst; die Lösung reagiert alkalisch.', L: [[1, 'CO3^2-'], [1, 'H2O']], R: [[1, 'HCO3^-'], [1, 'OH^-']], t: 'P', s: 1, b: 0, ps: 1, pb: 0, eqm: true },
+  { d: 'Zink reagiert mit Salzsäure (ohne Cl⁻).', L: [[1, 'Zn'], [2, 'H3O^+']], R: [[1, 'Zn^2+'], [1, 'H2'], [2, 'H2O']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Zn: 0 → +II; H: +I → 0' },
+  { d: 'Lithium reagiert mit Wasser unter Wasserstoffentwicklung.', L: [[2, 'Li'], [2, 'H2O']], R: [[2, 'Li^+'], [2, 'OH^-'], [1, 'H2']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Li: 0 → +I; H: +I → 0' },
+  { d: 'Wasserstoff reagiert mit Chlor (Chlorknallgas).', L: [[1, 'H2'], [1, 'Cl2']], R: [[2, 'HCl']], t: 'R', ox: 0, red: 1, ne: 2, on: 'H: 0 → +I; Cl: 0 → −I' },
+  { d: 'Hoch erhitztes Calcium reagiert mit Luftstickstoff zu Calciumnitrid.', L: [[3, 'Ca'], [1, 'N2']], R: [[1, 'Ca3N2']], t: 'R', ox: 0, red: 1, ne: 6, on: 'Ca: 0 → +II; N: 0 → −III' },
+  { d: 'Weißer Phosphor verbrennt zu Phosphorpentoxid.', L: [[1, 'P4'], [5, 'O2']], R: [[1, 'P4O10']], t: 'R', ox: 0, red: 1, ne: 20, on: 'P: 0 → +V; O: 0 → −II' },
+  { d: 'Magnesium reagiert mit Salzsäure (ohne Cl⁻).', L: [[1, 'Mg'], [2, 'H3O^+']], R: [[1, 'Mg^2+'], [1, 'H2'], [2, 'H2O']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Mg: 0 → +II; H: +I → 0' },
+  { d: 'Ein Eisennagel wird in Kupfersulfatlösung gestellt (ohne SO₄²⁻).', L: [[1, 'Fe'], [1, 'Cu^2+']], R: [[1, 'Fe^2+'], [1, 'Cu']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Fe: 0 → +II; Cu: +II → 0' },
+  { d: 'Natrium reagiert mit Chlor.', L: [[2, 'Na'], [1, 'Cl2']], R: [[2, 'NaCl']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Na: 0 → +I; Cl: 0 → −I' },
+  { d: 'Ein Kupferblech wird in Silbernitratlösung gestellt (ohne NO₃⁻).', L: [[1, 'Cu'], [2, 'Ag^+']], R: [[1, 'Cu^2+'], [2, 'Ag']], t: 'R', ox: 0, red: 1, ne: 2, on: 'Cu: 0 → +II; Ag: +I → 0' },
+  { d: 'Magnesium verbrennt an der Luft.', L: [[2, 'Mg'], [1, 'O2']], R: [[2, 'MgO']], t: 'R', ox: 0, red: 1, ne: 4, on: 'Mg: 0 → +II; O: 0 → −II' },
+  { d: 'Silbernitratlösung wird zu Kochsalzlösung gegeben; ein weißer Niederschlag entsteht.', L: [[1, 'Ag^+'], [1, 'Cl^-']], R: [[1, 'AgCl']], t: 'A', why: 'Fällungsreaktion: weder Elektronen- noch Protonenübergang.' },
+  { d: 'Phosphorpentoxid wird in Wasser gelöst; es entsteht Phosphorsäure.', L: [[1, 'P4O10'], [6, 'H2O']], R: [[4, 'H3PO4']], t: 'A', why: 'Addition von Wasser: keine Änderung der Oxidationszahlen, kein Protonenübergang (erst danach protolysiert die Phosphorsäure).' },
+  { d: 'Kochsalz löst sich in Wasser.', L: [[1, 'NaCl']], R: [[1, 'Na^+'], [1, 'Cl^-']], t: 'A', why: 'Lösungsvorgang: Das Ionengitter wird aufgelöst, die Ionen werden hydratisiert – kein Protonen- oder Elektronenübergang.' },
+  { d: 'Bariumchloridlösung wird zu verdünnter Schwefelsäure gegeben; ein weißer Niederschlag entsteht.', L: [[1, 'Ba^2+'], [1, 'SO4^2-']], R: [[1, 'BaSO4']], t: 'A', why: 'Fällungsreaktion: weder Elektronen- noch Protonenübergang.' },
+  { d: 'Kupfer wird zu Essigsäure gegeben.', L: [[1, 'Cu'], [1, 'CH3COOH']], R: null, t: 'K', why: 'Keine Reaktion: Kupfer ist edler als Wasserstoff und wird von H₃O⁺ nicht oxidiert.' },
+  { d: 'Silber wird in Salzsäure gegeben.', L: [[1, 'Ag'], [1, 'H3O^+']], R: null, t: 'K', why: 'Keine Reaktion: Silber ist edler als Wasserstoff.' },
+  { d: 'Ein Kupferblech wird in Zinksulfatlösung gestellt.', L: [[1, 'Cu'], [1, 'Zn^2+']], R: null, t: 'K', why: 'Keine Reaktion: Kupfer ist edler als Zink; Zn²⁺ kann Kupfer nicht oxidieren.' }
+];
+const CATS = [['R', 'Redoxreaktion'], ['P', 'Säure-Base-Reaktion (Protolyse)'], ['A', 'andere Reaktion (z. B. Fällung, Lösen, Addition)'], ['K', 'keine Reaktion']];
+function modeProtolyse(card) {
+  card.append(el('h2', null, 'Protolyse oder nicht?'));
+  add(card, lvlNote('protolyse'));
+  let pool = RX; if (LEVEL === 'leicht') pool = RX.filter(r => !(r.t === 'R' && r.ne > 6));
+  const rx = pick(pool);
+  const arrow = rx.eqm ? ' ⇌ ' : ' → ';
+  card.append(el('p', { class: 'task-text' }, rx.d),
+    el('div', { class: 'eq', html: side(rx.L) + (rx.R ? arrow + side(rx.R) : ' → ?') }));
+  const qa1 = el('div', { class: 'qa' });
+  const it1 = selItem(qa1, 'Um welche Art von Reaktion handelt es sich?', CATS.map(([v, t]) => ({ v, t })), rx.t, (v, good) => {
+    if (rx.t === 'P') return good ? 'Ein Proton (H⁺) wird übertragen.' : 'Die Oxidationszahlen ändern sich nicht, aber ein Teilchen gibt ein Proton (H⁺) an ein anderes ab.';
+    if (rx.t === 'R') return (good ? 'Elektronen werden übertragen: ' : 'Die Oxidationszahlen ändern sich – Elektronenübergang: ') + rx.on + '.';
+    return rx.why;
+  });
+  card.append(qa1);
+  const stage2 = el('div', { class: 'hidden' });
+  const items2 = [];
+  const lp = rx.L.map(([k, f], i) => ({ v: String(i), t: fmtU(f) }));
+  const rp = rx.R ? rx.R.map(([k, f], i) => ({ v: String(i), t: fmtU(f) })) : [];
+  const qa2 = el('div', { class: 'qa' });
+  if (LEVEL !== 'leicht' && rx.t === 'P') {
+    const S = fmtU(rx.L[rx.s][1]), B = fmtU(rx.L[rx.b][1]);
+    items2.push(selItem(qa2, 'Säure (Protonendonator) der Hinreaktion', lp, String(rx.s), (v, g) => g ? `${S} gibt ein Proton ab.` : `${S} gibt das Proton ab – ${fmtU(rx.L[+v][1])} nimmt es auf.`));
+    items2.push(selItem(qa2, 'Base (Protonenakzeptor) der Hinreaktion', lp, String(rx.b), (v, g) => g ? `${B} nimmt das Proton auf.` : `${B} nimmt das Proton auf.`));
+    if (LEVEL === 'schwer') {
+      items2.push(selItem(qa2, `korrespondierende Base zur Säure ${S}`, rp, String(rx.ps), (v, g) => `Säure-Base-Paar ${S} / ${fmtU(rx.R[rx.ps][1])}`));
+      items2.push(selItem(qa2, `korrespondierende Säure zur Base ${B}`, rp, String(rx.pb), (v, g) => `Säure-Base-Paar ${fmtU(rx.R[rx.pb][1])} / ${B}`));
+    }
+  } else if (LEVEL !== 'leicht' && rx.t === 'R') {
+    items2.push(selItem(qa2, 'Welches Teilchen wird oxidiert (gibt Elektronen ab)?', lp, String(rx.ox), () => rx.on));
+    items2.push(selItem(qa2, 'Welches Teilchen wird reduziert (nimmt Elektronen auf)?', lp, String(rx.red), () => rx.on));
+    if (LEVEL === 'schwer') items2.push(numItem(qa2, 'Anzahl der übertragenen Elektronen (für die Gleichung, wie sie dasteht)', '', rx.ne, [{ v: rx.ne / rx.L[rx.ox][0], why: 'Das gilt für ein Teilchen – die Gleichung enthält mehrere.' }], `${rx.on}; mit den Koeffizienten: ${rx.ne} e⁻.`, { rel: 0, abs: 0.01 }));
+  }
+  stage2.append(el('h3', null, rx.t === 'P' ? 'Protonenübergang' : 'Elektronenübergang'), qa2);
+  const fb = feedback();
+  card.__items = [it1, ...items2]; card.__rx = rx;
+  const btn = el('button', { class: 'primary', type: 'button', onclick: () => {
+    if (stage2.classList.contains('hidden')) {
+      const r = it1.check();
+      if (r.empty) { fb.set('info', 'Wähle eine Reaktionsart.'); return; }
+      if (items2.length) {
+        stage2.classList.remove('hidden');
+        it1.sel.disabled = true; it1.sel.value = rx.t; it1.sel.className = 'right';
+        fb.set(r.ok ? 'ok' : 'err', r.ok ? 'Richtig erkannt. Jetzt der zweite Teil.' : 'Die richtige Reaktionsart ist eingetragen – jetzt der zweite Teil.');
+        card.firstOk = r.ok;
+        return;
+      }
+      if (r.ok) { fb.set('ok', 'Richtig!'); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('protolyse'); } }
+      else { it1.sel.disabled = true; fb.set('err', 'Noch nicht – die Erklärung steht oben. Weiter mit „Neue Aufgabe“.'); }
+      return;
+    }
+    const ok = runCheck(items2, fb, card, null);
+    if (ok) { if (card.firstOk) { fb.set('ok', 'Alles richtig!'); card.classList.add('solved'); if (!card.done) { card.done = true; addScore('protolyse'); } } else fb.set('info', 'Der zweite Teil stimmt. Die Reaktionsart war zunächst falsch – nimm eine neue Aufgabe.'); }
+  } }, 'Prüfen');
+  card.append(stage2, el('div', { class: 'bar' }, btn), fb);
+}
+
+// =====================================================================
+//  4 Stöchiometrie
+// =====================================================================
+const COMP = [['H2SO4', 'Schwefelsäure'], ['Ca(OH)2', 'Calciumhydroxid'], ['Al2(SO4)3', 'Aluminiumsulfat'], ['NaHCO3', 'Natriumhydrogencarbonat'], ['CaCO3', 'Calciumcarbonat'],
+  ['C6H12O6', 'Glucose'], ['MgCl2', 'Magnesiumchlorid'], ['Fe2O3', 'Eisen(III)-oxid'], ['(NH4)2SO4', 'Ammoniumsulfat'], ['CH3COOH', 'Essigsäure'], ['NaOH', 'Natriumhydroxid'],
+  ['C2H5OH', 'Ethanol'], ['Ca(NO3)2', 'Calciumnitrat'], ['Na2CO3', 'Natriumcarbonat'], ['KMnO4', 'Kaliumpermanganat'], ['Cu(NO3)2', 'Kupfer(II)-nitrat'], ['NaCl', 'Natriumchlorid'], ['HgS', 'Zinnober (Quecksilbersulfid)']];
+const GASES = { O2: 'Sauerstoff', H2: 'Wasserstoff', CO2: 'Kohlenstoffdioxid', SO2: 'Schwefeldioxid', H2S: 'Schwefelwasserstoff', CO: 'Kohlenstoffmonoxid', N2: 'Stickstoff', Cl2: 'Chlor', NH3: 'Ammoniak', CH4: 'Methan' };
+// M ohne Klammer-Multiplikator (typischer Fehler)
+const molarNoParen = f => molar(f.replace(/\(([^()]+)\)\d+/g, '$1'));
+const VM_OPTS = [[22.4, 'bei Normbedingungen (0 °C, 1013 hPa): V<sub>m</sub> = 22,4 L/mol'], [24.5, 'bei 25 °C und 1013 hPa: V<sub>m</sub> = 24,5 L/mol']];
+const nice = arr => pick(arr);
+function stoichLeicht(card, qa, items) {
+  const typ = pick(['M', 'mn', 'nm', 'c', 'Vlsg', 'gas']);
+  let text, fs;
+  if (typ === 'M') {
+    const [f, n] = pick(COMP); fs = [f];
+    const M = molar(f);
+    text = `Berechne die molare Masse von ${n} (${fmt(f)}).`;
+    items.push(numItem(qa, `M(${fmt(f)})`, 'g/mol', M, [{ v: molarNoParen(f), why: 'Der Index hinter der Klammer gilt für alle Atome in der Klammer.' }], `M = ${Object.entries(parseFormula(f)).map(([e, k]) => (k > 1 ? k + ' · ' : '') + de(AM[e], AM[e] % 1 ? 1 : 0)).join(' + ')} = ${sig(M, 4)} g/mol`, { rel: 0.005 }));
+  } else if (typ === 'mn' || typ === 'nm') {
+    const [f, n] = pick(COMP); fs = [f]; const M = molar(f);
+    if (typ === 'mn') {
+      const m = nice([0.5, 1, 2, 5, 10, 12.5, 25, 50, 100, 250]);
+      text = `Welche Stoffmenge sind ${de(m, m % 1 ? 1 : 0)} g ${n} (${fmt(f)})?`;
+      items.push(numItem(qa, `n(${fmt(f)})`, 'mol', m / M, [{ v: M / m, why: 'Umgekehrt: n = m / M.' }, { v: m * M, why: 'Teilen, nicht multiplizieren: n = m / M.' }, { v: m / molarNoParen(f), why: 'Molare Masse prüfen: Der Index hinter der Klammer gilt für alle Atome darin.' }],
+        `M = ${sig(M, 4)} g/mol;  n = m / M = ${de(m, m % 1 ? 1 : 0)} g / ${sig(M, 4)} g/mol = ${sig(m / M, 3)} mol`, { rel: 0.02 }));
+    } else {
+      const nn = nice([0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.5, 2, 3]);
+      text = `Welche Masse haben ${sig(nn)} mol ${n} (${fmt(f)})?`;
+      items.push(numItem(qa, `m(${fmt(f)})`, 'g', nn * M, [{ v: nn / M, why: 'Multiplizieren: m = n · M.' }, { v: M / nn, why: 'm = n · M.' }, { v: nn * molarNoParen(f), why: 'Molare Masse prüfen: Der Index hinter der Klammer gilt für alle Atome darin.' }],
+        `M = ${sig(M, 4)} g/mol;  m = n · M = ${sig(nn)} mol · ${sig(M, 4)} g/mol = ${sig(nn * M, 3)} g`, { rel: 0.02 }));
+    }
+  } else if (typ === 'c') {
+    const [f, n] = pick(COMP.filter(c => !['C6H12O6', 'Fe2O3', 'CaCO3', 'HgS', 'C2H5OH'].includes(c[0]))); fs = [f]; const M = molar(f);
+    const m = nice([1, 2, 4, 5, 8, 10, 20]), V = nice([50, 100, 200, 250, 500]);
+    const nn = m / M, c = nn / (V / 1000);
+    text = `${de(m)} g ${n} (${fmt(f)}) werden in Wasser gelöst; die Lösung wird auf ${V} mL aufgefüllt. Berechne die Stoffmengenkonzentration.`;
+    items.push(numItem(qa, `n(${fmt(f)})`, 'mol', nn, [{ v: M / m, why: 'n = m / M.' }], `n = ${de(m)} g / ${sig(M, 4)} g/mol = ${sig(nn, 3)} mol`, { rel: 0.02 }));
+    items.push(numItem(qa, `c(${fmt(f)})`, 'mol/L', c, [{ v: nn / V, why: 'Das Volumen in Liter einsetzen: ' + V + ' mL = ' + de(V / 1000, 3).replace(/0+$/, '') + ' L.' }, { v: m / (V / 1000), why: 'Das ist die Massenkonzentration in g/L. Gefragt ist c = n / V.' }, { v: nn * V / 1000, why: 'c = n / V (teilen).' }],
+      `c = n / V = ${sig(nn, 3)} mol / ${sig(V / 1000)} L = ${sig(c, 3)} mol/L`, { rel: 0.02 }));
+  } else if (typ === 'Vlsg') {
+    const nn = nice([0.05, 0.1, 0.25, 0.5, 0.02]), c = nice([0.1, 0.5, 1, 2]); fs = [];
+    text = `Man benötigt ${sig(nn)} mol eines Stoffes X. Im Labor steht eine ${sig(c)}-molare Lösung (c = ${sig(c)} mol/L). Welches Volumen dieser Lösung muss man abmessen?`;
+    items.push(numItem(qa, 'V(Lösung)', 'mL', nn / c * 1000, [{ v: nn / c, why: 'Das Ergebnis n / c ist in Liter. Gefragt ist mL.' }, { v: nn * c * 1000, why: 'V = n / c (teilen).' }, { v: c / nn * 1000, why: 'V = n / c.' }],
+      `V = n / c = ${sig(nn)} mol / ${sig(c)} mol/L = ${sig(nn / c, 3)} L = ${sig(nn / c * 1000, 3)} mL`, { rel: 0.02 }));
+  } else {
+    const g = pick(['O2', 'H2', 'CO2', 'SO2', 'H2S', 'N2', 'Cl2', 'NH3', 'CH4']); fs = [g];
+    const [Vm, vt] = pick(VM_OPTS), M = molar(g), m = nice([1, 2, 5, 10, 16, 32, 44, 100]);
+    text = `Welches Volumen nehmen ${de(m)} g ${GASES[g]} (${fmt(g)}) ein? Es gilt ${vt}.`;
+    const nn = m / M;
+    items.push(numItem(qa, `n(${fmt(g)})`, 'mol', nn, [{ v: m / molar(g.replace(/\d/g, '')), why: 'Gase wie ' + fmtU(g) + ' bestehen aus Molekülen – den Index mitrechnen.' }, { v: M / m, why: 'n = m / M.' }], `n = ${de(m)} g / ${sig(M, 4)} g/mol = ${sig(nn, 3)} mol`, { rel: 0.02 }));
+    items.push(numItem(qa, `V(${fmt(g)})`, 'L', nn * Vm, [{ v: nn * (Vm === 22.4 ? 24.5 : 22.4), why: 'Das molare Volumen für die angegebenen Bedingungen verwenden.' }, { v: m * Vm, why: 'Erst die Stoffmenge berechnen: V = n · Vm.' }, { v: nn / Vm, why: 'V = n · Vm (multiplizieren).' }, { v: m / molar(g.replace(/\d/g, '')) * Vm, why: 'Molare Masse des Moleküls verwenden.' }],
+      `V = n · V<sub>m</sub> = ${sig(nn, 3)} mol · ${de(Vm, 1)} L/mol = ${sig(nn * Vm, 3)} L`.replace(/<[^>]+>/g, ''), { rel: 0.02 }));
+  }
+  return { text, fs };
+}
+// Reaktionen für Rechnungen über die Reaktionsgleichung
+const RXS = [
+  { d: 'Zinnober wird im heißen Luftstrom erhitzt; es entstehen Quecksilber und Schwefeldioxid.', L: [[1, 'HgS'], [1, 'O2']], R: [[1, 'Hg'], [1, 'SO2']], names: { HgS: 'Zinnober', Hg: 'Quecksilber' } },
+  { d: 'Eisen(II)-sulfid wird an der Luft geröstet; es entstehen Eisen(III)-oxid und Schwefeldioxid.', L: [[4, 'FeS'], [7, 'O2']], R: [[2, 'Fe2O3'], [4, 'SO2']], names: { FeS: 'Eisen(II)-sulfid', Fe2O3: 'Eisen(III)-oxid' } },
+  { d: 'Zinkcarbonat wird an der Luft erhitzt.', L: [[1, 'ZnCO3']], R: [[1, 'ZnO'], [1, 'CO2']], names: { ZnCO3: 'Zinkcarbonat', ZnO: 'Zinkoxid' } },
+  { d: 'Zinkoxid wird mit Kohlenstoff zu Zink reduziert.', L: [[2, 'ZnO'], [1, 'C']], R: [[2, 'Zn'], [1, 'CO2']], names: { ZnO: 'Zinkoxid', C: 'Kohlenstoff', Zn: 'Zink' } },
+  { d: 'Zink reagiert mit Salzsäure.', L: [[1, 'Zn'], [2, 'HCl']], R: [[1, 'ZnCl2'], [1, 'H2']], names: { Zn: 'Zink', ZnCl2: 'Zinkchlorid' } },
+  { d: 'Kalk reagiert mit Salpetersäure.', L: [[1, 'CaCO3'], [2, 'HNO3']], R: [[1, 'Ca(NO3)2'], [1, 'H2O'], [1, 'CO2']], names: { CaCO3: 'Calciumcarbonat', 'Ca(NO3)2': 'Calciumnitrat' } },
+  { d: 'Schwefeltrioxid reagiert mit Wasser zu Schwefelsäure.', L: [[1, 'SO3'], [1, 'H2O']], R: [[1, 'H2SO4']], names: { SO3: 'Schwefeltrioxid', H2SO4: 'Schwefelsäure' } },
+  { d: 'Lithiumhydroxid bindet in der Raumfahrt Kohlenstoffdioxid.', L: [[2, 'LiOH'], [1, 'CO2']], R: [[1, 'Li2CO3'], [1, 'H2O']], names: { LiOH: 'Lithiumhydroxid', Li2CO3: 'Lithiumcarbonat' } },
+  { d: 'Eisen(II)-sulfid reagiert mit Salzsäure; es entsteht Schwefelwasserstoff.', L: [[1, 'FeS'], [2, 'HCl']], R: [[1, 'FeCl2'], [1, 'H2S']], names: { FeS: 'Eisen(II)-sulfid', FeCl2: 'Eisen(II)-chlorid' } },
+  { d: 'Propan verbrennt vollständig.', L: [[1, 'C3H8'], [5, 'O2']], R: [[3, 'CO2'], [4, 'H2O']], names: { C3H8: 'Propan', H2O: 'Wasser' } },
+  { d: 'Im Hochofen wird Eisen(III)-oxid mit Kohlenstoffmonoxid reduziert.', L: [[1, 'Fe2O3'], [3, 'CO']], R: [[2, 'Fe'], [3, 'CO2']], names: { Fe2O3: 'Eisen(III)-oxid', Fe: 'Eisen' } },
+  { d: 'Thermitreaktion: Aluminium reduziert Eisen(III)-oxid.', L: [[2, 'Al'], [1, 'Fe2O3']], R: [[1, 'Al2O3'], [2, 'Fe']], names: { Al: 'Aluminium', Fe2O3: 'Eisen(III)-oxid', Al2O3: 'Aluminiumoxid', Fe: 'Eisen' } },
+  { d: 'Natrium reagiert mit Wasser.', L: [[2, 'Na'], [2, 'H2O']], R: [[2, 'NaOH'], [1, 'H2']], names: { Na: 'Natrium', NaOH: 'Natriumhydroxid' } },
+  { d: 'Glucose wird in der Zellatmung vollständig oxidiert.', L: [[1, 'C6H12O6'], [6, 'O2']], R: [[6, 'CO2'], [6, 'H2O']], names: { C6H12O6: 'Glucose', H2O: 'Wasser' } },
+  { d: 'Ammoniaksynthese.', L: [[1, 'N2'], [3, 'H2']], R: [[2, 'NH3']], names: {} }
+];
+const nm = (rx, f) => rx.names[f] || GASES[f] || f;
+function stoichMittel(card, qa, items) {
+  const typ = pick(['rgl', 'rgl', 'rgl', 'ionen', 'neutr']);
+  if (typ === 'rgl') {
+    const rx = pick(RXS); const all = [...rx.L, ...rx.R];
+    let gi, si; do { gi = R(0, all.length - 1); si = R(0, all.length - 1); } while (gi === si || all[si][1] === 'H2O' && Math.random() < 0.7);
+    const [kg, fg] = all[gi], [ks, fsd] = all[si];
+    const gGas = fg in GASES && Math.random() < 0.4, sGas = fsd in GASES && Math.random() < 0.7;
+    const [Vm, vt] = pick(VM_OPTS);
+    const Mg = molar(fg), Ms = molar(fsd);
+    let ng, givenTxt;
+    if (gGas) { const V = pick([1, 2, 5, 10, 50, 100, 340]); ng = V / Vm; givenTxt = `${de(V)} L ${nm(rx, fg)} (${fmt(fg)})`; }
+    else { const m = pick([1, 5, 10, 50, 100, 500, 1000]); ng = m / Mg; givenTxt = `${de(m)} g ${nm(rx, fg)} (${fmt(fg)})`; }
+    const ns = ng * ks / kg;
+    const gE = gi < rx.L.length, sE = si < rx.L.length;
+    const rel = gE && !sE ? `die aus ${givenTxt} entsteht` : !gE && sE ? `die man benötigt, um ${givenTxt} zu erhalten` : gE && sE ? `die mit ${givenTxt} reagiert` : `die neben ${givenTxt} entsteht`;
+    const text = `${rx.d} Berechne ${sGas ? 'das Volumen' : 'die Masse'} an ${nm(rx, fsd)} (${fmt(fsd)}), ${rel}.${gGas || sGas ? ' Es gilt ' + vt + '.' : ''}`;
+    card.append(el('div', { class: 'eq', html: side(rx.L) + ' → ' + side(rx.R) }));
+    items.push(numItem(qa, `n(${fmt(fg)})`, 'mol', ng, [], `n(${fmtU(fg)}) = ${gGas ? 'V / Vm' : 'm / M'} = ${sig(ng, 3)} mol${gGas ? '' : ' (M = ' + sig(Mg, 4) + ' g/mol)'}`, { rel: 0.02 }));
+    items.push(numItem(qa, `n(${fmt(fsd)})`, 'mol', ns, [{ v: ng, why: `Das Stoffmengenverhältnis aus der Reaktionsgleichung beachten: n(${fmtU(fsd)}) : n(${fmtU(fg)}) = ${ks} : ${kg}.` }, { v: ng * kg / ks, why: `Verhältnis umgedreht: n(${fmtU(fsd)}) = n(${fmtU(fg)}) · ${ks}/${kg}.` }],
+      `n(${fmtU(fsd)}) : n(${fmtU(fg)}) = ${ks} : ${kg}  →  n(${fmtU(fsd)}) = ${sig(ng, 3)} mol · ${ks}/${kg} = ${sig(ns, 3)} mol`, { rel: 0.02 }));
+    const want = sGas ? ns * Vm : ns * Ms;
+    items.push(numItem(qa, sGas ? `V(${fmt(fsd)})` : `m(${fmt(fsd)})`, sGas ? 'L' : 'g', want,
+      [{ v: sGas ? ng * Vm : ng * Ms, why: 'Das Stoffmengenverhältnis aus der Reaktionsgleichung fehlt.' }, { v: sGas ? ng * kg / ks * Vm : ng * kg / ks * Ms, why: 'Das Stoffmengenverhältnis ist umgedreht.' }, { v: sGas ? ns * (Vm === 22.4 ? 24.5 : 22.4) : NaN, why: 'Das molare Volumen für die angegebenen Bedingungen verwenden.' }, { v: (gGas ? NaN : (ns * Ms) * ks), why: 'Den Koeffizienten nicht doppelt berücksichtigen – er steckt schon in n.' }],
+      sGas ? `V = n · Vm = ${sig(ns, 3)} mol · ${de(Vm, 1)} L/mol = ${sig(want, 3)} L` : `m = n · M = ${sig(ns, 3)} mol · ${sig(Ms, 4)} g/mol = ${sig(want, 3)} g`, { rel: 0.02 }));
+    return { text, fs: [fg, fsd], eqFirst: true };
+  }
+  if (typ === 'ionen') {
+    const S = pick([['MgCl2', 'Magnesiumchlorid', 'Mg^2+', 1, 'Cl^-', 2], ['Na2SO4', 'Natriumsulfat', 'Na^+', 2, 'SO4^2-', 1], ['AlCl3', 'Aluminiumchlorid', 'Al^3+', 1, 'Cl^-', 3], ['K3PO4', 'Kaliumphosphat', 'K^+', 3, 'PO4^3-', 1],
+      ['CaCl2', 'Calciumchlorid', 'Ca^2+', 1, 'Cl^-', 2], ['Al2(SO4)3', 'Aluminiumsulfat', 'Al^3+', 2, 'SO4^2-', 3], ['(NH4)2SO4', 'Ammoniumsulfat', 'NH4^+', 2, 'SO4^2-', 1], ['Fe(NO3)3', 'Eisen(III)-nitrat', 'Fe^3+', 1, 'NO3^-', 3]]);
+    const [f, n, ci, kc, ai, ka] = S; const M = molar(f);
+    const m = pick([0.5, 1, 2, 5, 9.53, 10, 20]), V = pick([50, 100, 250, 500]);
+    const c = m / M / (V / 1000);
+    const text = `${de(m, m % 1 ? 2 : 0)} g ${n} (${fmt(f)}) werden in so viel Wasser gelöst, dass ${V} mL Lösung entstehen. Berechne die Konzentrationen aller Ionen in der Lösung.`;
+    items.push(numItem(qa, `c(${fmt(f)}) (Formeleinheiten)`, 'mol/L', c, [{ v: m / M / V, why: 'Volumen in Liter einsetzen.' }, { v: m / molarNoParen(f) / (V / 1000), why: 'Molare Masse prüfen (Klammer!).' }], `n = ${sig(m / M, 3)} mol (M = ${sig(M, 4)} g/mol);  c = n / V = ${sig(c, 3)} mol/L`, { rel: 0.02 }));
+    items.push(numItem(qa, `c(${fmt(ci)})`, 'mol/L', c * kc, [{ v: c, why: `Eine Formeleinheit ${fmtU(f)} liefert ${kc} ${fmtU(ci)}.` }, { v: c * ka, why: 'Faktoren vertauscht.' }], `${fmtU(f)} → ${kc > 1 ? kc + ' ' : ''}${fmtU(ci)} + ${ka > 1 ? ka + ' ' : ''}${fmtU(ai)};  c(${fmtU(ci)}) = ${kc} · ${sig(c, 3)} mol/L = ${sig(c * kc, 3)} mol/L`, { rel: 0.02 }));
+    items.push(numItem(qa, `c(${fmt(ai)})`, 'mol/L', c * ka, [{ v: c, why: `Eine Formeleinheit ${fmtU(f)} liefert ${ka} ${fmtU(ai)}.` }, { v: c * kc, why: 'Faktoren vertauscht.' }], `c(${fmtU(ai)}) = ${ka} · ${sig(c, 3)} mol/L = ${sig(c * ka, 3)} mol/L`, { rel: 0.02 }));
+    return { text, fs: [f] };
+  }
+  // Neutralisation
+  const acid = pick([['HCl', 'Salzsäure', 1], ['HNO3', 'Salpetersäure', 1], ['H2SO4', 'Schwefelsäure', 2]]);
+  const base = pick([['NaOH', 'Natronlauge', 1], ['KOH', 'Kalilauge', 1]]);
+  const Va = pick([5, 10, 20, 25, 50]), ca = pick([0.1, 0.5, 1, 2]), cb = pick([0.1, 0.2, 0.5, 1]);
+  const nH = Va / 1000 * ca * acid[2], Vb = nH / cb * 1000;
+  const text = `Gegeben sind ${Va} mL ${acid[1]} (${fmt(acid[0])}, c = ${sig(ca)} mol/L). Welches Volumen ${base[1]} (c = ${sig(cb)} mol/L) benötigt man zur vollständigen Neutralisation?`;
+  items.push(numItem(qa, 'n(H<sub>3</sub>O<sup>+</sup>)', 'mol', nH, [{ v: Va * ca * acid[2], why: 'Volumen in Liter umrechnen.' }, { v: Va / 1000 * ca, why: acid[2] === 2 ? 'Schwefelsäure gibt zwei Protonen ab: n(H₃O⁺) = 2 · n(H₂SO₄).' : '' }],
+    `n(H₃O⁺) = ${acid[2] === 2 ? '2 · ' : ''}c · V = ${acid[2] === 2 ? '2 · ' : ''}${sig(ca)} mol/L · ${sig(Va / 1000)} L = ${sig(nH, 3)} mol`, { rel: 0.02 }));
+  items.push(numItem(qa, `V(${base[1]})`, 'mL', Vb, [{ v: Vb / 1000, why: 'Ergebnis in mL angeben.' }, { v: Vb / acid[2], why: acid[2] === 2 ? 'Schwefelsäure ist zweiprotonig – doppelt so viel Lauge.' : '' }, { v: nH * cb * 1000, why: 'V = n / c.' }],
+    `H₃O⁺ + OH⁻ → 2 H₂O, also n(OH⁻) = n(H₃O⁺);  V = n / c = ${sig(nH, 3)} mol / ${sig(cb)} mol/L = ${sig(Vb, 3)} mL`, { rel: 0.02 }));
+  return { text, fs: [] };
+}
+const WSOL = [['H2SO4', 'Schwefelsäure (Akkusäure)', 0.37, 1.28], ['H2SO4', 'konzentrierte Schwefelsäure', 0.96, 1.84], ['NaOH', 'Natronlauge', 0.50, 1.52], ['HCl', 'konzentrierte Salzsäure', 0.37, 1.18],
+  ['HNO3', 'Salpetersäure', 0.65, 1.39], ['NH3', 'konzentrierte Ammoniaklösung', 0.25, 0.91], ['CH3COOH', 'Essigessenz', 0.25, 1.03]];
+const LIMIT = [
+  { d: 'Eisen und Schwefel reagieren zu Eisen(II)-sulfid.', L: [[1, 'Fe'], [1, 'S']], P: [1, 'FeS'], names: { Fe: 'Eisen', S: 'Schwefel', FeS: 'Eisen(II)-sulfid' } },
+  { d: 'Zink und Schwefel reagieren zu Zinksulfid.', L: [[1, 'Zn'], [1, 'S']], P: [1, 'ZnS'], names: { Zn: 'Zink', S: 'Schwefel', ZnS: 'Zinksulfid' } },
+  { d: 'Thermitreaktion: Aluminium reagiert mit Eisen(III)-oxid zu Aluminiumoxid und Eisen.', L: [[2, 'Al'], [1, 'Fe2O3']], P: [2, 'Fe'], names: { Al: 'Aluminium', Fe2O3: 'Eisen(III)-oxid', Fe: 'Eisen' } },
+  { d: 'Natrium reagiert mit Chlor zu Natriumchlorid.', L: [[2, 'Na'], [1, 'Cl2']], P: [2, 'NaCl'], names: { Na: 'Natrium', Cl2: 'Chlor', NaCl: 'Natriumchlorid' } },
+  { d: 'Magnesium verbrennt zu Magnesiumoxid.', L: [[2, 'Mg'], [1, 'O2']], P: [2, 'MgO'], names: { Mg: 'Magnesium', O2: 'Sauerstoff', MgO: 'Magnesiumoxid' } },
+  { d: 'Kupfer reagiert mit Schwefel zu Kupfer(I)-sulfid.', L: [[2, 'Cu'], [1, 'S']], P: [1, 'Cu2S'], names: { Cu: 'Kupfer', S: 'Schwefel', Cu2S: 'Kupfer(I)-sulfid' } }
+];
+function stoichSchwer(card, qa, items) {
+  const typ = pick(['w', 'limit', 'ausbeute', 'rueck']);
+  if (typ === 'w') {
+    const [f, n, w, rho] = pick(WSOL); const M = molar(f);
+    const mL = rho * 1000, mX = w * mL, c = mX / M;
+    const text = `${n} hat den Massenanteil w(${fmt(f)}) = ${de(w * 100)} % und die Dichte ρ = ${de(rho, 2)} g/mL. Berechne die Stoffmengenkonzentration c(${fmt(f)}). Tipp: Gehe von V(Lösung) = 1 L aus.`;
+    items.push(numItem(qa, 'm(Lösung) in 1 L', 'g', mL, [{ v: rho, why: '1 L = 1000 mL; m = ρ · V.' }, { v: 1000 / rho, why: 'm = ρ · V (multiplizieren).' }], `m = ρ · V = ${de(rho, 2)} g/mL · 1000 mL = ${sig(mL, 4)} g`, { rel: 0.01 }));
+    items.push(numItem(qa, `m(${fmt(f)}) in 1 L`, 'g', mX, [{ v: 1000 * w, why: 'Den Massenanteil auf die Masse der Lösung beziehen, nicht auf 1000 g.' }, { v: mL * w * 100, why: 'w als Dezimalzahl verwenden (' + de(w * 100) + ' % = ' + de(w, 2) + ').' }], `m(${fmtU(f)}) = w · m(Lösung) = ${de(w, 2)} · ${sig(mL, 4)} g = ${sig(mX, 4)} g`, { rel: 0.01 }));
+    items.push(numItem(qa, `c(${fmt(f)})`, 'mol/L', c, [{ v: 1000 * w / M, why: 'Die Dichte nicht vergessen: 1 L Lösung wiegt ' + sig(mL, 4) + ' g.' }, { v: mX * M, why: 'n = m / M.' }], `n = ${sig(mX, 4)} g / ${sig(M, 4)} g/mol = ${sig(c, 3)} mol in 1 L  →  c = ${sig(c, 3)} mol/L`, { rel: 0.02 }));
+    return { text, fs: [f] };
+  }
+  if (typ === 'limit') {
+    const rx = pick(LIMIT); const [[ka, A], [kb, B]] = rx.L; const [kp, P] = rx.P;
+    const MA = molar(A), MB = molar(B), MP = molar(P);
+    // Massen so wählen, dass ein deutlicher Überschuss vorliegt
+    let mA, mB, nA, nB;
+    do { mA = pick([2, 5, 10, 12, 20, 25, 50]); mB = pick([2, 4, 5, 8, 10, 16, 20, 32]); nA = mA / MA; nB = mB / MB; } while (Math.abs(nA / ka - nB / kb) / Math.max(nA / ka, nB / kb) < 0.12);
+    const limA = nA / ka < nB / kb; const nP = (limA ? nA / ka : nB / kb) * kp, mP = nP * MP;
+    const text = `${rx.d} Es werden ${de(mA)} g ${rx.names[A]} und ${de(mB)} g ${rx.names[B]} eingesetzt. Welcher Stoff liegt im Überschuss vor, und welche Masse ${rx.names[P]} entsteht höchstens?`;
+    card.append(el('div', { class: 'eq', html: side(rx.L) + ' → ' + side([rx.P]) }));
+    items.push(numItem(qa, `n(${fmt(A)})`, 'mol', nA, [], `n = ${de(mA)} g / ${sig(MA, 4)} g/mol = ${sig(nA, 3)} mol`, { rel: 0.02 }));
+    items.push(numItem(qa, `n(${fmt(B)})`, 'mol', nB, [], `n = ${de(mB)} g / ${sig(MB, 4)} g/mol = ${sig(nB, 3)} mol`, { rel: 0.02 }));
+    items.push(selItem(qa, 'Im Überschuss liegt vor:', [{ v: A, t: rx.names[A] }, { v: B, t: rx.names[B] }], limA ? B : A, (v, g) => `Verhältnis laut Gleichung ${ka} : ${kb}. ${sig(nA, 3)} mol ${fmtU(A)} bräuchten ${sig(nA * kb / ka, 3)} mol ${fmtU(B)} – vorhanden sind ${sig(nB, 3)} mol. Also ist ${limA ? rx.names[B] : rx.names[A]} im Überschuss${g ? '.' : ' – die kleinere Stoffmenge allein entscheidet nicht, wenn die Koeffizienten verschieden sind.'}`));
+    const wrongP = (limA ? nB / kb : nA / ka) * kp * MP;
+    items.push(numItem(qa, `m(${fmt(P)}) höchstens`, 'g', mP, [{ v: wrongP, why: 'Mit dem Stoff im Überschuss gerechnet – maßgeblich ist der Stoff, der zuerst verbraucht ist.' }, { v: mA + mB, why: 'Ein Teil eines Edukts bleibt übrig – die Massen dürfen nicht einfach addiert werden.' }],
+      `Der begrenzende Stoff ist ${limA ? rx.names[A] : rx.names[B]}: n(${fmtU(P)}) = ${sig(limA ? nA : nB, 3)} mol · ${kp}/${limA ? ka : kb} = ${sig(nP, 3)} mol;  m = ${sig(nP, 3)} mol · ${sig(MP, 4)} g/mol = ${sig(mP, 3)} g`, { rel: 0.02 }));
+    return { text, fs: [A, B, P], eqFirst: true };
+  }
+  if (typ === 'ausbeute') {
+    const rx = pick(RXS.filter(r => r.R.some(([k, f]) => !(f in GASES) && f !== 'H2O'))); const [ke, E] = pick(rx.L.filter(([k, f]) => !(f in GASES)).length ? rx.L.filter(([k, f]) => !(f in GASES)) : rx.L);
+    const [kp, P] = pick(rx.R.filter(([k, f]) => !(f in GASES) && f !== 'H2O'));
+    const ME = molar(E), MP = molar(P); const mE = pick([10, 20, 50, 100, 200]);
+    const mTh = mE / ME * kp / ke * MP; const y = pick([0.62, 0.7, 0.75, 0.8, 0.85, 0.9, 0.94]); const mReal = rnd(mTh * y, 1);
+    const text = `${rx.d} Aus ${de(mE)} g ${nm(rx, E)} (${fmt(E)}) erhält man ${de(mReal, 1)} g ${nm(rx, P)} (${fmt(P)}). Berechne die Ausbeute.`;
+    card.append(el('div', { class: 'eq', html: side(rx.L) + ' → ' + side(rx.R) }));
+    items.push(numItem(qa, `theoretische Masse m(${fmt(P)})`, 'g', mTh, [{ v: mE / ME * MP, why: `Stoffmengenverhältnis ${kp} : ${ke} beachten.` }, { v: mE / ME * ke / kp * MP, why: 'Verhältnis umgedreht.' }], `n(${fmtU(E)}) = ${sig(mE / ME, 3)} mol;  n(${fmtU(P)}) = · ${kp}/${ke} = ${sig(mE / ME * kp / ke, 3)} mol;  m = ${sig(mTh, 4)} g`, { rel: 0.02 }));
+    items.push(numItem(qa, 'Ausbeute', '%', mReal / mTh * 100, [{ v: mTh / mReal * 100, why: 'Ausbeute = tatsächliche Masse / theoretische Masse · 100 %.' }, { v: mReal / mE * 100, why: 'Mit der theoretischen Produktmasse vergleichen, nicht mit der Eduktmasse.' }], `Ausbeute = ${de(mReal, 1)} g / ${sig(mTh, 4)} g · 100 % = ${de(mReal / mTh * 100, 1)} %`, { rel: 0.02, abs: 0.6 }));
+    return { text, fs: [E, P], eqFirst: true };
+  }
+  // Rücktitration (Kalkgehalt von Eierschalen)
+  const w = pick([0.86, 0.88, 0.9, 0.92, 0.94, 0.96]), m = pick([0.6, 0.7, 0.8, 0.9, 1.0]), cH = 0.1, VH = 200, cN = pick([0.2, 0.25, 0.5]);
+  const nCa0 = w * m / molar('CaCO3'), nHtot = cH * VH / 1000; const VN = rnd((nHtot - 2 * nCa0) / cN * 1000, 1);
+  const nRest = cN * VN / 1000, nReact = nHtot - nRest, nCa = nReact / 2, mCa = nCa * molar('CaCO3'), wW = mCa / m * 100;
+  const text = `Um den Kalkgehalt von Eierschalen zu bestimmen, werden ${de(m, 1)} g Eierschale mit ${VH} mL Salzsäure (c = ${de(cH, 1)} mol/L) übergossen. Nach Ende der Gasentwicklung wird die übrige Salzsäure mit Natronlauge (c = ${sig(cN)} mol/L) titriert; Verbrauch ${de(VN, 1)} mL. Berechne den Massenanteil w(CaCO₃).`;
+  card.append(el('div', { class: 'eq', html: side([[1, 'CaCO3'], [2, 'HCl']]) + ' → ' + side([[1, 'CaCl2'], [1, 'H2O'], [1, 'CO2']]) + '<br>' + side([[1, 'HCl'], [1, 'NaOH']]) + ' → ' + side([[1, 'NaCl'], [1, 'H2O']]) }));
+  items.push(numItem(qa, 'n(HCl) insgesamt', 'mol', nHtot, [{ v: cH * VH, why: 'Volumen in Liter.' }], `n = ${de(cH, 1)} mol/L · 0,2 L = ${sig(nHtot, 3)} mol`, { rel: 0.02 }));
+  items.push(numItem(qa, 'n(HCl), die mit dem Kalk reagiert hat', 'mol', nReact, [{ v: nRest, why: 'Das ist der Rest, der mit Natronlauge titriert wurde.' }], `Rest: n = ${sig(cN)} mol/L · ${sig(VN / 1000, 4)} L = ${sig(nRest, 3)} mol;  reagiert: ${sig(nHtot, 3)} − ${sig(nRest, 3)} = ${sig(nReact, 3)} mol`, { rel: 0.02 }));
+  items.push(numItem(qa, 'w(CaCO<sub>3</sub>)', '%', wW, [{ v: nReact * molar('CaCO3') / m * 100, why: 'Je CaCO₃ werden 2 HCl verbraucht: n(CaCO₃) = n(HCl) / 2.' }, { v: nRest / 2 * molar('CaCO3') / m * 100, why: 'Mit der HCl rechnen, die mit dem Kalk reagiert hat – nicht mit dem Rest.' }],
+    `n(CaCO₃) = ${sig(nReact, 3)} mol / 2 = ${sig(nCa, 3)} mol;  m = ${sig(nCa, 3)} mol · ${sig(molar('CaCO3'), 4)} g/mol = ${sig(mCa, 3)} g;  w = ${sig(mCa, 3)} g / ${de(m, 1)} g = ${de(wW, 1)} %`, { rel: 0.02, abs: 0.8 }));
+  return { text, fs: ['CaCO3', 'HCl'] };
+}
+function modeStoich(card) {
+  card.append(el('h2', null, 'Stöchiometrie'));
+  add(card, lvlNote('stoich'));
+  const qa = el('div', { class: 'qa' }), items = [];
+  const hold = el('div');
+  const r = (LEVEL === 'leicht' ? stoichLeicht : LEVEL === 'mittel' ? stoichMittel : stoichSchwer)(hold, qa, items);
+  card.append(el('p', { class: 'task-text', html: r.text }));
+  add(card, ...hold.childNodes);
+  if (r.fs.length) card.append(el('p', { class: 'given' }, massLine(r.fs)));
+  card.append(qa, ...checkBar(card, items, 'stoich'));
+}
+
+// =====================================================================
+const LEVEL_TXT = {
+  ionen: { leicht: 'Stufe leicht: Hauptgruppen-Ionen (Oktettregel).', mittel: 'Stufe mittel: auch mehratomige Ionen (Hydroxid, Nitrat, Sulfat, Carbonat, Phosphat, Ammonium …).', schwer: 'Stufe schwer: auch Nebengruppen-Ionen mit römischen Zahlen und Hydrogen-Ionen; Ladung aus der Formel bestimmen.' },
+  paare: { leicht: 'Stufe leicht: einprotonige Säuren, Wasser und Ammoniak.', mittel: 'Stufe mittel: auch mehrprotonige Säuren (Schwefel-, Kohlen-, Phosphorsäure).', schwer: 'Stufe schwer: alle Paare und Ampholyte erkennen.' },
+  protolyse: { leicht: 'Stufe leicht: Reaktionsart bestimmen.', mittel: 'Stufe mittel: zusätzlich Säure und Base bzw. oxidiertes und reduziertes Teilchen benennen.', schwer: 'Stufe schwer: zusätzlich korrespondierende Paare bzw. Zahl der übertragenen Elektronen.' },
+  stoich: { leicht: 'Stufe leicht: Grundgrößen – M, n = m/M, c = n/V, V = n · Vm.', mittel: 'Stufe mittel: Rechnen über die Reaktionsgleichung, Ionenkonzentrationen, Neutralisation.', schwer: 'Stufe schwer: Massenanteil und Dichte, Überschuss, Ausbeute, Rücktitration.' }
+};
+const lvlNote = mode => el('div', { class: 'lvl' }, LEVEL_TXT[mode][LEVEL]);
+const MODES = [
+  { id: 'ionen', nr: 1, title: 'Ionen und Formeln' },
+  { id: 'paare', nr: 2, title: 'Säure-Base-Paare' },
+  { id: 'protolyse', nr: 3, title: 'Protolyse oder nicht?' },
+  { id: 'stoich', nr: 4, title: 'Stöchiometrie' }
+];
+function renderLevels() {
+  const nav = document.getElementById('levels'); nav.innerHTML = '';
+  nav.append(el('span', null, 'Stufe'));
+  for (const l of ['leicht', 'mittel', 'schwer']) nav.append(el('button', { type: 'button', class: l === LEVEL ? 'on' : '', 'aria-pressed': String(l === LEVEL),
+    onclick: () => { LEVEL = l; try { localStorage.setItem('grTraining.level', l); } catch (e) {} renderLevels(); show(); } }, l));
+}
+function renderModes() {
+  const nav = document.getElementById('modes'); nav.innerHTML = '';
+  for (const m of MODES) {
+    const n = SCORE[m.id] || 0;
+    nav.append(el('button', { type: 'button', class: m.id === MODE ? 'on' : '', 'aria-pressed': String(m.id === MODE),
+      onclick: () => { MODE = m.id; try { localStorage.setItem('grTraining.mode', m.id); } catch (e) {} renderModes(); show(); } },
+      el('span', { class: 'nr' }, String(m.nr)), m.title, n ? el('span', { class: 'cnt' }, '✓ ' + n) : null));
+  }
+}
+function terms() {
+  return el('details', { class: 'terms' }, el('summary', null, 'Formeln und Begriffe'),
+    el('dl', null,
+      el('dt', null, 'Stoffmenge'), el('dd', { html: 'n = m / M  (Einheit mol); 1 mol enthält N<sub>A</sub> = 6,022 · 10<sup>23</sup> Teilchen' }),
+      el('dt', null, 'molare Masse'), el('dd', { html: 'M in g/mol: Summe der Atommassen aus dem PSE' }),
+      el('dt', null, 'molares Volumen'), el('dd', { html: 'V<sub>m</sub> = V / n; ideale Gase: 22,4 L/mol bei 0 °C und 1013 hPa (24,5 L/mol bei 25 °C) – wird in Aufgaben angegeben' }),
+      el('dt', null, 'Konzentration'), el('dd', { html: 'c(X) = n(X) / V(Lösung)  in mol/L' }),
+      el('dt', null, 'Massenanteil'), el('dd', { html: 'w(X) = m(X) / m(Gemisch); Dichte ρ = m / V' }),
+      el('dt', null, 'über die Gleichung'), el('dd', { html: 'n(gesucht) : n(gegeben) = Koeffizient(gesucht) : Koeffizient(gegeben)' }),
+      el('dt', null, 'Brønsted'), el('dd', null, 'Säure = Protonendonator, Base = Protonenakzeptor. Korrespondierendes Paar: Säure/Base unterscheiden sich um ein H⁺.'),
+      el('dt', null, 'Redox'), el('dd', null, 'Oxidation = Elektronenabgabe (Oxidationszahl steigt), Reduktion = Elektronenaufnahme (Oxidationszahl sinkt).'),
+      el('dt', null, 'Ionen'), el('dd', null, 'Metalle bilden Kationen, Nichtmetalle Anionen; Ladung meist nach der Oktettregel. Endungen: -id (einatomige Anionen), -at (Sauerstoffsäure, höchste Oxidationsstufe), -it (niedrigere).')));
+}
+function show() {
+  const main = document.getElementById('main'); main.innerHTML = '';
+  main.append(terms());
+  const card = el('section', { class: 'card' });
+  ({ ionen: modeIonen, paare: modePaare, protolyse: modeProtolyse, stoich: modeStoich }[MODE] || modeIonen)(card);
+  main.append(card);
+  window.__card = card;
+}
+document.getElementById('btn-new').addEventListener('click', show);
+if (!MODES.some(m => m.id === MODE)) MODE = 'ionen';
+renderLevels(); renderModes(); show();
+window.__gr = { molar, parseFormula, saltFormula, CAT, ANI, setLevel: l => { LEVEL = l; renderLevels(); }, setMode: m => { MODE = m; renderModes(); show(); } };
+})();
+</script>
+</body>
+</html>
