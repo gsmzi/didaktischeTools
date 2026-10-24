@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pixel-Trainer</title>
+<style>:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--muted:#5d6878;--line:#d6dbe3;--accent:#1f5fa8;--accent-soft:#e6eef8;--ok:#1e7a3c;--ok-soft:#e5f4ea;--bad:#b3261e;--bad-soft:#fbe9e7;--warn-soft:#fff5e0;--mono:"Consolas","Courier New",monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181f;--card:#1d232c;--ink:#e6e9ee;--muted:#9aa4b2;--line:#343c48;--accent:#7fb2ee;--accent-soft:#22324a;--ok:#6fcf8f;--ok-soft:#1d3426;--bad:#f2948c;--bad-soft:#3d2422;--warn-soft:#3a3020}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{padding:18px 16px 8px;max-width:980px;margin:0 auto}
+header h1{margin:0;font-size:1.45rem}
+header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+main{max-width:980px;margin:0 auto;padding:0 16px 40px}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+nav.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:.95rem}
+nav.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.bar label{font-size:.92rem;color:var(--muted)}
+select,input[type=text],input[type=number]{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 8px;font-size:1.1rem}
+.task{font-size:1.05rem}
+.term{font-family:var(--mono);font-size:1.1rem;background:var(--accent-soft);padding:2px 8px;border-radius:6px;white-space:nowrap}
+pre.code{font-family:var(--mono);font-size:.95rem;background:var(--accent-soft);padding:10px 12px;border-radius:8px;overflow-x:auto;margin:8px 0}
+.btn{font:inherit;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--accent)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fb{margin-top:12px;padding:10px 12px;border-radius:8px;display:none}
+.fb.ok{display:block;background:var(--ok-soft);border-left:4px solid var(--ok)}
+.fb.bad{display:block;background:var(--bad-soft);border-left:4px solid var(--bad)}
+.fb.tip{display:block;background:var(--warn-soft);border-left:4px solid #c98a00}
+.score{margin-left:auto;font-size:.92rem;color:var(--muted)}
+table.tt{border-collapse:collapse;margin:8px 0;font-family:var(--mono)}
+table.tt th,table.tt td{border:1px solid var(--line);padding:4px 8px;text-align:center;min-width:40px}
+table.tt th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+table.tt td.cell{cursor:pointer;user-select:none}
+table.tt td.cell:hover{outline:2px solid var(--accent)}
+td.wrong{background:var(--bad-soft)}
+td.right{background:var(--ok-soft)}
+.scroll{overflow-x:auto}
+.choice{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.choice button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer}
+.choice button.sel{border-color:var(--accent);background:var(--accent-soft)}
+.list{list-style:none;padding:0;margin:8px 0}
+.list li{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.list li.sel{border-color:var(--accent);background:var(--accent-soft)}
+.list li.right{border-color:var(--ok);background:var(--ok-soft)}
+.list li.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.small{font-size:.9rem;color:var(--muted)}
+details{margin:6px 0}
+details summary{cursor:pointer;color:var(--accent)}
+.symbols{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.symbols button{font:inherit;font-family:var(--mono);min-width:38px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer;padding:4px 8px}
+canvas{max-width:100%;height:auto;border-radius:8px;touch-action:manipulation}
+.grid{display:inline-grid;gap:0;border:2px solid var(--ink);margin:6px 0}
+.grid div{width:42px;height:42px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.15rem;font-family:var(--mono)}
+.grid input{width:42px;height:42px;border:1px solid var(--line);text-align:center;font-weight:700;font-size:1.1rem;font-family:var(--mono);text-transform:uppercase;background:var(--card);color:var(--ink);border-radius:0;padding:0}
+.grid input.wrong{background:var(--bad-soft)}.grid input.right{background:var(--ok-soft)}
+.gwrap{display:inline-block;vertical-align:top;margin:4px 14px 4px 0}
+.gwrap .lbl{font-size:.88rem;color:var(--muted)}
+.axis{display:flex;font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.axis span{width:42px;text-align:center}
+.opts{display:flex;flex-wrap:wrap;gap:12px}
+.opt{border:2px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;background:var(--card)}
+.opt.sel{border-color:var(--accent)}.opt.right{border-color:var(--ok);background:var(--ok-soft)}.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.swatch{display:inline-block;width:56px;height:36px;border-radius:6px;border:1px solid var(--line);vertical-align:middle}
+footer{max-width:980px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:.85rem}
+.ylab{height:42px;display:flex;align-items:center}
+@media (max-width:600px){.grid div,.grid input{width:36px;height:36px}.axis span{width:36px}.ylab{height:36px}}
+</style></head>
+<body>
+<header><h1>Pixel-Trainer</h1><p>IMP 10 · Bilder als zweidimensionale Arrays: Spiegeln, Drehen, Farben, Graustufen</p></header>
+<main>
+<nav class="tabs" aria-label="Aufgabentyp"></nav>
+<div class="bar">
+  <label>Stufe <select id="level"><option value="leicht">leicht</option><option value="mittel">mittel</option><option value="schwer">schwer</option></select></label>
+  <label><input type="checkbox" id="predict"> Erst vorhersagen (bei „Code → Bild“, Stufe leicht)</label>
+  <span class="score" id="score"></span>
+</div>
+<section class="card"><div id="task"></div>
+  <div class="btns"><button class="btn" id="check">Prüfen</button><button class="btn sec" id="tip">Tipp</button><button class="btn sec" id="new">Neue Aufgabe</button></div>
+  <div class="fb" id="fb"></div>
+</section>
+<section class="card"><details><summary>Begriffe</summary>
+<p><b>Bildarray:</b> <code>color[][] pixel</code>; <code>pixel[x][y]</code> ist das Pixel in Spalte x und Zeile y. Die Zählung beginnt oben links bei (0|0).</p>
+<p><b>Breite und Höhe:</b> <code>pixel.length</code> ist die Breite (Anzahl der Spalten), <code>pixel[0].length</code> die Höhe. Der größte Index ist jeweils Breite − 1 bzw. Höhe − 1.</p>
+<p><b>Ergebnisarray:</b> Jede Methode legt ein neues Array <code>pixelNeu</code> an und liest nur aus <code>pixelAlt</code>. Das Original bleibt unverändert.</p>
+<p><b>Verschachtelte Zählschleife:</b> Die äußere Schleife läuft über die Spalten (x), die innere über die Zeilen (y) – so wird jedes Pixel des <i>neuen</i> Bildes genau einmal gesetzt.</p>
+<p><b>ArrayIndexOutOfBoundsException:</b> Fehler, wenn ein Index kleiner als 0 oder zu groß ist, z. B. <code>pixelAlt[breite][0]</code>.</p>
+<p><b>RGB:</b> Jede Farbe besteht aus Rot-, Grün- und Blauanteil (je 0–255). <code>red(farbe)</code>, <code>green(farbe)</code>, <code>blue(farbe)</code> lesen die Anteile; <code>color(m)</code> ist ein Grauton.</p>
+<p><b>Hexcode:</b> #RRGGBB, je zwei Hexadezimalziffern pro Anteil (FF = 255, 80 = 128).</p>
+<p><b>Kappen:</b> Werte über 255 werden auf 255 gesetzt, Werte unter 0 auf 0.</p>
+<p class="small">Hinweis: Damit eine Methode in Processing wirklich ausgeführt wird, muss sie in <code>setup()</code> aufgerufen werden, z. B. <code>color[][] pixelNeu = spiegleHorizontal(pixelAlt);</code></p>
+</details></section>
+</main>
+<footer>Übungsseite ohne Speicherung auf einem Server; der Punktestand bleibt nur in diesem Browser. · M. Zimmer</footer>
+<script>// ===== Pixel-Engine (pixel[x][y], Breite = pixel.length, Höhe = pixel[0].length) =====
+function rnd(n) { return Math.floor(Math.random() * n); }
+function pick(a) { return a[rnd(a.length)]; }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+// Buchstaben zufällig (nicht A, B, C … wie in Klassenarbeiten), aber zeilenweise lesbar
+const LETTERS = 'BDEFGHJKLMNPRSTUVWXYZ'.split('');
+function makeGrid(W, H, plain) { const g = []; const L = plain ? null : shuffle(LETTERS); let k = 0; for (let x = 0; x < W; x++) g.push(new Array(H)); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g[x][y] = plain ? String.fromCharCode(65 + k) : L[k]; k++; } return g; }
+const gW = g => g.length, gH = g => g[0].length;
+function gridEq(a, b) { if (gW(a) !== gW(b) || gH(a) !== gH(b)) return false; for (let x = 0; x < gW(a); x++) for (let y = 0; y < gH(a); y++) if (a[x][y] !== b[x][y]) return false; return true; }
+
+// Ausdrücke für Indizes (B = breite, H = hoehe des Originals)
+const EXPR = {
+  'x': (x, y, B, H) => x, 'y': (x, y, B, H) => y,
+  'breite-1-x': (x, y, B, H) => B - 1 - x, 'hoehe-1-y': (x, y, B, H) => H - 1 - y,
+  'breite-1-y': (x, y, B, H) => B - 1 - y, 'hoehe-1-x': (x, y, B, H) => H - 1 - x,
+  'breite-x': (x, y, B, H) => B - x, 'hoehe-y': (x, y, B, H) => H - y,
+};
+const TRANS = {
+  kopie:      {name: 'unveränderte Kopie', swap: false, e: ['x', 'y']},
+  horizontal: {name: 'horizontal gespiegelt (links und rechts vertauscht)', swap: false, e: ['breite-1-x', 'y']},
+  vertikal:   {name: 'vertikal gespiegelt (oben und unten vertauscht)', swap: false, e: ['x', 'hoehe-1-y']},
+  r180:       {name: 'um 180° gedreht', swap: false, e: ['breite-1-x', 'hoehe-1-y']},
+  links:      {name: 'um 90° nach links gedreht', swap: true, e: ['breite-1-y', 'x']},
+  rechts:     {name: 'um 90° nach rechts gedreht', swap: true, e: ['y', 'hoehe-1-x']},
+  transp:     {name: 'an der Diagonale von links oben nach rechts unten gespiegelt', swap: true, e: ['y', 'x']},
+  antitransp: {name: 'an der Diagonale von rechts oben nach links unten gespiegelt', swap: true, e: ['breite-1-y', 'hoehe-1-x']},
+};
+// führt pixelNeu[x][y] = pixelAlt[e1][e2] aus; swap: neues Array [hoehe][breite]
+function run(g, swap, e1, e2) {
+  const B = gW(g), H = gH(g), NW = swap ? H : B, NH = swap ? B : H, out = [];
+  for (let x = 0; x < NW; x++) { out.push(new Array(NH)); for (let y = 0; y < NH; y++) {
+    const i = EXPR[e1](x, y, B, H), j = EXPR[e2](x, y, B, H);
+    if (i < 0 || i >= B || j < 0 || j >= H) return {error: {x, y, i, j}};
+    out[x][y] = g[i][j];
+  } }
+  return {grid: out};
+}
+function applyT(g, key) { const t = TRANS[key]; return run(g, t.swap, t.e[0], t.e[1]).grid; }
+function whichT(g, res) { return Object.keys(TRANS).filter(k => gridEq(applyT(g, k), res)); }
+function codeLine(key) { const t = TRANS[key]; return `pixelNeu[x][y] = pixelAlt[${t.e[0]}][${t.e[1]}];`; }
+function methodCode(key, name) {
+  const t = TRANS[key];
+  return [
+    `color[][] ${name}(color[][] pixelAlt) {`,
+    `  int breite = pixelAlt.length;`,
+    `  int hoehe = pixelAlt[0].length;`,
+    `  color[][] pixelNeu = new color[${t.swap ? 'hoehe' : 'breite'}][${t.swap ? 'breite' : 'hoehe'}];`,
+    `  for (int x = 0; x < ${t.swap ? 'hoehe' : 'breite'}; x++) {`,
+    `    for (int y = 0; y < ${t.swap ? 'breite' : 'hoehe'}; y++) {`,
+    `      ${codeLine(key)}`,
+    `    }`, `  }`, `  return pixelNeu;`, `}`].join('\n');
+}
+// Koordinaten: woher kommt neues Pixel (x|y)? wohin geht altes Pixel (i|j)?
+function woher(key, x, y, B, H) { const t = TRANS[key]; return [EXPR[t.e[0]](x, y, B, H), EXPR[t.e[1]](x, y, B, H)]; }
+function wohin(key, i, j, B, H) {
+  const t = TRANS[key], NW = t.swap ? H : B, NH = t.swap ? B : H;
+  for (let x = 0; x < NW; x++) for (let y = 0; y < NH; y++) { const [a, b] = woher(key, x, y, B, H); if (a === i && b === j) return [x, y]; }
+  return null;
+}
+
+// ---------- Farben ----------
+const clamp = v => Math.max(0, Math.min(255, v));
+const GRAU = {
+  Durchschnitt: c => (c[0] + c[1] + c[2]) / 3,
+  Min: c => Math.min(...c), Max: c => Math.max(...c),
+  Natuerlich: c => 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2],
+};
+const hex2 = v => v.toString(16).toUpperCase().padStart(2, '0');
+const toHex = c => '#' + c.map(hex2).join('');
+const css = c => `rgb(${c.map(v => Math.round(clamp(v))).join(',')})`;
+
+if (typeof module !== 'undefined') module.exports = {makeGrid, gridEq, EXPR, TRANS, run, applyT, whichT, codeLine, methodCode, woher, wohin, GRAU, toHex, clamp};
+
+// ===== Pixel-Trainer: Oberfläche =====
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k === 'html') e.innerHTML = v; else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+};
+const APP = {mode: 'c2b', level: 'leicht', predict: false, task: null, score: {}};
+const MODES = [['c2b', 'Code → Bild'], ['b2c', 'Bild → Code'], ['koord', 'Koordinaten'], ['farbe', 'Farben rechnen'], ['luecke', 'Lückenprogramm']];
+function loadScore() { try { APP.score = JSON.parse(localStorage.getItem('px-score') || '{}'); } catch (e) { APP.score = {}; } }
+function saveScore() { try { localStorage.setItem('px-score', JSON.stringify(APP.score)); } catch (e) {} }
+function count(ok) { const s = APP.score[APP.mode] || (APP.score[APP.mode] = {r: 0, n: 0}); if (!APP.task.counted) { s.n++; if (ok) s.r++; APP.task.counted = true; saveScore(); } showScore(); }
+function showScore() { const s = APP.score[APP.mode] || {r: 0, n: 0}; $('#score').textContent = `Richtig beim ersten Versuch: ${s.r} von ${s.n}`; }
+function fb(kind, html) { const f = $('#fb'); f.className = 'fb ' + kind; f.innerHTML = html; }
+const C = s => `<code>${s}</code>`;
+const METHOD_NAME = {kopie: 'kopiere', horizontal: 'spiegleHorizontal', vertikal: 'spiegleVertikal', r180: 'drehe180', links: 'dreheLinks', rechts: 'dreheRechts', transp: 'spiegleDiagonal', antitransp: 'spiegleGegendiagonal'};
+const NEUTRAL = 'bearbeite';
+
+// Raster zeichnen
+function gridView(g, label) {
+  const W = g.length, H = g[0].length, w = el('div', {class: 'gwrap'});
+  if (label) w.append(el('div', {class: 'lbl'}, label));
+  const ax = el('div', {class: 'axis', style: 'margin-left:24px'}); for (let x = 0; x < W; x++) ax.append(el('span', {}, String(x)));
+  w.append(ax);
+  const row = el('div', {style: 'display:flex'});
+  const ay = el('div', {style: 'display:flex;flex-direction:column;width:24px'}); for (let y = 0; y < H; y++) ay.append(el('div', {class: 'small ylab'}, String(y)));
+  const gr = el('div', {class: 'grid', style: `grid-template-columns:repeat(${W},auto)`});
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) gr.append(el('div', {}, g[x][y]));
+  row.append(ay, gr); w.append(row);
+  return w;
+}
+function gridInput(W, H, id) {
+  const w = el('div', {class: 'gwrap', id});
+  const ax = el('div', {class: 'axis', style: 'margin-left:24px'}); for (let x = 0; x < W; x++) ax.append(el('span', {}, String(x)));
+  const row = el('div', {style: 'display:flex'});
+  const ay = el('div', {style: 'display:flex;flex-direction:column;width:24px'}); for (let y = 0; y < H; y++) ay.append(el('div', {class: 'small ylab'}, String(y)));
+  const gr = el('div', {class: 'grid', style: `grid-template-columns:repeat(${W},auto)`});
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) gr.append(el('input', {type: 'text', maxlength: '1', 'data-x': x, 'data-y': y, 'aria-label': `Pixel ${x}|${y}`}));
+  row.append(ay, gr); w.append(ax, row);
+  return w;
+}
+function levelTrans(withCopy) {
+  const lv = APP.level, base = ['horizontal', 'vertikal', 'r180'];
+  if (lv === 'leicht') return withCopy ? [...base, 'kopie'] : base;
+  if (lv === 'mittel') return [...base, 'links', 'rechts'];
+  return [...base, 'links', 'rechts', 'transp', 'antitransp'];
+}
+function levelSize() { return APP.level === 'schwer' ? pick([[4, 3], [3, 4], [4, 2]]) : pick([[3, 2], [2, 3], [4, 2]]); }
+
+// ---------------- Code → Bild ----------------
+function genC2B() {
+  const [W, H] = levelSize(), g = makeGrid(W, H), key = pick(levelTrans(false));
+  const res = applyT(g, key);
+  const others = shuffle(Object.keys(TRANS).filter(k => k !== key && !gridEq(applyT(g, k), res)));
+  // Ablenker: bevorzugt gleiche Größe, dazu eins mit vertauschter Größe
+  const same = others.filter(k => TRANS[k].swap === TRANS[key].swap), diff = others.filter(k => TRANS[k].swap !== TRANS[key].swap);
+  let distract = [...same.slice(0, 2), ...diff.slice(0, 1)];
+  while (distract.length < 3) distract.push(others.find(k => !distract.includes(k)));
+  const opts = shuffle([key, ...distract]);
+  return {g, key, res, opts, chosen: null, revealed: !APP.predict, showName: APP.level === 'leicht'};
+}
+function renderC2B() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task'}, 'Welches Bild erzeugt diese Methode aus dem Originalbild?'));
+  box.append(el('pre', {class: 'code'}, methodCode(t.key, NEUTRAL)));
+  box.append(gridView(t.g, `Originalbild (Breite ${t.g.length}, Höhe ${t.g[0].length})`));
+  if (APP.level === 'leicht') {
+    if (!t.revealed) {
+      box.append(el('p', {}, 'Erst vorhersagen: Zeichne das neue Bild auf ein Blatt. Gib vorher Breite und Höhe an.'));
+      box.append(el('button', {class: 'btn sec', onclick: () => { t.revealed = true; renderC2B(); }}, 'Vorhersage notiert – Auswahl zeigen'));
+      return;
+    }
+    const wrap = el('div', {class: 'opts'});
+    t.opts.forEach((k, i) => {
+      const o = el('div', {class: 'opt', 'data-k': k}, gridView(applyT(t.g, k), 'Bild ' + 'PQRS'[i]));
+      o.onclick = () => { t.chosen = k; wrap.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === o)); };
+      wrap.append(o);
+    });
+    box.append(wrap);
+  } else {
+    const NW = t.res.length, NH = t.res[0].length;
+    if (APP.level === 'schwer') {
+      box.append(el('p', {}, 'Gib zuerst Breite und Höhe des neuen Bildes an, dann fülle das Raster aus.'));
+      const sw = el('input', {type: 'number', id: 'nw', min: 1, max: 6, style: 'width:70px'}), sh = el('input', {type: 'number', id: 'nh', min: 1, max: 6, style: 'width:70px'});
+      const area = el('div', {id: 'garea'});
+      box.append(el('div', {class: 'bar'}, el('label', {}, 'Breite ', sw), el('label', {}, 'Höhe ', sh),
+        el('button', {class: 'btn sec', onclick: () => {
+          const w = +sw.value, h = +sh.value;
+          if (w !== NW || h !== NH) return fb('bad', `Breite ${w} und Höhe ${h} passen nicht. Schau auf die Zeile ${C('new color[…][…]')}: Der erste Wert ist die neue Breite.`);
+          $('#fb').className = 'fb'; t.sizeOk = true; area.innerHTML = ''; area.append(gridInput(NW, NH, 'gin'));
+        }}, 'Raster anlegen')), area);
+    } else {
+      box.append(el('p', {}, `Das neue Bild ist ${NW} Pixel breit und ${NH} Pixel hoch. Trage die Buchstaben ein.`));
+      box.append(gridInput(NW, NH, 'gin'));
+    }
+  }
+}
+function explainPixel(t, x, y) {
+  const tr = TRANS[t.key], B = t.g.length, H = t.g[0].length, [i, j] = woher(t.key, x, y, B, H);
+  return `Neues Pixel (${x}|${y}): ${C(`pixelAlt[${tr.e[0]}][${tr.e[1]}]`)} = ${C(`pixelAlt[${i}][${j}]`)} = ${t.g[i][j]}.`;
+}
+function checkGridInputs(target) {
+  let wrong = [], empty = 0;
+  document.querySelectorAll('#gin input').forEach(inp => {
+    const x = +inp.dataset.x, y = +inp.dataset.y, v = inp.value.trim().toUpperCase();
+    if (!v) { empty++; inp.className = ''; return; }
+    const ok = v === target[x][y]; inp.className = ok ? 'right' : 'wrong'; if (!ok) wrong.push([x, y]);
+  });
+  return {wrong, empty};
+}
+function checkC2B() {
+  const t = APP.task;
+  if (APP.level === 'leicht') {
+    if (!t.revealed) return fb('bad', 'Zeige zuerst die Auswahl.');
+    if (!t.chosen) return fb('bad', 'Bitte wähle ein Bild aus.');
+    document.querySelectorAll('.opt').forEach(o => { o.classList.remove('right', 'wrong'); if (o.dataset.k === t.chosen) o.classList.add(t.chosen === t.key ? 'right' : 'wrong'); });
+    if (t.chosen === t.key) { count(true); return fb('ok', `Richtig! Das Bild ist ${TRANS[t.key].name}.`); }
+    count(false);
+    const B = t.g.length, H = t.g[0].length, ch = applyT(t.g, t.chosen);
+    let msg = `Dieses Bild wäre ${TRANS[t.chosen].name}. `;
+    if (TRANS[t.chosen].swap !== TRANS[t.key].swap) msg += `Achte auf die Größe: Laut ${C('new color[…][…]')} ist das neue Bild ${t.res.length} breit und ${t.res[0].length} hoch. `;
+    else { const [i, j] = woher(t.key, 0, 0, B, H); msg += `Prüfe die Ecke (0|0): ${explainPixel(t, 0, 0)} Im gewählten Bild steht dort ${ch[0][0]}.`; }
+    return fb('bad', msg);
+  }
+  if (APP.level === 'schwer' && !t.sizeOk) return fb('bad', 'Lege zuerst mit Breite und Höhe das Raster an.');
+  const {wrong, empty} = checkGridInputs(t.res);
+  if (empty) return fb('bad', `Es sind noch ${empty} Felder leer.`);
+  if (!wrong.length) { count(true); return fb('ok', `Richtig! Das Bild ist ${TRANS[t.key].name}.`); }
+  count(false);
+  fb('bad', `${wrong.length} Feld(er) stimmen nicht (rot). Beispiel: ${explainPixel(t, ...wrong[0])}`);
+}
+function tipC2B() { const t = APP.task; fb('tip', `Setze für ein einzelnes neues Pixel x und y ein. ${explainPixel(t, 0, 0)} Mache das für alle Ecken, dann erkennst du die Bewegung.`); }
+
+// ---------------- Bild → Code ----------------
+function genB2C() {
+  const [W, H] = levelSize(), g = makeGrid(W, H), key = pick(levelTrans(false));
+  return {g, key, res: applyT(g, key)};
+}
+function exprSelect(id) { const s = el('select', {id}); s.append(el('option', {value: ''}, '…')); Object.keys(EXPR).forEach(k => s.append(el('option', {value: k}, k))); return s; }
+function renderB2C() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task'}, 'Ergänze den Code so, dass aus dem Originalbild das Zielbild entsteht.'));
+  box.append(gridView(t.g, `Originalbild (Breite ${t.g.length}, Höhe ${t.g[0].length})`), gridView(t.res, 'Zielbild'));
+  const size = el('select', {id: 'bsize'}, el('option', {value: ''}, '…'), el('option', {value: '0'}, '[breite][hoehe]'), el('option', {value: '1'}, '[hoehe][breite]'));
+  const pre = el('pre', {class: 'code'});
+  pre.append('int breite = pixelAlt.length;\nint hoehe = pixelAlt[0].length;\ncolor[][] pixelNeu = new color', size, ';\n// Schleifen über alle Pixel des neuen Bildes …\npixelNeu[x][y] = pixelAlt[', exprSelect('be1'), '][', exprSelect('be2'), '];');
+  box.append(pre);
+  box.append(el('div', {id: 'bresult'}));
+}
+function checkB2C() {
+  const t = APP.task, s = $('#bsize').value, e1 = $('#be1').value, e2 = $('#be2').value;
+  if (s === '' || !e1 || !e2) return fb('bad', 'Bitte alle drei Auswahlfelder ausfüllen.');
+  const r = run(t.g, s === '1', e1, e2), out = $('#bresult'); out.innerHTML = '';
+  if (r.error) { count(false); return fb('bad', `Das Programm bricht ab: Bei x = ${r.error.x}, y = ${r.error.y} wird ${C(`pixelAlt[${r.error.i}][${r.error.j}]`)} gelesen. Diesen Index gibt es nicht (ArrayIndexOutOfBoundsException).`); }
+  if (gridEq(r.grid, t.res)) { count(true); return fb('ok', `Richtig! Dein Code erzeugt das Zielbild (${TRANS[t.key].name}).`); }
+  count(false);
+  out.append(gridView(r.grid, 'Das erzeugt dein Code'));
+  const k = whichT(t.g, r.grid)[0];
+  fb('bad', 'Dein Code erzeugt ein anderes Bild' + (k ? ` – es ist ${TRANS[k].name}.` : '.') + ' Vergleiche Zielbild und Ergebnis an der Ecke (0|0).');
+}
+function tipB2C() { const t = APP.task, B = t.g.length, H = t.g[0].length; const v = t.res[0][0]; let i, j; for (let x = 0; x < B; x++) for (let y = 0; y < H; y++) if (t.g[x][y] === v) [i, j] = [x, y];
+  fb('tip', `Im Zielbild steht bei (0|0) das Pixel ${v}. Im Original hat es die Koordinaten (${i}|${j}). Welcher Ausdruck ergibt für x = 0, y = 0 den Wert ${i}, welcher ${j}? Prüfe danach ein zweites Pixel.`); }
+
+// ---------------- Koordinaten ----------------
+function genKoord() {
+  const lv = APP.level, key = pick(levelTrans(false));
+  let B, H; do { B = 5 + rnd(10); H = 4 + rnd(8); } while (B === H);
+  const NW = TRANS[key].swap ? H : B, NH = TRANS[key].swap ? B : H;
+  const kinds = lv === 'leicht' ? ['woher', 'size'] : ['woher', 'wohin', 'size'];
+  const kind = pick(TRANS[key].swap ? kinds : kinds.filter(k => k !== 'size'));
+  let q, ans;
+  if (kind === 'size') { q = 'Gib die Breite und die Höhe des neuen Bildes an.'; ans = [NW, NH]; }
+  if (kind === 'woher') { const x = rnd(NW), y = rnd(NH); q = `Welches Pixel des Originalbildes landet im neuen Bild an der Position (${x}|${y})?`; ans = woher(key, x, y, B, H); }
+  if (kind === 'wohin') { const i = rnd(B), j = rnd(H); q = `Das Pixel des Originalbildes an der Position (${i}|${j}): An welche Position im neuen Bild wandert es?`; ans = wohin(key, i, j, B, H); }
+  return {key, B, H, kind, q, ans};
+}
+function renderKoord() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task'}, `Das Originalbild ist ${t.B} Pixel breit und ${t.H} Pixel hoch. Die Methode enthält:`));
+  box.append(el('pre', {class: 'code'}, `color[][] pixelNeu = new color[${TRANS[t.key].swap ? 'hoehe][breite' : 'breite][hoehe'}];\n…\n${codeLine(t.key)}`));
+  box.append(el('p', {class: 'task'}, t.q));
+  const lab = t.kind === 'size' ? ['Breite', 'Höhe'] : ['x', 'y'];
+  box.append(el('div', {class: 'bar'}, el('label', {}, lab[0] + ' ', el('input', {type: 'number', id: 'k1', style: 'width:80px'})), el('label', {}, lab[1] + ' ', el('input', {type: 'number', id: 'k2', style: 'width:80px'}))));
+}
+function checkKoord() {
+  const t = APP.task, a = [$('#k1').value, $('#k2').value];
+  if (a.some(v => v === '')) return fb('bad', 'Bitte beide Werte eingeben.');
+  if (+a[0] === t.ans[0] && +a[1] === t.ans[1]) { count(true); return fb('ok', `Richtig: (${t.ans.join('|')}).`); }
+  count(false);
+  if (+a[0] === t.ans[1] && +a[1] === t.ans[0]) return fb('bad', 'Fast: Du hast die beiden Werte vertauscht. Der erste Wert ist x (Spalte) bzw. die Breite.');
+  fb('bad', 'Noch nicht richtig. Nutze den Tipp, wenn du nicht weiterkommst.');
+}
+function tipKoord() {
+  const t = APP.task, tr = TRANS[t.key];
+  if (t.kind === 'size') fb('tip', `Schau auf ${C('new color[…][…]')}: Der erste Wert ist die neue Breite. Hier ist breite = ${t.B} und hoehe = ${t.H}.`);
+  else if (t.kind === 'woher') fb('tip', `Setze x und y in ${C(`pixelAlt[${tr.e[0]}][${tr.e[1]}]`)} ein. Dabei ist breite = ${t.B} und hoehe = ${t.H}.`);
+  else fb('tip', `Im Code steht ${C(`pixelAlt[${tr.e[0]}][${tr.e[1]}]`)}. Gesucht sind x und y, für die der erste Ausdruck den ersten Originalindex und der zweite Ausdruck den zweiten Originalindex ergibt. Löse beide Gleichungen nach x bzw. y auf (breite = ${t.B}, hoehe = ${t.H}).`);
+}
+
+// ---------------- Farben rechnen ----------------
+function rc(lv) { const step = lv === 'leicht' ? 30 : lv === 'mittel' ? 5 : 1; return [0, 1, 2].map(() => Math.min(255, step * rnd(Math.floor(255 / step) + 1))); }
+function genFarbe() {
+  const lv = APP.level;
+  const kinds = lv === 'leicht' ? ['grau', 'invert', 'hex2rgb'] : lv === 'mittel' ? ['grau', 'faktor', 'rgb2hex', 'hex2rgb', 'invert'] : ['grau', 'faktor', 'rgb2hex', 'heller'];
+  const kind = pick(kinds);
+  let c = rc(lv);
+  if (kind === 'grau') {
+    const m = lv === 'leicht' ? pick(['Durchschnitt', 'Min', 'Max']) : pick(['Durchschnitt', 'Min', 'Max', 'Natuerlich', 'Natuerlich']);
+    const v = GRAU[m](c);
+    return {kind, c, m, ans: [v], n: 1, q: `Ein Pixel hat die Farbe ${C(`color(${c.join(', ')})`)}. Welchen Grauwert erhält es bei der Methode ${C('graustufen' + m)}?` + (m === 'Natuerlich' ? ' (Rot 29,9 %, Grün 58,7 %, Blau 11,4 %; auf ganze Zahl gerundet)' : (v % 1 ? ' (auf ganze Zahl gerundet)' : ''))};
+  }
+  if (kind === 'invert') return {kind, c, ans: c.map(v => 255 - v), n: 3, q: `Welche Farbe erhält das Pixel ${C(`color(${c.join(', ')})`)} nach der Methode ${C('invertiere')}?`};
+  if (kind === 'faktor') {
+    const f = [0, 1, 2].map(() => pick(lv === 'schwer' ? [0, 0.5, 1, 1.5, 2, 1.2] : [0, 0.5, 1, 2]));
+    return {kind, c, f, ans: c.map((v, i) => clamp(v * f[i])), n: 3, q: `Die Methode ${C('farbaenderung')} multipliziert jeden Farbanteil mit seinem Faktor; Werte über 255 werden auf 255 gesetzt. Welche Farbe entsteht aus ${C(`color(${c.join(', ')})`)} bei den Faktoren ${f.map(x => String(x).replace('.', ',')).join(' / ')} (Rot / Grün / Blau)?`};
+  }
+  if (kind === 'hex2rgb') { if (lv === 'leicht') do { c = [0, 1, 2].map(() => pick([0, 64, 128, 192, 255])); } while (c.join() === '128,64,0'); return {kind, c, ans: c, n: 3, q: `Gib die RGB-Anteile der Farbe ${C(toHex(c))} an (je 0–255).`}; }
+  if (kind === 'rgb2hex') return {kind, c, ans: [toHex(c)], n: 'hex', q: `Gib den Hexcode der Farbe ${C(`color(${c.join(', ')})`)} an (Form #RRGGBB).`};
+  if (kind === 'heller') {
+    let base; do { base = [0, 1, 2].map(() => 20 + 10 * rnd(12)); } while (Math.max(...base) > 120 || new Set(base).size < 2);
+    const k = pick([1.5, 2]), right = base.map(v => Math.round(v * k));
+    const d1 = [right[0], base[1], base[2]], d2 = [right[1], right[0], right[2]], d3 = base.map((v, i) => Math.round(v * [k, 1, k][i]));
+    const opts = shuffle([right, d1, d2, d3].filter((o, i, a) => a.findIndex(p => p.join() === o.join()) === i));
+    return {kind, c: base, right, opts, ans: null, n: 'mc', chosen: null, q: `Welche Farbe ist heller als ${C(`color(${base.join(', ')})`)}, hat aber denselben Farbton?`};
+  }
+}
+function renderFarbe() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task', html: t.q}));
+  box.append(el('p', {}, el('span', {class: 'swatch', style: `background:${css(t.c)}`}), ' Ausgangsfarbe'));
+  if (t.n === 1) box.append(el('label', {}, 'Grauwert ', el('input', {type: 'number', id: 'f0', style: 'width:90px'})));
+  if (t.n === 3) box.append(el('div', {class: 'bar'}, ...['Rot', 'Grün', 'Blau'].map((n, i) => el('label', {}, n + ' ', el('input', {type: 'number', id: 'f' + i, style: 'width:80px'})))));
+  if (t.n === 'hex') box.append(el('label', {}, 'Hexcode ', el('input', {type: 'text', id: 'f0', size: 10, placeholder: '#'})));
+  if (t.n === 'mc') {
+    const w = el('div', {class: 'opts'});
+    t.opts.forEach(o => { const d = el('div', {class: 'opt', 'data-v': o.join()}, el('span', {class: 'swatch', style: `background:${css(o)}`}), ' ', C(`color(${o.join(', ')})`)); d.innerHTML = d.innerHTML; d.onclick = () => { t.chosen = o.join(); w.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === d)); }; w.append(d); });
+    box.append(w);
+  }
+}
+function checkFarbe() {
+  const t = APP.task;
+  if (t.n === 'mc') {
+    if (!t.chosen) return fb('bad', 'Bitte wähle eine Farbe.');
+    if (t.chosen === t.right.join()) { count(true); return fb('ok', 'Richtig! Alle drei Anteile wurden mit demselben Faktor multipliziert, das Verhältnis der Anteile bleibt gleich.'); }
+    count(false); return fb('bad', 'Bei dieser Farbe hat sich das Verhältnis der Farbanteile verändert – dadurch ändert sich auch der Farbton. Gesucht ist eine Farbe, bei der alle Anteile mit demselben Faktor multipliziert wurden.');
+  }
+  if (t.n === 'hex') {
+    const v = $('#f0').value.trim().toUpperCase().replace(/^([^#])/, '#$1');
+    if (v === t.ans[0]) { count(true); return fb('ok', `Richtig: ${t.ans[0]}.`); }
+    count(false); return fb('bad', 'Noch nicht richtig. Rechne jeden Anteil einzeln um: Wert ÷ 16 ergibt die erste Ziffer, der Rest die zweite (10 = A … 15 = F).');
+  }
+  const vals = [...Array(t.n)].map((_, i) => $('#f' + i).value);
+  if (vals.some(v => v === '')) return fb('bad', 'Bitte alle Werte eingeben.');
+  const tol = t.kind === 'grau' ? 0.51 : t.kind === 'faktor' ? 1 : 0;
+  const ok = vals.every((v, i) => Math.abs(+v - t.ans[i]) <= tol || (t.kind === 'grau' && Math.floor(t.ans[i]) === +v));
+  if (ok) { count(true); return fb('ok', 'Richtig' + (t.kind === 'grau' && t.ans[0] % 1 ? ` (genau: ${t.ans[0].toFixed(2).replace('.', ',')})` : '') + '!'); }
+  count(false);
+  const hint = {grau: 'Prüfe, welche Rechnung zu dieser Methode gehört.', invert: 'Beim Invertieren wird jeder Anteil von 255 abgezogen.', faktor: 'Multipliziere jeden Anteil mit seinem Faktor und begrenze auf 255.', hex2rgb: 'Je zwei Hex-Ziffern gehören zu einem Anteil: erste Ziffer · 16 + zweite Ziffer.'}[t.kind];
+  fb('bad', 'Noch nicht richtig. ' + hint);
+}
+function tipFarbe() {
+  const t = APP.task;
+  const tips = {grau: {Durchschnitt: 'Durchschnitt: (r + g + b) / 3.', Min: 'Min: der kleinste der drei Werte.', Max: 'Max: der größte der drei Werte.', Natuerlich: '0,299 · r + 0,587 · g + 0,114 · b.'}[t.m],
+    invert: 'Neuer Wert = 255 − alter Wert, für jeden Anteil.', faktor: 'Neuer Anteil = alter Anteil · Faktor. Liegt das Ergebnis über 255, wird es auf 255 gesetzt.',
+    hex2rgb: 'Hexziffern: A = 10, B = 11, C = 12, D = 13, E = 14, F = 15. Beispiel: 80 = 8 · 16 + 0 = 128.', rgb2hex: 'Teile durch 16: Das Ergebnis ist die erste Ziffer, der Rest die zweite. Beispiel: 200 = 12 · 16 + 8 → C8.',
+    heller: 'Der Farbton bleibt gleich, wenn alle drei Anteile im gleichen Verhältnis bleiben.'};
+  fb('tip', tips[t.kind]);
+}
+
+// ---------------- Lückenprogramm ----------------
+// Bausteine: {code} oder {gap: {ok:[...], wrong:{option: Begründung}}}
+function geoTemplate(key) {
+  const tr = TRANS[key], NB = tr.swap ? 'hoehe' : 'breite', NH = tr.swap ? 'breite' : 'hoehe';
+  const xOuter = Math.random() < 0.5;
+  const loopX = {gap: {id: 'lx', ok: [`x < ${NB}`], wrong: {[`x <= ${NB}`]: `Mit <= läuft x bis ${NB}. Diesen Index gibt es nicht (ArrayIndexOutOfBoundsException).`, [`x < ${NB === 'breite' ? 'hoehe' : 'breite'}`]: `x läuft über die Breite des neuen Bildes – und die ist hier ${NB}.`}}};
+  const loopY = {gap: {id: 'ly', ok: [`y < ${NH}`], wrong: {[`y <= ${NH}`]: `Mit <= läuft y bis ${NH}. Diesen Index gibt es nicht.`, [`y < ${NH === 'breite' ? 'hoehe' : 'breite'}`]: `y läuft über die Höhe des neuen Bildes – und die ist hier ${NH}.`}}};
+  const idxOpts = Object.keys(EXPR);
+  return {title: METHOD_NAME[key], desc: `Die Methode soll das Bild ${tr.name.replace('gespiegelt', 'spiegeln').replace('gedreht', 'drehen')}.`, key, lines: [
+    [`color[][] ${METHOD_NAME[key]}(color[][] pixelAlt) {`],
+    ['  int breite = ', {gap: {id: 'b', ok: ['pixelAlt.length'], wrong: {'pixelAlt[0].length': 'pixelAlt[0].length ist die Höhe (Länge einer Spalte).', 'pixelAlt.length()': 'Bei Arrays ist length keine Methode – ohne Klammern schreiben.'}}}, ';'],
+    ['  int hoehe = ', {gap: {id: 'h', ok: ['pixelAlt[0].length'], wrong: {'pixelAlt.length': 'pixelAlt.length ist die Breite (Anzahl der Spalten).', 'pixelAlt[0].length()': 'Bei Arrays ist length keine Methode – ohne Klammern schreiben.'}}}, ';'],
+    ['  color[][] pixelNeu = ', {gap: {id: 's', ok: [`new color[${NB}][${NH}]`], wrong: {[`new color[${NH}][${NB}]`]: tr.swap ? 'Beim Drehen um 90° (oder Spiegeln an der Diagonale) werden Breite und Höhe vertauscht.' : 'Beim Spiegeln und beim Drehen um 180° bleibt die Größe gleich.', 'pixelAlt': 'Dann würde kein neues Array angelegt – das Original würde verändert.'}}}, ';'],
+    ['  for (int ', xOuter ? 'x' : 'y', ' = 0; ', xOuter ? loopX : loopY, `; ${xOuter ? 'x' : 'y'}++) {`],
+    ['    for (int ', xOuter ? 'y' : 'x', ' = 0; ', xOuter ? loopY : loopX, `; ${xOuter ? 'y' : 'x'}++) {`],
+    ['      pixelNeu[x][y] = pixelAlt[', {gap: {id: 'i1', sim: 0, ok: [tr.e[0]], opts: idxOpts}}, '][', {gap: {id: 'i2', sim: 1, ok: [tr.e[1]], opts: idxOpts}}, '];'],
+    ['    }'], ['  }'],
+    ['  return ', {gap: {id: 'r', ok: ['pixelNeu'], wrong: {'pixelAlt': 'Zurückgegeben werden muss das neue Bild.', 'pixelNeu[x][y]': 'Zurückgegeben wird das ganze Array, nicht ein einzelnes Pixel (x und y gibt es hier auch nicht mehr).'}}}, ';'],
+    ['}']]};
+}
+function grauTemplate() {
+  const m = pick(['Durchschnitt', 'Min', 'Max', 'Natuerlich']);
+  const mExpr = {Durchschnitt: '(r + g + b) / 3', Min: 'min(r, g, b)', Max: 'max(r, g, b)', Natuerlich: '0.299*r + 0.587*g + 0.114*b'}[m];
+  const mWrong = {'r + g + b / 3': 'Punkt vor Strich: Hier wird nur b durch 3 geteilt. Klammern setzen!', '(r + g + b) / 3': 'Das ist der Durchschnitt.', 'min(r, g, b)': 'Das ist das Minimum.', 'max(r, g, b)': 'Das ist das Maximum.', '0.299*r + 0.587*g + 0.114*b': 'Das ist die natürliche Gewichtung.'};
+  delete mWrong[mExpr];
+  return {title: 'graustufen' + m, desc: `Die Methode soll ein Graustufenbild erzeugen (${{Durchschnitt: 'Durchschnitt der drei Anteile', Min: 'kleinster Anteil', Max: 'größter Anteil', Natuerlich: 'Rot 29,9 %, Grün 58,7 %, Blau 11,4 %'}[m]}).`, lines: [
+    [`color[][] graustufen${m}(color[][] pixelAlt) {`], ['  int breite = pixelAlt.length;'], ['  int hoehe = pixelAlt[0].length;'],
+    ['  color[][] pixelNeu = new color[breite][hoehe];'],
+    ['  for (int x = 0; x < breite; x++) {'], ['    for (int y = 0; y < hoehe; y++) {'],
+    ['      float r = red(pixelAlt[x][y]);'],
+    ['      float g = ', {gap: {id: 'g', ok: ['green(pixelAlt[x][y])'], wrong: {'green(pixelNeu[x][y])': 'pixelNeu ist noch leer – gelesen wird aus dem Original.', 'red(pixelAlt[x][y])': 'Das ist der Rotanteil.'}}}, ';'],
+    ['      float b = ', {gap: {id: 'bl', ok: ['blue(pixelAlt[x][y])'], wrong: {'blue(pixelNeu[x][y])': 'pixelNeu ist noch leer – gelesen wird aus dem Original.', 'green(pixelAlt[x][y])': 'Das ist der Grünanteil.'}}}, ';'],
+    ['      float m = ', {gap: {id: 'm', ok: [mExpr], wrong: mWrong}}, ';'],
+    ['      ', {gap: {id: 'z', ok: ['pixelNeu[x][y] = color(m)'], wrong: {'pixelAlt[x][y] = color(m)': 'Das Original darf nicht verändert werden; das Ergebnis kommt in pixelNeu.', 'pixelNeu[x][y] = color(m, 0, 0)': 'color(m, 0, 0) ist ein Rotton, kein Grau. Ein Grauwert braucht color(m).', 'pixelNeu = color(m)': 'Einem ganzen Array kann man keine einzelne Farbe zuweisen.'}}}, ';'],
+    ['    }'], ['  }'],
+    ['  return ', {gap: {id: 'r', ok: ['pixelNeu'], wrong: {'pixelAlt': 'Zurückgegeben werden muss das neue Bild.', 'm': 'Zurückgegeben wird das Bildarray, nicht ein Grauwert.'}}}, ';'], ['}']]};
+}
+function invTemplate() {
+  return {title: 'invertiere', desc: 'Die Methode soll ein Negativbild erzeugen: Jeder Farbanteil wird umgedreht (0 ↔ 255).', lines: [
+    ['color[][] invertiere(color[][] pixelAlt) {'], ['  int breite = pixelAlt.length;'], ['  int hoehe = pixelAlt[0].length;'],
+    ['  color[][] pixelNeu = ', {gap: {id: 's', ok: ['new color[breite][hoehe]'], wrong: {'new color[hoehe][breite]': 'Beim Invertieren bleibt die Bildgröße gleich.', 'pixelAlt': 'Dann würde kein neues Array angelegt.'}}}, ';'],
+    ['  for (int x = 0; ', {gap: {id: 'lx', ok: ['x < breite'], wrong: {'x <= breite': 'x = breite gibt es als Index nicht.', 'x < hoehe': 'x läuft über die Breite.'}}}, '; x++) {'],
+    ['    for (int y = 0; y < hoehe; y++) {'],
+    ['      float r = red(pixelAlt[x][y]);'], ['      float g = green(pixelAlt[x][y]);'], ['      float b = blue(pixelAlt[x][y]);'],
+    ['      pixelNeu[x][y] = ', {gap: {id: 'c', ok: ['color(255 - r, 255 - g, 255 - b)'], wrong: {'color(255 - r, 255 - g, b)': 'Der Blauanteil wird nicht umgedreht.', 'color(r - 255, g - 255, b - 255)': 'Das ergibt negative Werte – richtig ist 255 minus alter Wert.', 'color(255, 255, 255)': 'Das wäre ein weißes Bild.'}}}, ';'],
+    ['    }'], ['  }'], ['  return pixelNeu;'], ['}']]};
+}
+function kappTemplate() {
+  const ch = pick(['r', 'g', 'b']), fn = {r: 'red', g: 'green', b: 'blue'}[ch], f = {r: 'faktor_r', g: 'faktor_g', b: 'faktor_b'}[ch];
+  return {title: 'aendereFarbanteil', desc: `Ausschnitt aus farbaenderung: Der ${{r: 'Rot', g: 'Grün', b: 'Blau'}[ch]}anteil wird mit dem Faktor multipliziert und danach auf den Bereich 0 bis 255 begrenzt.`, lines: [
+    [`float ${ch} = `, {gap: {id: 'mul', ok: [`${fn}(farbe) * ${f}`], wrong: {[`${fn}(farbe) + ${f}`]: 'Der Faktor wird multipliziert, nicht addiert.', [`${f}`]: 'Dann ginge der alte Farbwert verloren.'}}}, ';'],
+    ['if (', {gap: {id: 'c1', ok: [`${ch} > 255`], wrong: {[`${ch} < 255`]: 'Begrenzt werden müssen die zu großen Werte.', [`${ch} > 0`]: 'Dann würde fast jeder Wert auf 255 gesetzt.'}}}, ') {'],
+    [`  ${ch} = `, {gap: {id: 'v1', ok: ['255'], wrong: {'0': 'Zu große Werte werden auf den Höchstwert 255 gesetzt.', '256': '256 liegt schon außerhalb des Bereichs.'}}}, ';'],
+    ['} else if (', {gap: {id: 'c2', ok: [`${ch} < 0`], wrong: {[`${ch} > 0`]: 'Gesucht sind die negativen Werte.', [`${ch} < 255`]: 'Das trifft auf fast alle Werte zu.'}}}, ') {'],
+    [`  ${ch} = `, {gap: {id: 'v2', ok: ['0'], wrong: {'255': 'Negative Werte werden auf den kleinsten Wert 0 gesetzt.', [`-${ch}`]: 'Der Wert soll auf 0 begrenzt, nicht umgedreht werden.'}}}, ';'],
+    ['}']]};
+}
+function genLuecke() {
+  const lv = APP.level;
+  const tpl = pick(lv === 'leicht' ? [() => geoTemplate(pick(['horizontal', 'vertikal', 'r180'])), grauTemplate, invTemplate]
+    : [() => geoTemplate(pick(levelTrans(false))), () => geoTemplate(pick(levelTrans(false))), grauTemplate, invTemplate, kappTemplate])();
+  const gaps = []; tpl.lines.forEach(l => l.forEach(p => { if (p && p.gap) gaps.push(p.gap); }));
+  const want = lv === 'leicht' ? 3 : lv === 'mittel' ? 4 : 6;
+  let open = shuffle(gaps.map(g => g.id)).slice(0, Math.min(want, gaps.length));
+  if (tpl.key && lv !== 'leicht' && !open.includes('i1')) open[0] = 'i1';
+  if (tpl.key && lv === 'schwer' && !open.includes('i2')) open[1] = 'i2';
+  return {tpl, open: new Set(open)};
+}
+function renderLuecke() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task'}, t.tpl.desc + ' Wähle für jede Lücke den passenden Baustein.'));
+  const pre = el('pre', {class: 'code'});
+  t.tpl.lines.forEach(l => {
+    l.forEach(p => {
+      if (typeof p === 'string') pre.append(p);
+      else if (p.gap && !t.open.has(p.gap.id)) pre.append(p.gap.ok[0]);
+      else if (p.gap) {
+        const opts = shuffle(p.gap.opts ? p.gap.opts : [...p.gap.ok, ...Object.keys(p.gap.wrong)]);
+        const s = el('select', {'data-id': p.gap.id}, el('option', {value: ''}, '…'), ...opts.map(o => el('option', {value: o}, o)));
+        pre.append(s);
+      }
+    });
+    pre.append('\n');
+  });
+  box.append(pre);
+}
+function findGap(t, id) { let g; t.tpl.lines.forEach(l => l.forEach(p => { if (p && p.gap && p.gap.id === id) g = p.gap; })); return g; }
+function checkLuecke() {
+  const t = APP.task, sels = [...document.querySelectorAll('pre.code select')];
+  if (sels.some(s => !s.value)) return fb('bad', 'Bitte alle Lücken ausfüllen.');
+  const msgs = [];
+  let idx = {};
+  sels.forEach(s => { idx[s.dataset.id] = s.value; });
+  // Index-Lücken über Ausführung prüfen
+  let idxOk = true, idxMsg = '';
+  if (t.tpl.key && (t.open.has('i1') || t.open.has('i2'))) {
+    const tr = TRANS[t.tpl.key], e1 = idx.i1 || tr.e[0], e2 = idx.i2 || tr.e[1], g = makeGrid(3, 2);
+    const r = run(g, tr.swap, e1, e2);
+    if (r.error) { idxOk = false; idxMsg = `Mit ${C(`pixelAlt[${e1}][${e2}]`)} bricht das Programm ab: z. B. bei x = ${r.error.x}, y = ${r.error.y} wird Index [${r.error.i}][${r.error.j}] gelesen (ArrayIndexOutOfBoundsException).`; }
+    else if (!gridEq(r.grid, applyT(g, t.tpl.key))) { idxOk = false; const k = whichT(g, r.grid)[0]; idxMsg = `Mit ${C(`pixelAlt[${e1}][${e2}]`)} entsteht ein anderes Bild` + (k ? ` (${TRANS[k].name}).` : '.'); }
+  }
+  sels.forEach(s => {
+    const id = s.dataset.id;
+    if (id === 'i1' || id === 'i2') { s.style.outline = idxOk ? '2px solid var(--ok)' : '2px solid var(--bad)'; return; }
+    const gp = findGap(t, id), ok = gp.ok.includes(s.value);
+    s.style.outline = ok ? '2px solid var(--ok)' : '2px solid var(--bad)';
+    if (!ok) msgs.push(`${C(s.value)}: ${gp.wrong[s.value] || 'passt hier nicht.'}`);
+  });
+  if (!idxOk) msgs.push(idxMsg);
+  if (!msgs.length) { count(true); return fb('ok', 'Alles richtig! So würde die Methode in Processing funktionieren.'); }
+  count(false); fb('bad', 'Noch nicht ganz:<br>' + msgs.join('<br>'));
+}
+function tipLuecke() { const t = APP.task; fb('tip', t.tpl.key ? 'Überlege für die Ecke (0|0) des neuen Bildes, aus welchem Originalpixel sie kommt. Die Schleifen laufen über Breite und Höhe des <b>neuen</b> Bildes.' : 'Gelesen wird immer aus pixelAlt, geschrieben in pixelNeu. Achte bei Rechnungen auf Punkt vor Strich.'); }
+
+// ---------------- Steuerung ----------------
+const GEN = {c2b: genC2B, b2c: genB2C, koord: genKoord, farbe: genFarbe, luecke: genLuecke};
+const REN = {c2b: renderC2B, b2c: renderB2C, koord: renderKoord, farbe: renderFarbe, luecke: renderLuecke};
+const CHK = {c2b: checkC2B, b2c: checkB2C, koord: checkKoord, farbe: checkFarbe, luecke: checkLuecke};
+const TIP = {c2b: tipC2B, b2c: tipB2C, koord: tipKoord, farbe: tipFarbe, luecke: tipLuecke};
+function newTask() { APP.task = GEN[APP.mode](); $('#fb').className = 'fb'; REN[APP.mode](); showScore(); }
+function setMode(m) { APP.mode = m; document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); newTask(); }
+function init() {
+  loadScore();
+  const nav = $('nav.tabs');
+  MODES.forEach(([m, n]) => nav.append(el('button', {'data-m': m, onclick: () => setMode(m)}, n)));
+  $('#level').onchange = e => { APP.level = e.target.value; newTask(); };
+  $('#predict').onchange = e => { APP.predict = e.target.checked; newTask(); };
+  $('#new').onclick = newTask; $('#check').onclick = () => CHK[APP.mode](); $('#tip').onclick = () => TIP[APP.mode]();
+  setMode('c2b');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body></html>

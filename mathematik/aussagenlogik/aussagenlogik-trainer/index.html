@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aussagenlogik-Trainer</title>
+<style>:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--muted:#5d6878;--line:#d6dbe3;--accent:#1f5fa8;--accent-soft:#e6eef8;--ok:#1e7a3c;--ok-soft:#e5f4ea;--bad:#b3261e;--bad-soft:#fbe9e7;--warn-soft:#fff5e0;--mono:"Consolas","Courier New",monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181f;--card:#1d232c;--ink:#e6e9ee;--muted:#9aa4b2;--line:#343c48;--accent:#7fb2ee;--accent-soft:#22324a;--ok:#6fcf8f;--ok-soft:#1d3426;--bad:#f2948c;--bad-soft:#3d2422;--warn-soft:#3a3020}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{padding:18px 16px 8px;max-width:980px;margin:0 auto}
+header h1{margin:0;font-size:1.45rem}
+header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+main{max-width:980px;margin:0 auto;padding:0 16px 40px}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+nav.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:.95rem}
+nav.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.bar label{font-size:.92rem;color:var(--muted)}
+select,input[type=text],input[type=number]{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 8px;font-size:1.1rem}
+.task{font-size:1.05rem}
+.term{font-family:var(--mono);font-size:1.1rem;background:var(--accent-soft);padding:2px 8px;border-radius:6px;white-space:nowrap}
+pre.code{font-family:var(--mono);font-size:.95rem;background:var(--accent-soft);padding:10px 12px;border-radius:8px;overflow-x:auto;margin:8px 0}
+.btn{font:inherit;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--accent)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fb{margin-top:12px;padding:10px 12px;border-radius:8px;display:none}
+.fb.ok{display:block;background:var(--ok-soft);border-left:4px solid var(--ok)}
+.fb.bad{display:block;background:var(--bad-soft);border-left:4px solid var(--bad)}
+.fb.tip{display:block;background:var(--warn-soft);border-left:4px solid #c98a00}
+.score{margin-left:auto;font-size:.92rem;color:var(--muted)}
+table.tt{border-collapse:collapse;margin:8px 0;font-family:var(--mono)}
+table.tt th,table.tt td{border:1px solid var(--line);padding:4px 8px;text-align:center;min-width:40px}
+table.tt th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+table.tt td.cell{cursor:pointer;user-select:none}
+table.tt td.cell:hover{outline:2px solid var(--accent)}
+td.wrong{background:var(--bad-soft)}
+td.right{background:var(--ok-soft)}
+.scroll{overflow-x:auto}
+.choice{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.choice button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer}
+.choice button.sel{border-color:var(--accent);background:var(--accent-soft)}
+.list{list-style:none;padding:0;margin:8px 0}
+.list li{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.list li.sel{border-color:var(--accent);background:var(--accent-soft)}
+.list li.right{border-color:var(--ok);background:var(--ok-soft)}
+.list li.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.small{font-size:.9rem;color:var(--muted)}
+details{margin:6px 0}
+details summary{cursor:pointer;color:var(--accent)}
+.symbols{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.symbols button{font:inherit;font-family:var(--mono);min-width:38px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;cursor:pointer;padding:4px 8px}
+canvas{max-width:100%;height:auto;border-radius:8px;touch-action:manipulation}
+.grid{display:inline-grid;gap:0;border:2px solid var(--ink);margin:6px 0}
+.grid div{width:42px;height:42px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.15rem;font-family:var(--mono)}
+.grid input{width:42px;height:42px;border:1px solid var(--line);text-align:center;font-weight:700;font-size:1.1rem;font-family:var(--mono);text-transform:uppercase;background:var(--card);color:var(--ink);border-radius:0;padding:0}
+.grid input.wrong{background:var(--bad-soft)}.grid input.right{background:var(--ok-soft)}
+.gwrap{display:inline-block;vertical-align:top;margin:4px 14px 4px 0}
+.gwrap .lbl{font-size:.88rem;color:var(--muted)}
+.axis{display:flex;font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.axis span{width:42px;text-align:center}
+.opts{display:flex;flex-wrap:wrap;gap:12px}
+.opt{border:2px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;background:var(--card)}
+.opt.sel{border-color:var(--accent)}.opt.right{border-color:var(--ok);background:var(--ok-soft)}.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.swatch{display:inline-block;width:56px;height:36px;border-radius:6px;border:1px solid var(--line);vertical-align:middle}
+footer{max-width:980px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:.85rem}
+.ylab{height:42px;display:flex;align-items:center}
+@media (max-width:600px){.grid div,.grid input{width:36px;height:36px}.axis span{width:36px}.ylab{height:36px}}
+</style></head>
+<body>
+<header><h1>Aussagenlogik-Trainer</h1><p>IMP 10 · Wahrheitstafeln, Rechengesetze, Venn-Diagramme, Kontraposition</p></header>
+<main>
+<nav class="tabs" aria-label="Aufgabentyp"></nav>
+<div class="bar">
+  <label>Stufe <select id="level"><option value="leicht">leicht</option><option value="mittel">mittel</option><option value="schwer">schwer</option></select></label>
+  <label><input type="checkbox" id="predict"> Erst vorhersagen (bei Wahrheitstafeln)</label>
+  <span class="score" id="score"></span>
+</div>
+<section class="card"><div id="task"></div>
+  <div class="btns"><button class="btn" id="check">Prüfen</button><button class="btn sec" id="tip">Tipp</button><button class="btn sec" id="new">Neue Aufgabe</button></div>
+  <div class="fb" id="fb"></div>
+</section>
+<section class="card" id="lawbox"><details><summary>Rechengesetze (Tabelle wie in der Klassenarbeit)</summary>
+  <div class="scroll"><table class="tt" id="lawtable"></table></div></details></section>
+<section class="card"><details><summary>Begriffe</summary>
+<p><b>Junktor:</b> logische Verknüpfung wie ¬, ∧, ∨, →, ↔.</p>
+<p><b>Tautologie (allgemeingültige Aussage):</b> ist bei jeder Belegung wahr; in der letzten Spalte der Wahrheitstafel steht überall 1. Tautologien sind die Rechengesetze.</p>
+<p><b>Bijunktion und Äquivalenz:</b> a ↔ b ist eine Bijunktion. Ist sie allgemeingültig, schreibt man a ⇔ b (Äquivalenz): Beide Seiten sind gleichwertig.</p>
+<p><b>Subjunktion und Implikation:</b> a → b („wenn a, dann b“) ist nur falsch, wenn a wahr und b falsch ist. Ist die Subjunktion allgemeingültig, schreibt man a ⇒ b (Implikation).</p>
+<p><b>Kontraposition:</b> Zu a → b gehört ¬b → ¬a. Beide sind gleichwertig.</p>
+<p><b>Umkehrung:</b> Zu a → b gehört b → a. Sie ist <i>nicht</i> gleichwertig.</p>
+<p><b>De Morgan:</b> ¬(a ∧ b) ⇔ ¬a ∨ ¬b und ¬(a ∨ b) ⇔ ¬a ∧ ¬b – beim Verneinen wechseln ∧ und ∨.</p>
+<p><b>Dualität:</b> Tauscht man in einem Gesetz ∧ mit ∨ und 0 mit 1, erhält man das duale Gesetz (z. B. (5) und (5')).</p>
+</details></section>
+</main>
+<footer>Übungsseite ohne Speicherung auf einem Server; der Punktestand bleibt nur in diesem Browser. · M. Zimmer</footer>
+<script>// ===== Aussagenlogik-Engine =====
+// Terme: {t:'var',n} {t:'const',v} {t:'not',a} {t:'and'|'or'|'imp'|'iff',a,b} {t:'mv',n}
+const V = n => ({t:'var', n});
+const K = v => ({t:'const', v});
+const NOT = a => ({t:'not', a});
+const AND = (a,b) => ({t:'and', a, b});
+const OR = (a,b) => ({t:'or', a, b});
+const IMP = (a,b) => ({t:'imp', a, b});
+const IFF = (a,b) => ({t:'iff', a, b});
+const MV = n => ({t:'mv', n});
+const SYM = {and:'∧', or:'∨', imp:'→', iff:'↔'};
+
+function eq(x, y) {
+  if (x.t !== y.t) return false;
+  switch (x.t) {
+    case 'var': case 'mv': return x.n === y.n;
+    case 'const': return x.v === y.v;
+    case 'not': return eq(x.a, y.a);
+    default: return eq(x.a, y.a) && eq(x.b, y.b);
+  }
+}
+function isBin(x) { return x.t === 'and' || x.t === 'or' || x.t === 'imp' || x.t === 'iff'; }
+function str(x, top = true) {
+  switch (x.t) {
+    case 'var': case 'mv': return x.n;
+    case 'const': return String(x.v);
+    case 'not': return '¬' + (isBin(x.a) ? '(' + str(x.a, false) + ')' : str(x.a, false));
+    default: {
+      const s = (isBin(x.a) ? '(' + str(x.a, false) + ')' : str(x.a, false)) + ' ' + SYM[x.t] + ' ' +
+                (isBin(x.b) ? '(' + str(x.b, false) + ')' : str(x.b, false));
+      return s;
+    }
+  }
+}
+function ev(x, env) {
+  switch (x.t) {
+    case 'var': return env[x.n] ? 1 : 0;
+    case 'const': return x.v;
+    case 'not': return 1 - ev(x.a, env);
+    case 'and': return ev(x.a, env) & ev(x.b, env);
+    case 'or': return ev(x.a, env) | ev(x.b, env);
+    case 'imp': return (1 - ev(x.a, env)) | ev(x.b, env);
+    case 'iff': return ev(x.a, env) === ev(x.b, env) ? 1 : 0;
+  }
+}
+function varsOf(x, s = new Set()) {
+  if (x.t === 'var') s.add(x.n);
+  else if (x.t === 'not') varsOf(x.a, s);
+  else if (isBin(x)) { varsOf(x.a, s); varsOf(x.b, s); }
+  return s;
+}
+function sortVars(arr) { return [...arr].sort(); }
+function rows(vars) { // Belegungen in Schulreihenfolge 00, 01, 10, 11
+  const n = vars.length, out = [];
+  for (let i = 0; i < (1 << n); i++) {
+    const env = {};
+    vars.forEach((v, k) => env[v] = (i >> (n - 1 - k)) & 1);
+    out.push(env);
+  }
+  return out;
+}
+function equiv(x, y) {
+  const vs = sortVars(new Set([...varsOf(x), ...varsOf(y)]));
+  return rows(vs).every(e => ev(x, e) === ev(y, e));
+}
+function counterexample(x, y) {
+  const vs = sortVars(new Set([...varsOf(x), ...varsOf(y)]));
+  return rows(vs).find(e => ev(x, e) !== ev(y, e)) || null;
+}
+function isTaut(x) { const vs = sortVars(varsOf(x)); return rows(vs).every(e => ev(x, e) === 1); }
+function isConst(x) { const vs = sortVars(varsOf(x)); const r = rows(vs).map(e => ev(x, e)); return r.every(v => v === r[0]); }
+
+// Teilterme in Auswerte-Reihenfolge (ohne Variablen), ohne Doppelte
+function subterms(x, out = []) {
+  if (x.t === 'not') subterms(x.a, out);
+  else if (isBin(x)) { subterms(x.a, out); subterms(x.b, out); }
+  if (x.t !== 'var' && !out.some(s => eq(s, x))) out.push(x);
+  return out;
+}
+
+// ---------- Parser für Eingaben ----------
+function parse(input) {
+  let s = input.replace(/\s+/g, '')
+    .replace(/<->|<=>|⇔|↔/g, '↔').replace(/->|=>|⇒|→/g, '→')
+    .replace(/[&∧*]|und/gi, '∧').replace(/[|∨+]|oder/gi, '∨')
+    .replace(/[!~¬]|nicht/gi, '¬').replace(/wahr/gi, '1').replace(/falsch/gi, '0');
+  let i = 0;
+  const peek = () => s[i];
+  function fail(msg) { throw new Error(msg); }
+  function pIff() { let l = pImp(); while (peek() === '↔') { i++; l = IFF(l, pImp()); } return l; }
+  function pImp() { const l = pOr(); if (peek() === '→') { i++; return IMP(l, pImp()); } return l; }
+  function pOr() { let l = pAnd(); while (peek() === '∨') { i++; l = OR(l, pAnd()); } return l; }
+  function pAnd() { let l = pNot(); while (peek() === '∧') { i++; l = AND(l, pNot()); } return l; }
+  function pNot() { if (peek() === '¬') { i++; return NOT(pNot()); } return pAtom(); }
+  function pAtom() {
+    const c = peek();
+    if (c === '(') { i++; const e = pIff(); if (peek() !== ')') fail('Es fehlt eine schließende Klammer.'); i++; return e; }
+    if (c === '0' || c === '1') { i++; return K(+c); }
+    if (c && /[a-z]/i.test(c)) { i++; return V(c.toLowerCase()); }
+    fail(c ? 'Unerwartetes Zeichen „' + c + '“.' : 'Der Term ist unvollständig.');
+  }
+  if (!s) fail('Bitte einen Term eingeben.');
+  const e = pIff();
+  if (i < s.length) fail('Unerwartetes Zeichen „' + s[i] + '“.');
+  return e;
+}
+
+// ---------- Rechengesetze (Nummern wie im Pool / in der Klassenarbeit) ----------
+const A = MV('A'), B = MV('B'), C = MV('C');
+const LAWS = [
+  {id:'1',  name:'Kommutativgesetz', L:OR(A,B), R:OR(B,A)},
+  {id:"1'", name:'Kommutativgesetz', L:AND(A,B), R:AND(B,A)},
+  {id:'2',  name:'Assoziativgesetz', L:OR(OR(A,B),C), R:OR(A,OR(B,C))},
+  {id:"2'", name:'Assoziativgesetz', L:AND(AND(A,B),C), R:AND(A,AND(B,C))},
+  {id:'3',  name:'Absorptionsgesetz', L:OR(A,AND(A,B)), R:A},
+  {id:"3'", name:'Absorptionsgesetz', L:AND(A,OR(A,B)), R:A},
+  {id:'4',  name:'Distributivgesetz', L:OR(A,AND(B,C)), R:AND(OR(A,B),OR(A,C))},
+  {id:"4'", name:'Distributivgesetz', L:AND(A,OR(B,C)), R:OR(AND(A,B),AND(A,C))},
+  {id:'5',  name:'Komplementärgesetz', L:OR(A,NOT(A)), R:K(1)},
+  {id:"5'", name:'Komplementärgesetz', L:AND(A,NOT(A)), R:K(0)},
+  {id:'6',  name:'Neutralitätsgesetz', L:OR(A,K(0)), R:A},
+  {id:"6'", name:'Neutralitätsgesetz', L:AND(A,K(1)), R:A},
+  {id:'7',  name:'Extremalgesetz', L:OR(A,K(1)), R:K(1)},
+  {id:"7'", name:'Extremalgesetz', L:AND(A,K(0)), R:K(0)},
+  {id:'8',  name:'Dualitätsgesetz', L:NOT(K(1)), R:K(0)},
+  {id:"8'", name:'Dualitätsgesetz', L:NOT(K(0)), R:K(1)},
+  {id:'9',  name:'Idempotenzgesetz', L:OR(A,A), R:A},
+  {id:"9'", name:'Idempotenzgesetz', L:AND(A,A), R:A},
+  {id:'10', name:'Involutionsgesetz', L:NOT(NOT(A)), R:A},
+  {id:'11', name:'De Morgansches Gesetz', L:NOT(AND(A,B)), R:OR(NOT(A),NOT(B))},
+  {id:"11'",name:'De Morgansches Gesetz', L:NOT(OR(A,B)), R:AND(NOT(A),NOT(B))},
+];
+const LAW = Object.fromEntries(LAWS.map(l => [l.id, l]));
+
+function match(p, x, b) {
+  if (p.t === 'mv') {
+    if (b[p.n]) return eq(b[p.n], x);
+    b[p.n] = x; return true;
+  }
+  if (p.t !== x.t) return false;
+  if (p.t === 'var') return p.n === x.n;
+  if (p.t === 'const') return p.v === x.v;
+  if (p.t === 'not') return match(p.a, x.a, b);
+  return match(p.a, x.a, b) && match(p.b, x.b, b);
+}
+function lawFits(law, s1, s2) {
+  for (const [P, Q] of [[law.L, law.R], [law.R, law.L]]) {
+    const b = {};
+    if (match(P, s1, b) && match(Q, s2, b)) return true;
+  }
+  return false;
+}
+// alle Paare (Teilterm von t1, Teilterm von t2) an derselben Position, an der sich t1 und t2 unterscheiden (inkl. Vorfahren)
+function diffChain(t1, t2) {
+  const chain = [];
+  (function go(x, y) {
+    if (eq(x, y)) return;
+    chain.push([x, y]);
+    if (x.t === y.t) {
+      if (x.t === 'not') return go(x.a, y.a);
+      if (isBin(x)) {
+        if (eq(x.a, y.a)) return go(x.b, y.b);
+        if (eq(x.b, y.b)) return go(x.a, y.a);
+      }
+    }
+  })(t1, t2);
+  return chain;
+}
+function stepFits(t1, t2, lawId) {
+  const law = LAW[lawId];
+  return diffChain(t1, t2).some(([x, y]) => lawFits(law, x, y));
+}
+function fittingLaws(t1, t2) { return LAWS.filter(l => stepFits(t1, t2, l.id)).map(l => l.id); }
+
+// ---------- Vereinfacher: erzeugt beschriftete Umformungsketten ----------
+function compl(x, y) { return (x.t === 'not' && eq(x.a, y)) || (y.t === 'not' && eq(y.a, x)); }
+// Regeln: f(x) -> {res, law, err?} oder null. err = typischer Fehler {res, text}
+const RULES = [
+  x => x.t === 'not' && x.a.t === 'not' ? {res: x.a.a, law: '10', err: {res: x.a, text: 'Die doppelte Verneinung wurde nur zur Hälfte aufgelöst.'}} : null,
+  x => x.t === 'not' && x.a.t === 'const' ? {res: K(1 - x.a.v), law: x.a.v ? '8' : "8'", err: {res: x.a, text: 'Die Verneinung der Konstante wurde vergessen.'}} : null,
+  x => x.t === 'or' && compl(x.a, x.b) && x.b.t === 'not' ? {res: K(1), law: '5', err: {res: K(0), text: 'Komplementärgesetz verwechselt: a ∨ ¬a ergibt 1, nicht 0.'}} : null,
+  x => x.t === 'and' && compl(x.a, x.b) && x.b.t === 'not' ? {res: K(0), law: "5'", err: {res: K(1), text: 'Komplementärgesetz verwechselt: a ∧ ¬a ergibt 0, nicht 1.'}} : null,
+  x => x.t === 'or' && x.b.t === 'const' && x.b.v === 0 ? {res: x.a, law: '6', err: {res: K(0), text: 'Neutralitätsgesetz verwechselt: a ∨ 0 ergibt a.'}} : null,
+  x => x.t === 'and' && x.b.t === 'const' && x.b.v === 1 ? {res: x.a, law: "6'", err: {res: K(1), text: 'Neutralitätsgesetz verwechselt: a ∧ 1 ergibt a.'}} : null,
+  x => x.t === 'or' && x.b.t === 'const' && x.b.v === 1 ? {res: K(1), law: '7', err: {res: x.a, text: 'Extremalgesetz verwechselt: a ∨ 1 ergibt immer 1.'}} : null,
+  x => x.t === 'and' && x.b.t === 'const' && x.b.v === 0 ? {res: K(0), law: "7'", err: {res: x.a, text: 'Extremalgesetz verwechselt: a ∧ 0 ergibt immer 0.'}} : null,
+  x => x.t === 'or' && eq(x.a, x.b) ? {res: x.a, law: '9'} : null,
+  x => x.t === 'and' && eq(x.a, x.b) ? {res: x.a, law: "9'"} : null,
+  x => x.t === 'or' && x.b.t === 'and' && eq(x.a, x.b.a) ? {res: x.a, law: '3', err: {res: x.b, text: 'Absorption falsch: Von a ∨ (a ∧ b) bleibt a übrig, nicht a ∧ b.'}} : null,
+  x => x.t === 'and' && x.b.t === 'or' && eq(x.a, x.b.a) ? {res: x.a, law: "3'", err: {res: x.b, text: 'Absorption falsch: Von a ∧ (a ∨ b) bleibt a übrig, nicht a ∨ b.'}} : null,
+  x => x.t === 'not' && x.a.t === 'and' ? {res: OR(NOT(x.a.a), NOT(x.a.b)), law: '11', err: {res: AND(NOT(x.a.a), NOT(x.a.b)), text: 'De Morgan: Beim Verneinen muss ∧ zu ∨ werden.'}} : null,
+  x => x.t === 'not' && x.a.t === 'or' ? {res: AND(NOT(x.a.a), NOT(x.a.b)), law: "11'", err: {res: OR(NOT(x.a.a), NOT(x.a.b)), text: 'De Morgan: Beim Verneinen muss ∨ zu ∧ werden.'}} : null,
+  // Ausklammern (Distributivgesetz rückwärts)
+  x => x.t === 'or' && x.a.t === 'and' && x.b.t === 'and' && eq(x.a.a, x.b.a) ? {res: AND(x.a.a, OR(x.a.b, x.b.b)), law: "4'", err: {res: OR(x.a.a, AND(x.a.b, x.b.b)), text: 'Beim Ausklammern wurden ∧ und ∨ vertauscht.'}} : null,
+  x => x.t === 'and' && x.a.t === 'or' && x.b.t === 'or' && eq(x.a.a, x.b.a) ? {res: OR(x.a.a, AND(x.a.b, x.b.b)), law: '4', err: {res: AND(x.a.a, OR(x.a.b, x.b.b)), text: 'Beim Ausklammern wurden ∧ und ∨ vertauscht.'}} : null,
+  // Ausmultiplizieren, wenn ein Komplement entsteht
+  x => x.t === 'or' && x.b.t === 'and' && compl(x.a, x.b.a) ? {res: AND(OR(x.a, x.b.a), OR(x.a, x.b.b)), law: '4', err: {res: OR(AND(x.a, x.b.a), AND(x.a, x.b.b)), text: 'Beim Ausmultiplizieren wurden ∧ und ∨ vertauscht.'}} : null,
+  x => x.t === 'and' && x.b.t === 'or' && compl(x.a, x.b.a) ? {res: OR(AND(x.a, x.b.a), AND(x.a, x.b.b)), law: "4'", err: {res: AND(OR(x.a, x.b.a), OR(x.a, x.b.b)), text: 'Beim Ausmultiplizieren wurden ∧ und ∨ vertauscht.'}} : null,
+  // Assoziativ, wenn danach ein Komplement oder Doppeltes entsteht
+  x => x.t === 'or' && x.a.t === 'or' && (compl(x.a.b, x.b) || eq(x.a.b, x.b)) ? {res: OR(x.a.a, OR(x.a.b, x.b)), law: '2'} : null,
+  x => x.t === 'and' && x.a.t === 'and' && (compl(x.a.b, x.b) || eq(x.a.b, x.b)) ? {res: AND(x.a.a, AND(x.a.b, x.b)), law: "2'"} : null,
+];
+function ruleAt(x) {
+  for (const r of RULES) { const m = r(x); if (m) return m; }
+  // Kommutativ, wenn vertauscht eine Regel greift (nicht wieder Kommutativ)
+  if (x.t === 'or' || x.t === 'and') {
+    const sw = {t: x.t, a: x.b, b: x.a};
+    for (const r of RULES) if (r(sw)) return {res: sw, law: x.t === 'or' ? '1' : "1'"};
+    // innere Kommutativ-Variante für Ausklammern / Absorption / Ausmultiplizieren
+    for (const side of ['a', 'b']) {
+      const c = x[side];
+      if ((c.t === 'and' || c.t === 'or')) {
+        const sw2 = {...x, [side]: {t: c.t, a: c.b, b: c.a}};
+        for (const r of RULES) if (r(sw2)) return {res: sw2, law: c.t === 'or' ? '1' : "1'"};
+      }
+    }
+  }
+  return null;
+}
+// innerster passender Teilterm zuerst; gibt {res, law, err:{res,text}|undefined} für den Gesamtterm
+function step(x) {
+  if (x.t === 'not') { const s = step(x.a); if (s) return wrap(s, a => NOT(a)); }
+  if (isBin(x)) {
+    const s1 = step(x.a); if (s1) return wrap(s1, a => ({t: x.t, a, b: x.b}));
+    const s2 = step(x.b); if (s2) return wrap(s2, b => ({t: x.t, a: x.a, b}));
+  }
+  const m = ruleAt(x);
+  return m ? {res: m.res, law: m.law, err: m.err} : null;
+}
+function wrap(s, f) { return {res: f(s.res), law: s.law, err: s.err ? {res: f(s.err.res), text: s.err.text} : undefined}; }
+function simplifyChain(x, max = 12) {
+  const chain = [{term: x, law: null}];
+  let cur = x;
+  for (let i = 0; i < max; i++) {
+    const s = step(cur);
+    if (!s) break;
+    chain.push({term: s.res, law: s.law, err: s.err});
+    cur = s.res;
+  }
+  return chain;
+}
+
+// Starttermen für „Fehler finden“ (keine Terme aus der Klassenarbeit)
+const CHAIN_STARTS = [
+  '¬(¬a∧¬b)', '(a∧b)∨(a∧¬b)', '¬(a∨b)∨a', 'a∨(¬a∧b)', '(a∨b)∧(a∨¬b)', '¬(¬a∨¬b)∨¬a',
+  '¬(a∧(b∨¬b))', '(a∧¬a)∨(b∧c)', '¬(¬a∨(b∧¬b))', '(a∨(a∧b))∧¬¬c', '¬(a∧b)∨b',
+  '(a∨b)∧¬(¬a∧¬b)', '¬(¬(a∨b)∨c)', '(c∧a)∨(c∧b)', '(a∨c)∧(a∨¬c)', '¬(¬b∧(b∨c))',
+  '¬a∧(a∨b)', '(b∧¬¬a)∨(b∧¬a)', '¬(¬(a∧1)∨0)', 'a∧(b∨(a∧¬a))'
+];
+
+// ---------- Zufall ----------
+function rnd(n) { return Math.floor(Math.random() * n); }
+function pick(a) { return a[rnd(a.length)]; }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function inst(p, b) {
+  switch (p.t) {
+    case 'mv': return b[p.n];
+    case 'var': case 'const': return p;
+    case 'not': return NOT(inst(p.a, b));
+    default: return {t: p.t, a: inst(p.a, b), b: inst(p.b, b)};
+  }
+}
+function randomTerm(vars, depth, ops) {
+  if (depth <= 0 || Math.random() < 0.25) { const v = V(pick(vars)); return Math.random() < 0.3 ? NOT(v) : v; }
+  const op = pick(ops);
+  if (op === 'not') return NOT(randomTerm(vars, depth - 1, ops.filter(o => o !== 'not')));
+  return {t: op, a: randomTerm(vars, depth - 1, ops), b: randomTerm(vars, depth - 1, ops)};
+}
+// Verfälschungen (für „keine Tautologie“-Aufgaben)
+function mutations(x) {
+  const out = [];
+  (function go(y, f) {
+    if (y.t === 'and') out.push(f({...y, t: 'or'}));
+    if (y.t === 'or') out.push(f({...y, t: 'and'}));
+    if (y.t === 'imp') out.push(f(IMP(y.b, y.a)));
+    if (y.t === 'not') out.push(f(y.a));
+    if (y.t === 'var') out.push(f(NOT(y)));
+    if (y.t === 'not') go(y.a, a => f(NOT(a)));
+    if (isBin(y)) { go(y.a, a => f({...y, a})); go(y.b, b => f({...y, b})); }
+  })(x, z => z);
+  return out;
+}
+
+if (typeof module !== 'undefined') module.exports = {V,K,NOT,AND,OR,IMP,IFF,MV,eq,str,ev,varsOf,rows,equiv,counterexample,isTaut,isConst,subterms,parse,LAWS,LAW,stepFits,fittingLaws,simplifyChain,CHAIN_STARTS,randomTerm,mutations,inst,pick,rnd,shuffle,sortVars};
+
+// ===== Aussagenlogik-Trainer: Oberfläche =====
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k === 'html') e.innerHTML = v; else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+};
+const APP = {mode: 'wt', level: 'leicht', predict: false, task: null, score: {}};
+const MODES = [
+  ['wt', 'Wahrheitstafel'], ['gesetz', 'Gesetz erkennen'], ['fehler', 'Fehler finden'],
+  ['venn', 'Venn-Diagramm'], ['gleich', 'Gleichwertig?']
+];
+function loadScore() { try { APP.score = JSON.parse(localStorage.getItem('al-score') || '{}'); } catch (e) { APP.score = {}; } }
+function saveScore() { try { localStorage.setItem('al-score', JSON.stringify(APP.score)); } catch (e) {} }
+function count(ok) {
+  const s = APP.score[APP.mode] || (APP.score[APP.mode] = {r: 0, n: 0});
+  if (!APP.task.counted) { s.n++; if (ok) s.r++; APP.task.counted = true; saveScore(); }
+  showScore();
+}
+function showScore() { const s = APP.score[APP.mode] || {r: 0, n: 0}; $('#score').textContent = `Richtig beim ersten Versuch: ${s.r} von ${s.n}`; }
+function fb(kind, html) { const f = $('#fb'); f.className = 'fb ' + kind; f.innerHTML = html; }
+function T(x) { return `<span class="term">${str(x)}</span>`; }
+function lawText(id) { const l = LAW[id]; return `(${id}) ${l.name}: ${str(l.L).replace(/A/g,'a').replace(/B/g,'b').replace(/C/g,'c')} ⇔ ${str(l.R).replace(/A/g,'a').replace(/B/g,'b').replace(/C/g,'c')}`; }
+function lawSelect(id) {
+  const s = el('select', {id});
+  s.append(el('option', {value: ''}, '– Gesetz wählen –'));
+  for (const l of LAWS) s.append(el('option', {value: l.id}, lawText(l.id)));
+  return s;
+}
+function envText(e) { return Object.entries(e).map(([k, v]) => `${k} = ${v}`).join(', '); }
+
+// ---------------- Wahrheitstafel ----------------
+const WT_SOURCES = [
+  {L: AND(A, OR(A, B)), R: A}, {L: OR(A, AND(A, B)), R: A},
+  {L: NOT(AND(A, B)), R: OR(NOT(A), NOT(B))}, {L: NOT(OR(A, B)), R: AND(NOT(A), NOT(B))},
+  {L: IMP(A, B), R: IMP(NOT(B), NOT(A))}, {L: IMP(A, B), R: OR(NOT(A), B)},
+  {L: IMP(A, B), R: NOT(AND(A, NOT(B)))}, {L: OR(A, AND(B, C)), R: AND(OR(A, B), OR(A, C))},
+  {L: AND(A, OR(B, C)), R: OR(AND(A, B), AND(A, C))}, {L: OR(OR(A, B), C), R: OR(A, OR(B, C))},
+  {L: AND(A, NOT(A)), R: K(0)}, {L: OR(A, NOT(A)), R: K(1)},
+  {full: IMP(AND(A, IMP(A, B)), B)}, {full: IMP(AND(IMP(A, B), IMP(B, C)), IMP(A, C))},
+  {full: IMP(IMP(A, B), IMP(B, A))}, {full: IMP(IMP(A, B), IMP(NOT(A), NOT(B)))},
+  {full: IMP(AND(OR(A, B), NOT(A)), B)}
+];
+function mvCount(x) { const s = new Set(); (function g(y) { if (y.t === 'mv') s.add(y.n); else if (y.t === 'not') g(y.a); else if (isBin(y)) { g(y.a); g(y.b); } })(x); return s.size; }
+function genWT() {
+  for (let tries = 0; tries < 200; tries++) {
+    const lv = APP.level;
+    let src = pick(WT_SOURCES);
+    const full0 = src.full || IFF(src.L, src.R);
+    const n = mvCount(full0);
+    if (lv === 'leicht' && (n > 2 || full0.t === 'imp' && src.full && mvCount(full0) > 2)) continue;
+    if (lv === 'schwer' && n < 2) continue;
+    const vars = shuffle(['a', 'b', 'c']);
+    const b = {};
+    ['A', 'B', 'C'].forEach((m, i) => { b[m] = V(vars[i]); if (lv === 'schwer' && Math.random() < 0.3) b[m] = NOT(V(vars[i])); });
+    let term = inst(full0, b);
+    if (Math.random() < 0.5) { // verfälschen
+      const side = term.t === 'iff' ? pick(['a', 'b']) : null;
+      const base = side ? term[side] : term;
+      const ms = shuffle(mutations(base)).filter(m => !isConst(m) || m.t === 'const');
+      const m = ms.find(m => { const t2 = side ? {...term, [side]: m} : m; return !isTaut(t2) && varsOf(t2).size === varsOf(term).size; });
+      if (m) term = side ? {...term, [side]: m} : m;
+    }
+    const vs = sortVars(varsOf(term));
+    const cols = subterms(term).filter(s => s.t !== 'const');
+    if (cols.length > 7) continue;
+    return {kind: 'wt', term, vs, cols, rows: rows(vs), cells: {}, pred: null, taut: isTaut(term), answer: null};
+  }
+}
+function renderWT() {
+  const t = APP.task, box = $('#task');
+  box.innerHTML = '';
+  box.append(el('p', {class: 'task', html: `Prüfe mit einer Wahrheitstafel, ob ${T(t.term)} allgemeingültig (eine Tautologie) ist.`}));
+  box.append(el('p', {class: 'small'}, 'Klicke in eine Zelle, um zwischen 1 und 0 zu wechseln. Die Spalten der Aussagevariablen sind vorgegeben.'));
+  if (APP.predict && t.pred === null) {
+    box.append(el('p', {}, 'Erst vorhersagen: Was vermutest du, bevor du rechnest?'));
+    box.append(el('div', {class: 'choice'},
+      el('button', {onclick: () => { t.pred = true; renderWT(); }}, 'Tautologie'),
+      el('button', {onclick: () => { t.pred = false; renderWT(); }}, 'keine Tautologie')));
+    return;
+  }
+  const tbl = el('table', {class: 'tt'});
+  tbl.append(el('tr', {}, ...t.vs.map(v => el('th', {}, v)), ...t.cols.map(c => el('th', {}, str(c)))));
+  t.rows.forEach((env, r) => {
+    const tr = el('tr');
+    t.vs.forEach(v => tr.append(el('td', {}, String(env[v]))));
+    t.cols.forEach((c, k) => {
+      const key = r + ',' + k;
+      const td = el('td', {class: 'cell', 'data-key': key}, t.cells[key] ?? '');
+      td.addEventListener('click', () => { t.cells[key] = t.cells[key] === '1' ? '0' : '1'; td.textContent = t.cells[key]; td.classList.remove('wrong', 'right'); });
+      tr.append(td);
+    });
+    tbl.append(tr);
+  });
+  box.append(el('div', {class: 'scroll'}, tbl));
+  box.append(el('p', {}, 'Ergebnis: Der Term ist …'));
+  const ch = el('div', {class: 'choice', id: 'wtans'},
+    el('button', {'data-v': '1', onclick: e => selAns(e, true)}, 'allgemeingültig'),
+    el('button', {'data-v': '0', onclick: e => selAns(e, false)}, 'nicht allgemeingültig'));
+  box.append(ch);
+  function selAns(e, v) { t.answer = v; ch.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b === e.target)); }
+}
+function checkWT() {
+  const t = APP.task; let wrong = 0, empty = 0;
+  t.rows.forEach((env, r) => t.cols.forEach((c, k) => {
+    const key = r + ',' + k, td = document.querySelector(`td[data-key="${key}"]`);
+    const v = t.cells[key];
+    if (v == null) { empty++; return; }
+    const ok = +v === ev(c, env);
+    td.classList.toggle('wrong', !ok); td.classList.toggle('right', ok);
+    if (!ok) wrong++;
+  }));
+  if (empty) return fb('bad', `Es sind noch ${empty} Zellen leer.`);
+  if (wrong) { count(false); return fb('bad', `${wrong} Zelle(n) sind falsch (rot markiert). Prüfe sie Spalte für Spalte.`); }
+  if (t.answer === null) return fb('bad', 'Die Tafel stimmt. Entscheide jetzt noch, ob der Term allgemeingültig ist.');
+  if (t.answer !== t.taut) { count(false); return fb('bad', t.taut ? 'Schau dir die letzte Spalte an: Steht dort überall 1?' : 'Schau dir die letzte Spalte an: Es gibt eine Zeile mit 0.'); }
+  count(true);
+  let msg = t.taut ? `Richtig! In der letzten Spalte steht überall 1, also ist der Term eine Tautologie.` : `Richtig! Der Term ist nicht allgemeingültig, denn es gibt eine Zeile mit 0 (z. B. ${envText(t.rows.find(e => !ev(t.term, e)))}).`;
+  if (t.term.t === 'iff' && t.taut) msg += ` Man schreibt deshalb ${str(t.term.a)} ⇔ ${str(t.term.b)}.`;
+  if (t.term.t === 'imp' && t.taut) msg += ` Die Subjunktion ist eine Implikation: ${str(t.term.a)} ⇒ ${str(t.term.b)}.`;
+  if (t.pred !== null) msg += t.pred === t.taut ? ' Deine Vorhersage war richtig.' : ' Deine Vorhersage war falsch – gut, dass du nachgerechnet hast.';
+  fb('ok', msg);
+}
+const OPRULE = {not: 'Die Negation ¬ dreht den Wert um.', and: '∧ ergibt nur dann 1, wenn beide Seiten 1 sind.', or: '∨ ergibt 1, sobald mindestens eine Seite 1 ist.', imp: '→ ist nur dann 0, wenn links 1 und rechts 0 steht.', iff: '↔ ergibt 1, wenn beide Seiten gleich sind.'};
+function tipWT() {
+  const t = APP.task;
+  for (let k = 0; k < t.cols.length; k++) {
+    const bad = t.rows.some((env, r) => t.cells[r + ',' + k] == null || +t.cells[r + ',' + k] !== ev(t.cols[k], env));
+    if (bad) {
+      const c = t.cols[k];
+      const parts = c.t === 'not' ? `der Spalte ${str(c.a)}` : `den Spalten ${str(c.a)} und ${str(c.b)}`;
+      return fb('tip', `Schau dir die Spalte ${T(c)} an. Sie entsteht aus ${parts}. ${OPRULE[c.t]}`);
+    }
+  }
+  fb('tip', 'Die Tafel ist vollständig. Allgemeingültig heißt: In der letzten Spalte steht in jeder Zeile 1.');
+}
+
+// ---------------- Gesetz erkennen ----------------
+function smallTerm(vars, lv) {
+  const v = V(pick(vars));
+  if (lv === 'leicht') return v;
+  if (lv === 'mittel') return Math.random() < 0.4 ? NOT(v) : v;
+  const r = Math.random();
+  if (r < 0.3) return NOT(v);
+  if (r < 0.6) return {t: pick(['and', 'or']), a: V(pick(vars)), b: V(pick(vars))};
+  return v;
+}
+function genGesetz() {
+  const lv = APP.level;
+  for (let tries = 0; tries < 300; tries++) {
+    let t1, t2;
+    if (Math.random() < 0.5) {
+      const ch = simplifyChain(parse(pick(CHAIN_STARTS)));
+      if (ch.length < 2) continue;
+      const i = 1 + rnd(ch.length - 1);
+      t1 = ch[i - 1].term; t2 = ch[i].term;
+      if (lv === 'leicht' && (str(t1).length > 16)) continue;
+    } else {
+      const law = pick(LAWS);
+      const vars = shuffle(['a', 'b', 'c']);
+      const b = {A: smallTerm(vars.slice(0, 1), lv), B: smallTerm(vars.slice(1, 2), lv), C: smallTerm(vars.slice(2, 3), lv)};
+      if (lv !== 'leicht') { b.A = smallTerm(vars, lv); }
+      let L = inst(law.L, b), R = inst(law.R, b);
+      if (Math.random() < 0.5) [L, R] = [R, L];
+      if (lv === 'schwer' && Math.random() < 0.6) { const ctx = smallTerm(vars, 'mittel'); const op = pick(['and', 'or']); L = {t: op, a: ctx, b: L}; R = {t: op, a: ctx, b: R}; }
+      t1 = L; t2 = R;
+    }
+    if (eq(t1, t2)) continue;
+    const ok = fittingLaws(t1, t2);
+    if (!ok.length) continue;
+    return {kind: 'gesetz', t1, t2, ok};
+  }
+}
+function renderGesetz() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task', html: `Welches Rechengesetz wurde bei diesem Umformungsschritt angewendet?`}));
+  box.append(el('p', {class: 'task', html: `${T(t.t1)} &nbsp;⇔&nbsp; ${T(t.t2)}`}));
+  box.append(lawSelect('lawsel'));
+}
+function checkGesetz() {
+  const t = APP.task, v = $('#lawsel').value;
+  if (!v) return fb('bad', 'Bitte wähle ein Gesetz aus.');
+  if (t.ok.includes(v)) { count(true); return fb('ok', `Richtig: ${lawText(v)}.` + (t.ok.length > 1 ? ` (Ebenfalls passend: ${t.ok.filter(x => x !== v).map(x => '(' + x + ')').join(', ')}.)` : '')); }
+  count(false);
+  fb('bad', `Nicht passend. ${lawText(v)} – dieses Muster findest du hier nicht. Tipp: Vergleiche genau, welcher Teil sich verändert hat.`);
+}
+function tipGesetz() {
+  const t = APP.task, d = diffChain(t.t1, t.t2);
+  const [x, y] = d[d.length - 1];
+  fb('tip', `Verändert hat sich nur dieser Teil: ${T(x)} wird zu ${T(y)}. Suche in der Tabelle ein Gesetz mit genau diesem Muster.`);
+}
+
+// ---------------- Fehler finden ----------------
+function genFehler() {
+  const lv = APP.level;
+  for (let tries = 0; tries < 300; tries++) {
+    const start = parse(pick(CHAIN_STARTS));
+    if (lv === 'leicht' && varsOf(start).size > 2) continue;
+    const ch = simplifyChain(start);
+    if (ch.length < 4) continue;
+    const type = lv === 'leicht' ? (Math.random() < 0.5 ? 'gesetz' : 'umformung') : pick(['gesetz', 'umformung']);
+    let lines, errIdx, errText = '', correctLaw = null, correctTerm = null;
+    if (type === 'umformung') {
+      const cand = [];
+      for (let i = 1; i < ch.length; i++) if (ch[i].err && !equiv(ch[i - 1].term, ch[i].err.res)) cand.push(i);
+      if (!cand.length) continue;
+      errIdx = pick(cand);
+      const wrong = ch[errIdx].err.res;
+      errText = ch[errIdx].err.text;
+      correctTerm = ch[errIdx].term;
+      const cont = simplifyChain(wrong, 6).slice(1);
+      lines = [...ch.slice(0, errIdx), {term: wrong, law: ch[errIdx].law}, ...cont];
+    } else {
+      errIdx = 1 + rnd(ch.length - 1);
+      const right = ch[errIdx].law;
+      const others = LAWS.filter(l => !stepFits(ch[errIdx - 1].term, ch[errIdx].term, l.id));
+      const near = others.filter(l => l.id.replace("'", '') === right.replace("'", '') || Math.abs(parseInt(l.id) - parseInt(right)) <= 1);
+      const wrongLaw = pick(near.length ? near : others).id;
+      correctLaw = right;
+      lines = ch.map((c, i) => i === errIdx ? {term: c.term, law: wrongLaw} : c);
+      errText = `Hier wurde nicht (${wrongLaw}) angewendet, sondern ${lawText(right)}.`;
+    }
+    if (lines.length > 9) continue;
+    return {kind: 'fehler', lines, errIdx, type, errText, correctLaw, correctTerm, selRow: null, selType: null};
+  }
+}
+function renderFehler() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  const intro = APP.level === 'leicht'
+    ? (t.type === 'gesetz' ? 'In dieser Umformung ist genau <b>ein Gesetz falsch angegeben</b>. Alle Umformungen selbst sind richtig.' : 'In dieser Umformung ist genau <b>eine Umformung falsch</b>. Die folgenden Schritte rechnen mit dem falschen Term korrekt weiter.')
+    : 'In dieser Umformung steckt genau <b>ein Fehler</b>: Entweder ist eine Umformung falsch oder bei einer richtigen Umformung ist das falsche Gesetz angegeben. Die Schritte nach einer falschen Umformung rechnen mit dem falschen Term korrekt weiter.';
+  box.append(el('p', {class: 'task', html: intro}));
+  box.append(el('p', {class: 'small'}, 'Klicke auf die Zeile mit dem Fehler.'));
+  const ul = el('ul', {class: 'list', id: 'flines'});
+  t.lines.forEach((ln, i) => {
+    const li = el('li', {'data-i': i}, el('span', {class: 'small'}, 'Z' + (i + 1)), el('span', {class: 'term'}, (i ? '⇔ ' : '') + str(ln.term)), el('span', {class: 'small'}, ln.law ? '(' + ln.law + ')' : ''));
+    if (i > 0) li.addEventListener('click', () => { t.selRow = i; ul.querySelectorAll('li').forEach(x => x.classList.toggle('sel', +x.dataset.i === i)); });
+    ul.append(li);
+  });
+  box.append(ul);
+  if (APP.level !== 'leicht') {
+    box.append(el('p', {}, 'Art des Fehlers:'));
+    const ch = el('div', {class: 'choice', id: 'ftype'},
+      el('button', {onclick: e => st(e, 'umformung')}, 'falsche Umformung'),
+      el('button', {onclick: e => st(e, 'gesetz')}, 'falsches Gesetz angegeben'));
+    box.append(ch);
+    function st(e, v) { t.selType = v; ch.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b === e.target)); extra(); }
+  }
+  const ex = el('div', {id: 'fextra'}); box.append(ex);
+  function extra() {
+    ex.innerHTML = '';
+    const ty = APP.level === 'leicht' ? t.type : t.selType;
+    if (ty === 'gesetz') { ex.append(el('p', {}, 'Welches Gesetz wurde in dieser Zeile tatsächlich angewendet?')); ex.append(lawSelect('flaw')); }
+    if (ty === 'umformung' && APP.level === 'schwer') {
+      ex.append(el('p', {}, 'Wie lautet die Zeile richtig? (Eingabe z. B. mit ! & | oder den Knöpfen)'));
+      const inp = el('input', {type: 'text', id: 'fterm', size: 30}); ex.append(symbols(inp), inp);
+    }
+  }
+  if (APP.level === 'leicht') extra();
+}
+function checkFehler() {
+  const t = APP.task;
+  if (t.selRow == null) return fb('bad', 'Bitte klicke zuerst die Zeile mit dem Fehler an.');
+  const ty = APP.level === 'leicht' ? t.type : t.selType;
+  if (!ty) return fb('bad', 'Bitte wähle die Art des Fehlers.');
+  const lis = document.querySelectorAll('#flines li');
+  if (t.selRow !== t.errIdx || ty !== t.type) {
+    count(false);
+    let why = '';
+    const i = t.selRow, prev = t.lines[i - 1].term, cur = t.lines[i].term;
+    if (!equiv(prev, cur)) why = 'Diese Zeile ist tatsächlich nicht gleichwertig zur vorherigen – aber du hast die falsche Fehlerart gewählt.';
+    else if (!stepFits(prev, cur, t.lines[i].law)) why = 'In dieser Zeile passt das Gesetz wirklich nicht – aber du hast die falsche Fehlerart gewählt.';
+    else why = `Zeile Z${i + 1} ist richtig: Sie ist gleichwertig zur Zeile davor und passt zu Gesetz (${t.lines[i].law}).`;
+    return fb('bad', why + ' Versuche es noch einmal.');
+  }
+  if (ty === 'gesetz') {
+    const v = $('#flaw') && $('#flaw').value;
+    if (!v) return fb('bad', 'Richtige Zeile! Wähle jetzt noch das tatsächlich angewendete Gesetz.');
+    if (!stepFits(t.lines[t.errIdx - 1].term, t.lines[t.errIdx].term, v)) { count(false); return fb('bad', `Richtige Zeile, aber (${v}) passt auch nicht. Vergleiche Z${t.errIdx} und Z${t.errIdx + 1} genau.`); }
+  }
+  if (ty === 'umformung' && APP.level === 'schwer') {
+    let inp; try { inp = parse($('#fterm').value); } catch (e) { return fb('bad', 'Richtige Zeile! Dein Term ist aber nicht lesbar: ' + e.message); }
+    const prev = t.lines[t.errIdx - 1].term;
+    if (!(equiv(prev, inp) && stepFits(prev, inp, t.lines[t.errIdx].law))) { count(false); return fb('bad', `Richtige Zeile! Dein Term passt aber noch nicht: Er muss aus Z${t.errIdx} mit Gesetz (${t.lines[t.errIdx].law}) entstehen. Richtig wäre z. B. ${T(t.correctTerm)}.`); }
+  }
+  lis[t.errIdx].classList.add('wrong');
+  count(true);
+  fb('ok', `Richtig, der Fehler steht in Z${t.errIdx + 1}. ${t.errText}` + (t.type === 'umformung' ? ` Richtig wäre ${T(t.correctTerm)}.` : ''));
+}
+function tipFehler() {
+  fb('tip', 'Prüfe jede Zeile zweimal: 1. Ist sie gleichwertig zur Zeile davor? (Setze z. B. eine Belegung ein.) 2. Passt das angegebene Gesetz zu genau dem Teil, der sich verändert hat?');
+}
+
+// ---------------- Venn ----------------
+const VENN2 = {w: 360, h: 230, c: [[145, 115, 78], [215, 115, 78]], lab: [[70, 45], [282, 45]]};
+const VENN3 = {w: 360, h: 300, c: [[150, 115, 72], [212, 115, 72], [181, 168, 72]], lab: [[72, 50], [285, 50], [181, 285]]};
+function regionOf(V3, x, y, n) {
+  let r = 0;
+  for (let i = 0; i < n; i++) { const [cx, cy, rr] = V3.c[i]; if ((x - cx) ** 2 + (y - cy) ** 2 <= rr * rr) r |= 1 << (n - 1 - i); }
+  return r;
+}
+function regionSet(term, vs) { const s = new Set(); rows(vs).forEach((e, i) => { if (ev(term, e)) s.add(i); }); return s; }
+function ugly(x) { if (x.t === 'not') return x.a.t === 'not' || ugly(x.a); if (isBin(x)) return eq(x.a, x.b) || compl(x.a, x.b) || (x.a.t === 'var' && x.b.t === 'not' && x.b.a.t === 'var' && x.a.n === x.b.a.n) || ugly(x.a) || ugly(x.b); return false; }
+function genVenn() {
+  const lv = APP.level, n = lv === 'schwer' ? 3 : 2, vs = ['a', 'b', 'c'].slice(0, n);
+  const kind = Math.random() < 0.5 ? 'faerben' : 'term';
+  for (let tries = 0; tries < 300; tries++) {
+    const ops = lv === 'leicht' ? ['and', 'or', 'not'] : ['and', 'or', 'not', 'imp'];
+    const term = randomTerm(vs, lv === 'leicht' ? 2 : 3, ops);
+    if (varsOf(term).size < n || isConst(term)) continue;
+    if (ugly(term)) continue;
+    if (str(term).length > (lv === 'leicht' ? 12 : 22)) continue;
+    return {kind: 'venn', sub: kind, term, vs, n, target: regionSet(term, vs), sel: new Set()};
+  }
+}
+function drawVenn(cv, t, sel, interactive) {
+  const G = t.n === 3 ? VENN3 : VENN2, ctx = cv.getContext('2d');
+  cv.width = G.w; cv.height = G.h;
+  const img = ctx.createImageData(G.w, G.h), dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const bg = dark ? [29, 35, 44] : [255, 255, 255], fill = dark ? [70, 120, 190] : [150, 190, 235];
+  for (let y = 0; y < G.h; y++) for (let x = 0; x < G.w; x++) {
+    const inside = x > 8 && y > 8 && x < G.w - 8 && y < G.h - 8;
+    const r = regionOf(G, x, y, t.n), col = inside && sel.has(r) ? fill : bg, p = 4 * (y * G.w + x);
+    img.data[p] = col[0]; img.data[p + 1] = col[1]; img.data[p + 2] = col[2]; img.data[p + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  ctx.strokeStyle = dark ? '#e6e9ee' : '#1d2430'; ctx.lineWidth = 2; ctx.strokeRect(8, 8, G.w - 16, G.h - 16);
+  G.c.slice(0, t.n).forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); });
+  ctx.fillStyle = ctx.strokeStyle; ctx.font = 'italic 22px serif';
+  t.vs.forEach((v, i) => ctx.fillText(v, G.lab[i][0], G.lab[i][1]));
+  if (interactive) cv.onclick = ev2 => {
+    const b = cv.getBoundingClientRect(), x = (ev2.clientX - b.left) * G.w / b.width, y = (ev2.clientY - b.top) * G.h / b.height;
+    if (x < 8 || y < 8 || x > G.w - 8 || y > G.h - 8) return;
+    const r = regionOf(G, x, y, t.n);
+    sel.has(r) ? sel.delete(r) : sel.add(r);
+    drawVenn(cv, t, sel, true);
+  };
+}
+function renderVenn() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  const cv = el('canvas', {id: 'vcv'});
+  if (t.sub === 'faerben') {
+    box.append(el('p', {class: 'task', html: `Färbe im Venn-Diagramm die Menge, die zu ${T(t.term)} gehört. Klicke dazu auf die Bereiche.`}));
+    box.append(cv); drawVenn(cv, t, t.sel, true);
+  } else {
+    box.append(el('p', {class: 'task'}, 'Gib einen Aussageterm an, der genau zum gefärbten Bereich gehört.'));
+    box.append(cv); drawVenn(cv, t, t.target, false);
+    const inp = el('input', {type: 'text', id: 'vterm', size: 30});
+    box.append(symbols(inp), inp);
+    box.append(el('p', {class: 'small'}, 'Eingabe auch mit Tastatur: ! für ¬, & für ∧, | für ∨, -> für →.'));
+  }
+}
+function setEq(a, b) { return a.size === b.size && [...a].every(x => b.has(x)); }
+function checkVenn() {
+  const t = APP.task;
+  if (t.sub === 'faerben') {
+    if (setEq(t.sel, t.target)) { count(true); return fb('ok', 'Richtig gefärbt!'); }
+    count(false);
+    const miss = [...t.target].filter(x => !t.sel.has(x)).length, extra = [...t.sel].filter(x => !t.target.has(x)).length;
+    return fb('bad', `Noch nicht ganz: ${miss} Bereich(e) fehlen, ${extra} Bereich(e) sind zu viel gefärbt.`);
+  }
+  let x; try { x = parse($('#vterm').value); } catch (e) { return fb('bad', e.message); }
+  if ([...varsOf(x)].some(v => !t.vs.includes(v))) return fb('bad', `Verwende nur die Variablen ${t.vs.join(', ')}.`);
+  if (setEq(regionSet(x, t.vs), t.target)) { count(true); return fb('ok', `Richtig! ${T(x)} passt.` + (eq(x, t.term) ? '' : ` Eine andere Lösung wäre ${T(t.term)}.`)); }
+  count(false);
+  fb('bad', `${T(x)} beschreibt eine andere Menge. Prüfe die Bereiche einzeln: Welche Bedingung gilt dort für ${t.vs.join(', ')}?`);
+}
+function tipVenn() {
+  const t = APP.task;
+  if (t.sub === 'faerben') fb('tip', 'Gehe die Bereiche einzeln durch: Liegt ein Punkt in a? In b? Setze die Werte in den Term ein – ergibt er 1, wird der Bereich gefärbt. Auch der Bereich außerhalb aller Kreise zählt!');
+  else fb('tip', 'Beschreibe jeden gefärbten Bereich einzeln (z. B. a ∧ ¬b für „in a, aber nicht in b“) und verbinde diese Teile mit ∨. Danach kannst du vereinfachen.');
+}
+
+// ---------------- Gleichwertig? ----------------
+const PAIRS = [
+  [{m: ['der Akku ist leer', 'der Akku ist nicht leer'], s: ['der Akku leer ist', 'der Akku nicht leer ist'], d: ['ist der Akku leer', 'ist der Akku nicht leer']},
+   {m: ['das Handy geht aus', 'das Handy geht nicht aus'], s: ['das Handy ausgeht', 'das Handy nicht ausgeht'], d: ['geht das Handy aus', 'geht das Handy nicht aus']}],
+  [{m: ['die Ampel ist rot', 'die Ampel ist nicht rot'], s: ['die Ampel rot ist', 'die Ampel nicht rot ist'], d: ['ist die Ampel rot', 'ist die Ampel nicht rot']},
+   {m: ['die Autos halten', 'die Autos halten nicht'], s: ['die Autos halten', 'die Autos nicht halten'], d: ['halten die Autos', 'halten die Autos nicht']}],
+  [{m: ['die Zahl ist durch 4 teilbar', 'die Zahl ist nicht durch 4 teilbar'], s: ['die Zahl durch 4 teilbar ist', 'die Zahl nicht durch 4 teilbar ist'], d: ['ist die Zahl durch 4 teilbar', 'ist die Zahl nicht durch 4 teilbar']},
+   {m: ['die Zahl ist gerade', 'die Zahl ist nicht gerade'], s: ['die Zahl gerade ist', 'die Zahl nicht gerade ist'], d: ['ist die Zahl gerade', 'ist die Zahl nicht gerade']}],
+  [{m: ['das Dreieck ist gleichseitig', 'das Dreieck ist nicht gleichseitig'], s: ['das Dreieck gleichseitig ist', 'das Dreieck nicht gleichseitig ist'], d: ['ist das Dreieck gleichseitig', 'ist das Dreieck nicht gleichseitig']},
+   {m: ['das Dreieck ist gleichschenklig', 'das Dreieck ist nicht gleichschenklig'], s: ['das Dreieck gleichschenklig ist', 'das Dreieck nicht gleichschenklig ist'], d: ['ist das Dreieck gleichschenklig', 'ist das Dreieck nicht gleichschenklig']}],
+  [{m: ['der Hund bellt', 'der Hund bellt nicht'], s: ['der Hund bellt', 'der Hund nicht bellt'], d: ['bellt der Hund', 'bellt der Hund nicht']},
+   {m: ['die Katze versteckt sich', 'die Katze versteckt sich nicht'], s: ['die Katze sich versteckt', 'die Katze sich nicht versteckt'], d: ['versteckt sich die Katze', 'versteckt sich die Katze nicht']}],
+  [{m: ['das Passwort ist falsch', 'das Passwort ist nicht falsch'], s: ['das Passwort falsch ist', 'das Passwort nicht falsch ist'], d: ['ist das Passwort falsch', 'ist das Passwort nicht falsch']},
+   {m: ['die Anmeldung scheitert', 'die Anmeldung scheitert nicht'], s: ['die Anmeldung scheitert', 'die Anmeldung nicht scheitert'], d: ['scheitert die Anmeldung', 'scheitert die Anmeldung nicht']}],
+  [{m: ['der Zug hat Verspätung', 'der Zug hat keine Verspätung'], s: ['der Zug Verspätung hat', 'der Zug keine Verspätung hat'], d: ['hat der Zug Verspätung', 'hat der Zug keine Verspätung']},
+   {m: ['Jakob kommt zu spät', 'Jakob kommt nicht zu spät'], s: ['Jakob zu spät kommt', 'Jakob nicht zu spät kommt'], d: ['kommt Jakob zu spät', 'kommt Jakob nicht zu spät']}],
+  [{m: ['die Pizza ist im Ofen', 'die Pizza ist nicht im Ofen'], s: ['die Pizza im Ofen ist', 'die Pizza nicht im Ofen ist'], d: ['ist die Pizza im Ofen', 'ist die Pizza nicht im Ofen']},
+   {m: ['es riecht lecker', 'es riecht nicht lecker'], s: ['es lecker riecht', 'es nicht lecker riecht'], d: ['riecht es lecker', 'riecht es nicht lecker']}],
+];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+// Literal: [atomIndex 0|1, negiert]
+function lit(at, neg) { return {at, neg}; }
+function litTerm(l) { const v = V(l.at ? 'q' : 'p'); return l.neg ? NOT(v) : v; }
+const FORMS = {
+  imp: (P, x, y) => ({txt: `Wenn ${P[x.at].s[+x.neg]}, dann ${P[y.at].d[+y.neg]}.`, term: IMP(litTerm(x), litTerm(y))}),
+  or: (P, x, y) => ({txt: `${cap(P[x.at].m[+x.neg])} oder ${P[y.at].m[+y.neg]}.`, term: OR(litTerm(x), litTerm(y))}),
+  nand: (P, x, y) => ({txt: `Es ist nicht der Fall, dass ${P[x.at].s[+x.neg]} und ${P[y.at].s[+y.neg]}.`, term: NOT(AND(litTerm(x), litTerm(y)))}),
+  and: (P, x, y) => ({txt: `${cap(P[x.at].m[+x.neg])} und ${P[y.at].m[+y.neg]}.`, term: AND(litTerm(x), litTerm(y))}),
+};
+const NAMES = [
+  [IMP(NOT(V('q')), NOT(V('p'))), 'Kontraposition'], [OR(NOT(V('p')), V('q')), 'Subjunktion als Disjunktion'],
+  [NOT(AND(V('p'), NOT(V('q')))), 'Subjunktion als negierte Konjunktion'], [IMP(V('q'), V('p')), 'Umkehrung'],
+  [IMP(NOT(V('p')), NOT(V('q'))), 'Kontraposition der Umkehrung (gleichwertig zur Umkehrung)'],
+];
+function genGleich() {
+  const lv = APP.level, P = pick(PAIRS);
+  const p0 = lit(0, false), q0 = lit(1, false), np = lit(0, true), nq = lit(1, true);
+  const S = lv === 'schwer' ? pick([FORMS.or(P, np, q0), FORMS.nand(P, p0, nq)]) : FORMS.imp(P, p0, q0);
+  const eqv = [FORMS.imp(P, nq, np), FORMS.or(P, np, q0), FORMS.nand(P, p0, nq)];
+  if (lv === 'schwer') eqv.push(FORMS.imp(P, p0, q0));
+  const neq = [FORMS.imp(P, q0, p0), FORMS.imp(P, np, nq), FORMS.and(P, p0, q0), FORMS.or(P, p0, nq), FORMS.nand(P, np, q0), FORMS.or(P, p0, q0)];
+  const nE = lv === 'leicht' ? 2 : 3, nN = lv === 'leicht' ? 2 : 3;
+  let items = [...shuffle(eqv.filter(f => f.txt !== S.txt)).slice(0, nE), ...shuffle(neq).slice(0, nN)];
+  items = shuffle(items).map(f => ({...f, isEq: equiv(f.term, S.term), ans: null}));
+  return {kind: 'gleich', P, S, items};
+}
+function renderGleich() {
+  const t = APP.task, box = $('#task'); box.innerHTML = '';
+  box.append(el('p', {class: 'task'}, 'Aussage S: „' + t.S.txt + '“'));
+  box.append(el('p', {class: 'small'}, `Mit p: „${t.P[0].m[0]}“ und q: „${t.P[1].m[0]}“. Entscheide für jeden Satz, ob er gleichwertig zu S ist.`));
+  const ul = el('ul', {class: 'list', id: 'glist'});
+  t.items.forEach((it, i) => {
+    const b1 = el('button', {class: 'btn sec'}, 'gleichwertig'), b2 = el('button', {class: 'btn sec'}, 'nicht gleichwertig');
+    const set = v => { it.ans = v; b1.style.fontWeight = v ? '700' : ''; b2.style.fontWeight = v === false ? '700' : ''; b1.classList.toggle('sec', !v); b2.classList.toggle('sec', v !== false); };
+    b1.onclick = () => set(true); b2.onclick = () => set(false);
+    ul.append(el('li', {'data-i': i}, el('span', {style: 'flex:1 1 300px'}, it.txt), b1, b2, el('div', {class: 'small gfb', style: 'flex-basis:100%'})));
+  });
+  box.append(ul);
+}
+function describe(it, S) {
+  const nm = NAMES.find(([x]) => eq(x, it.term));
+  let s = `Term: ${T(it.term)}` + (nm ? ` (${nm[1]})` : '') + '. ';
+  if (it.isEq) s += 'Gleichwertig zu ' + T(S.term) + '.';
+  else { const ce = counterexample(it.term, S.term); s += `Gegenbeispiel: ${envText(ce)} – dann ist S ${ev(S.term, ce) ? 'wahr' : 'falsch'}, dieser Satz aber ${ev(it.term, ce) ? 'wahr' : 'falsch'}.`; }
+  return s;
+}
+function checkGleich() {
+  const t = APP.task;
+  if (t.items.some(it => it.ans === null)) return fb('bad', 'Bitte entscheide für jeden Satz.');
+  let wrong = 0;
+  document.querySelectorAll('#glist li').forEach((li, i) => {
+    const it = t.items[i], ok = it.ans === it.isEq;
+    li.classList.toggle('right', ok); li.classList.toggle('wrong', !ok);
+    li.querySelector('.gfb').innerHTML = describe(it, t.S);
+    if (!ok) wrong++;
+  });
+  count(!wrong);
+  fb(wrong ? 'bad' : 'ok', wrong ? `${wrong} Entscheidung(en) sind falsch. Unter jedem Satz steht jetzt die Begründung.` : `Alles richtig! Die Aussage S lautet als Term ${T(t.S.term)}.`);
+}
+function tipGleich() { fb('tip', 'Übersetze jeden Satz in einen Term mit p und q. Prüfe dann die Belegungen einzeln, besonders die Zeile, in der S falsch ist: Ein gleichwertiger Satz muss bei jeder Belegung denselben Wahrheitswert haben wie S. Denke auch an Kontraposition und Umkehrung.'); }
+
+// ---------------- Symbolknöpfe ----------------
+function symbols(inp) {
+  const d = el('div', {class: 'symbols'});
+  ['¬', '∧', '∨', '→', '↔', '(', ')', 'a', 'b', 'c'].forEach(s => d.append(el('button', {type: 'button', onclick: () => { const p = inp.selectionStart ?? inp.value.length; inp.value = inp.value.slice(0, p) + s + inp.value.slice(inp.selectionEnd ?? p); inp.focus(); inp.selectionStart = inp.selectionEnd = p + s.length; }}, s)));
+  d.append(el('button', {type: 'button', onclick: () => { inp.value = inp.value.slice(0, -1); inp.focus(); }}, '⌫'));
+  return d;
+}
+
+// ---------------- Steuerung ----------------
+const GEN = {wt: genWT, gesetz: genGesetz, fehler: genFehler, venn: genVenn, gleich: genGleich};
+const REN = {wt: renderWT, gesetz: renderGesetz, fehler: renderFehler, venn: renderVenn, gleich: renderGleich};
+const CHK = {wt: checkWT, gesetz: checkGesetz, fehler: checkFehler, venn: checkVenn, gleich: checkGleich};
+const TIP = {wt: tipWT, gesetz: tipGesetz, fehler: tipFehler, venn: tipVenn, gleich: tipGleich};
+function newTask() { APP.task = GEN[APP.mode](); $('#fb').className = 'fb'; REN[APP.mode](); showScore(); }
+function setMode(m) {
+  APP.mode = m;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  $('#lawbox').style.display = (m === 'gesetz' || m === 'fehler') ? '' : 'none';
+  newTask();
+}
+function init() {
+  loadScore();
+  const nav = $('nav.tabs');
+  MODES.forEach(([m, n]) => nav.append(el('button', {'data-m': m, onclick: () => setMode(m)}, n)));
+  $('#level').onchange = e => { APP.level = e.target.value; newTask(); };
+  $('#predict').onchange = e => { APP.predict = e.target.checked; newTask(); };
+  $('#new').onclick = newTask; $('#check').onclick = () => CHK[APP.mode](); $('#tip').onclick = () => TIP[APP.mode]();
+  const tb = $('#lawtable');
+  LAWS.forEach(l => tb.append(el('tr', {}, el('td', {}, '(' + l.id + ')'), el('td', {}, l.name), el('td', {class: 'term'}, lawText(l.id).split(': ')[1]))));
+  setMode('wt');
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body></html>
