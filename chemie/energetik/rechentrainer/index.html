@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="M. Zimmer">
+<title>Energetik-Rechentrainer</title>
+<style>
+  :root {
+    --bg: #eef3f2; --panel: #ffffff; --ink: #1d2330; --muted: #5b6475; --line: #c3cfcd;
+    --accent: #0f7a6a; --accent-soft: #e2f3f0;
+    --ok: #1e8e44; --ok-soft: #e5f5ea; --err: #c62828; --err-soft: #fdecea; --warn-soft: #fff6dc;
+    --a1: rgba(31,111,209,.22); --a2: rgba(178,106,0,.25);
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #0b6356; }
+  button:disabled { opacity: .55; cursor: default; }
+
+  .topbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 20px; background: linear-gradient(180deg, #2a9d8a, #0d5f53); color: #fff; }
+  .topbar h1 { margin: 0; font-size: 20px; letter-spacing: .04em; font-weight: 700; }
+  .topbar h1 small { font-weight: 400; opacity: .85; letter-spacing: 0; margin-left: 6px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button { background: rgba(255,255,255,.95); border-color: transparent; }
+  .levels { display: flex; background: rgba(0,0,0,.18); border-radius: 8px; padding: 3px; gap: 3px; align-items: center; }
+  .levels span { font-size: 13px; padding: 0 6px 0 4px; opacity: .9; }
+  .levels button { background: transparent; color: #fff; border: none; border-radius: 6px; padding: 4px 11px; }
+  .levels button:hover { background: rgba(255,255,255,.15); }
+  .levels button.on { background: #fff; color: #0d5f53; font-weight: 600; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 0; }
+  .modes button { display: flex; align-items: baseline; gap: 7px; border-radius: 8px; padding: 6px 12px; }
+  .modes button .nr { font-weight: 700; color: var(--accent); }
+  .modes button.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .modes button.on .nr { color: #fff; }
+  .modes .cnt { font-size: 12px; color: var(--ok); font-weight: 600; }
+  .modes button.on .cnt { color: #d9ffe3; }
+
+  main { padding: 14px 20px 30px; max-width: 1250px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.solved { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-soft); }
+  .card h2 { margin: 0 0 6px; font-size: 18px; }
+  .card h3 { margin: 14px 0 6px; font-size: 15px; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .task-text { margin: 4px 0 10px; }
+  .bar { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .note { font-size: 13.5px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 5px 10px; border-radius: 0 6px 6px 0; margin: 6px 0; }
+  .lvl { font-size: 13px; color: var(--muted); background: #f4f6f7; border-left: 3px solid #8fc2b8; padding: 4px 10px; border-radius: 0 6px 6px 0; margin: 0 0 8px; }
+  .lbl-small { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  details.terms { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.terms summary { cursor: pointer; font-weight: 600; }
+  details.terms dl { margin: 8px 0 4px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; }
+  details.terms dt { font-weight: 600; } details.terms dd { margin: 0; }
+  .eq { font-size: 16.5px; padding: 7px 12px; background: #f7faf9; border: 1px solid var(--line); border-radius: 8px; display: inline-block; max-width: 100%; overflow-x: auto; }
+  .formula { font-family: Cambria, "Times New Roman", serif; font-size: 17px; font-weight: 600; }
+  .scroll { overflow-x: auto; max-width: 100%; }
+
+  table.data { border-collapse: collapse; font-size: 14px; }
+  table.data th, table.data td { border: 1px solid var(--line); padding: 3px 9px; text-align: center; white-space: nowrap; }
+  table.data th { background: #f1f5f4; font-weight: 600; }
+  table.data td.hl { background: #fff3c4; font-weight: 600; }
+
+  .qa { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; max-width: 780px; }
+  .qa .why { grid-column: 1 / -1; font-size: 13.5px; margin: -4px 0 4px; white-space: pre-line; }
+  .qa .why.ok { color: #145c2e; } .qa .why.err { color: #8c1c1c; }
+  .unitbox { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .unit { color: var(--muted); }
+  input.num { width: 110px; font: 15px var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 5px; text-align: center; }
+  input.num.small { width: 64px; }
+  input.num.right { background: var(--ok-soft); border-color: var(--ok); } input.num.wrong { background: var(--err-soft); border-color: var(--err); }
+  select { font: 15px var(--sans); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
+
+  .fb { margin-top: 10px; padding: 8px 12px; border-radius: 8px; display: none; white-space: pre-line; }
+  .fb.show { display: block; }
+  .fb.ok { background: var(--ok-soft); color: #145c2e; border: 1px solid #9fd8b2; }
+  .fb.err { background: var(--err-soft); color: #8c1c1c; border: 1px solid #f0b4b0; }
+  .fb.info { background: var(--warn-soft); color: #6b5100; border: 1px solid #ecd58c; }
+  .calc { font: 14px/1.6 var(--mono); background: #fbfcfc; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; overflow-x: auto; white-space: pre; margin-top: 8px; }
+
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+  .choice { text-align: left; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; background: #fff; }
+  .choice:hover { border-color: var(--accent); }
+  .choice.right { border-color: var(--ok); background: var(--ok-soft); }
+  .choice.wrong { border-color: var(--err); background: var(--err-soft); }
+  .scenario { font-size: 16px; padding: 10px 14px; background: #f7faf9; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; margin: 6px 0 12px; }
+
+  /* Hess */
+  .hess { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; }
+  .hess .rx { font-size: 15.5px; overflow-x: auto; }
+  .hess .dh { font: 14px var(--mono); white-space: nowrap; }
+  .sumline { font-size: 16px; padding: 8px 12px; border-radius: 8px; border: 1px dashed var(--line); background: #fbfcfc; margin-top: 10px; overflow-x: auto; }
+  .sumline.match { border: 2px solid var(--ok); background: var(--ok-soft); }
+  .left { color: #8c1c1c; font-size: 13.5px; margin-top: 4px; }
+
+  /* Diagramm */
+  .chart { width: 100%; max-width: 760px; }
+  .chart svg { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px; touch-action: none; }
+  .chart text { font: 12px var(--sans); fill: #444; }
+  .readout { font: 14px var(--mono); margin-top: 6px; }
+
+  .hidden { display: none !important; }
+  footer { padding: 0 20px 24px; color: var(--muted); font-size: 12.5px; max-width: 1250px; }
+  @media (max-width: 700px) {
+    .topbar, .modes, main { padding-left: 12px; padding-right: 12px; }
+    .qa { grid-template-columns: minmax(0, 1fr); }
+    .hess { grid-template-columns: auto minmax(0, 1fr); }
+    .hess .dh { grid-column: 2; }
+  }
+  @media print { .topbar, .modes, .bar, footer { display: none; } body { background: #fff; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>ENERGETIK <small>Rechentrainer: Kalorimetrie und Satz von Hess</small></h1>
+  <span class="spacer"></span>
+  <nav class="levels" id="levels" aria-label="Schwierigkeitsstufe"></nav>
+  <button id="btn-new" type="button">Neue Aufgabe</button>
+</header>
+
+<nav class="modes" id="modes" aria-label="Aufgabentypen"></nav>
+
+<main id="main"></main>
+
+<footer>
+  Leistungsfach Chemie, Kapitel 1.2 und 1.3 (Buch S. 258–261 und 269–271), passend zum Schülerversuch „Bestimmung der Reaktionswärme“ und zu den Arbeitsblättern „Enthalpie – Übersicht“ und „Energetik – Übungen“.
+  Bildungsenthalpien wie im Unterrichtsverlauf bzw. Tafelwerk, auf ganze kJ/mol gerundet. Die Aufgaben werden zufällig erzeugt; der Fortschritt wird nur in diesem Browser gespeichert. · M. Zimmer
+</footer>
+
+<script>
+(() => {
+'use strict';
+
+// =====================================================================
+//  Hilfsfunktionen
+// =====================================================================
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const RF = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) { const a = arr.slice(); for (let n = a.length - 1; n > 0; n--) { const m = Math.floor(Math.random() * (n + 1)); [a[n], a[m]] = [a[m], a[n]]; } return a; }
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+const svgEl = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const rnd = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
+function de(v, d = 0) { return rnd(v, d).toFixed(d).replace('.', ',').replace('-', '−'); }
+// sinnvolle Nachkommastellen
+function deAuto(v) { const a = Math.abs(v); return de(v, a >= 100 ? 0 : a >= 10 ? 1 : a >= 1 ? 2 : 3); }
+function readNum(s) {
+  const t = String(s).trim().replace(/\s/g, '').replace(/−/g, '-').replace(',', '.');
+  const m = t.match(/^([-+]?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+  if (m) return Number(m[2]) === 0 ? NaN : Number(m[1]) / Number(m[2]);
+  if (t === '' || !/^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$/i.test(t)) return NaN;
+  return Number(t);
+}
+// Toleranz: relativ (Standard 2 %) bzw. absolut
+const close = (a, b, rel = 0.02, abs = 0) => Math.abs(a - b) <= Math.max(abs, Math.abs(b) * rel);
+function frac(x) {
+  const a = Math.abs(x), s = x < 0 ? '−' : '';
+  if (Number.isInteger(a)) return s + a;
+  if (Number.isInteger(a * 2)) return s + (a === 0.5 ? '½' : (a * 2) + '/2');
+  if (Number.isInteger(a * 4)) return s + (a * 4) + '/4';
+  return s + de(a, 2);
+}
+
+const STORE = 'enTraining.score';
+let SCORE = {};
+try { SCORE = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { SCORE = {}; }
+function addScore(id) { SCORE[id] = (SCORE[id] || 0) + 1; try { localStorage.setItem(STORE, JSON.stringify(SCORE)); } catch (e) {} renderModes(); }
+let LEVEL = 'leicht'; try { LEVEL = localStorage.getItem('enTraining.level') || 'leicht'; } catch (e) {}
+let MODE = 'kalorimetrie'; try { MODE = localStorage.getItem('enTraining.mode') || 'kalorimetrie'; } catch (e) {}
+
+function feedback() {
+  const box = el('div', { class: 'fb', role: 'status' });
+  box.set = (kind, text) => { box.className = 'fb show ' + kind; box.textContent = text; };
+  return box;
+}
+// Frage-Zeile mit Erkennung typischer Fehler
+function addQ(qa, rows, label, unit, want, alts, expl, tol = {}) {
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', 'aria-label': label.replace(/<[^>]+>/g, '') });
+  const why = el('div', { class: 'why hidden' });
+  qa.append(el('div', { html: label }), el('span', { class: 'unitbox' }, inp, unit ? el('span', { class: 'unit', html: unit }) : null), why);
+  const rel = tol.rel != null ? tol.rel : 0.02, abs = tol.abs || 0;
+  rows.push({ inp, why, want, rel, abs, expl, alts: (alts || []).filter(a => isFinite(a.v) && !close(a.v, want, rel, abs)) });
+}
+function checkRows(rows) {
+  let ok = 0, empty = 0;
+  for (const q of rows) {
+    const v = readNum(q.inp.value);
+    if (isNaN(v)) { empty++; q.inp.className = 'num'; q.why.className = 'why hidden'; continue; }
+    const good = close(v, q.want, q.rel, q.abs);
+    if (good) ok++;
+    q.inp.className = 'num ' + (good ? 'right' : 'wrong');
+    const a = good ? null : q.alts.find(x => close(v, x.v, q.rel, q.abs));
+    q.why.className = 'why ' + (good ? 'ok' : 'err');
+    q.why.textContent = good ? q.expl : (a ? a.why + '\n' : 'Noch nicht. ') + q.expl;
+  }
+  return { ok, empty };
+}
+function checkButton(card, rows, scoreId, extra) {
+  const fb = feedback();
+  const b = el('button', { class: 'primary', type: 'button', onclick: () => {
+    const { ok, empty } = checkRows(rows);
+    const ex = extra ? extra() : { ok: true, empty: false };
+    if (empty || ex.empty) { fb.set('info', 'Fülle alle Felder aus. Dezimalzahlen mit Komma oder Punkt.'); return; }
+    if (ok === rows.length && ex.ok) { fb.set('ok', 'Alles richtig!' + (ex.msg ? ' ' + ex.msg : '')); card.classList.add('solved'); if (!card.done) { card.done = true; addScore(scoreId); } }
+    else fb.set('err', `${ok} von ${rows.length} Werten richtig.` + (ex.msg && !ex.ok ? ' ' + ex.msg : '') + ' Die Erklärungen stehen unter den Feldern.');
+  } }, 'Prüfen');
+  return [el('div', { class: 'bar' }, b), fb];
+}
+
+// =====================================================================
+//  Stoffdaten: Δf H° in kJ/mol, M in g/mol
+// =====================================================================
+const SP = {
+  C:      { f: 'C(Graphit)', H: 0, M: 12 },
+  H2:     { f: 'H<sub>2</sub>(g)', H: 0, M: 2 },
+  O2:     { f: 'O<sub>2</sub>(g)', H: 0, M: 32 },
+  N2:     { f: 'N<sub>2</sub>(g)', H: 0, M: 28 },
+  S:      { f: 'S(s)', H: 0, M: 32 },
+  Fe:     { f: 'Fe(s)', H: 0, M: 56 },
+  Al:     { f: 'Al(s)', H: 0, M: 27 },
+  O:      { f: 'O(g)', H: 249, M: 16 },
+  O3:     { f: 'O<sub>3</sub>(g)', H: 143, M: 48 },
+  CO2:    { f: 'CO<sub>2</sub>(g)', H: -394, M: 44 },
+  CO:     { f: 'CO(g)', H: -111, M: 28 },
+  H2Ol:   { f: 'H<sub>2</sub>O(l)', H: -286, M: 18 },
+  H2Og:   { f: 'H<sub>2</sub>O(g)', H: -242, M: 18 },
+  CH4:    { f: 'CH<sub>4</sub>(g)', H: -75, M: 16 },
+  C2H6:   { f: 'C<sub>2</sub>H<sub>6</sub>(g)', H: -84, M: 30 },
+  C3H8:   { f: 'C<sub>3</sub>H<sub>8</sub>(g)', H: -104, M: 44 },
+  C4H10:  { f: 'C<sub>4</sub>H<sub>10</sub>(g)', H: -126, M: 58 },
+  C8H18:  { f: 'C<sub>8</sub>H<sub>18</sub>(l)', H: -250, M: 114 },
+  C2H4:   { f: 'C<sub>2</sub>H<sub>4</sub>(g)', H: 52, M: 28 },
+  C2H2:   { f: 'C<sub>2</sub>H<sub>2</sub>(g)', H: 227, M: 26 },
+  CH3OH:  { f: 'CH<sub>3</sub>OH(l)', H: -239, M: 32 },
+  EtOH:   { f: 'C<sub>2</sub>H<sub>5</sub>OH(l)', H: -277, M: 46 },
+  EtAl:   { f: 'CH<sub>3</sub>CHO(l)', H: -166, M: 44 },
+  HAc:    { f: 'CH<sub>3</sub>COOH(l)', H: -485, M: 60 },
+  Aceton: { f: 'CH<sub>3</sub>COCH<sub>3</sub>(l)', H: -248, M: 58 },
+  Benzol: { f: 'C<sub>6</sub>H<sub>6</sub>(l)', H: 49, M: 78 },
+  Glc:    { f: 'C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>(s)', H: -1274, M: 180 },
+  NH3:    { f: 'NH<sub>3</sub>(g)', H: -46, M: 17 },
+  NO:     { f: 'NO(g)', H: 90, M: 30 },
+  NO2:    { f: 'NO<sub>2</sub>(g)', H: 33, M: 46 },
+  N2H4:   { f: 'N<sub>2</sub>H<sub>4</sub>(l)', H: 51, M: 32 },
+  HNO3:   { f: 'HNO<sub>3</sub>(l)', H: -174, M: 63 },
+  SO2:    { f: 'SO<sub>2</sub>(g)', H: -297, M: 64 },
+  SO3:    { f: 'SO<sub>3</sub>(g)', H: -396, M: 80 },
+  H2S:    { f: 'H<sub>2</sub>S(g)', H: -21, M: 34 },
+  Fe2O3:  { f: 'Fe<sub>2</sub>O<sub>3</sub>(s)', H: -824, M: 160 },
+  Al2O3:  { f: 'Al<sub>2</sub>O<sub>3</sub>(s)', H: -1676, M: 102 },
+  CaCO3:  { f: 'CaCO<sub>3</sub>(s)', H: -1207, M: 100 },
+  CaO:    { f: 'CaO(s)', H: -635, M: 56 },
+  CaOH2:  { f: 'Ca(OH)<sub>2</sub>(s)', H: -986, M: 74 },
+  H2O2:   { f: 'H<sub>2</sub>O<sub>2</sub>(l)', H: -188, M: 34 }
+};
+const ELEM = new Set(['C', 'H2', 'O2', 'N2', 'S', 'Fe', 'Al']);
+// Reaktion als Map Stoff → Koeffizient (Edukte negativ, Produkte positiv)
+const rx = (e, p) => { const m = {}; for (const [n, s] of e) m[s] = (m[s] || 0) - n; for (const [n, s] of p) m[s] = (m[s] || 0) + n; return m; };
+function eqHTML(m) {
+  const L = [], Rr = [];
+  for (const s in m) { const c = m[s]; if (Math.abs(c) < 1e-9) continue; const t = (Math.abs(c) === 1 ? '' : frac(Math.abs(c)) + ' ') + SP[s].f; (c < 0 ? L : Rr).push(t); }
+  return (L.join(' + ') || '0') + ' → ' + (Rr.join(' + ') || '0');
+}
+const dHf = m => Object.entries(m).reduce((a, [s, c]) => a + c * SP[s].H, 0);
+
+// Reaktionen für „ΔrH aus ΔfH°“
+const RXF = [
+  { lvl: 1, name: 'Hydrierung von Ethen', m: rx([[1, 'C2H4'], [1, 'H2']], [[1, 'C2H6']]) },
+  { lvl: 1, name: 'Kalkbrennen', m: rx([[1, 'CaCO3']], [[1, 'CaO'], [1, 'CO2']]) },
+  { lvl: 1, name: 'Kalklöschen', m: rx([[1, 'CaO'], [1, 'H2Ol']], [[1, 'CaOH2']]) },
+  { lvl: 1, name: 'Ammoniaksynthese', m: rx([[1, 'N2'], [3, 'H2']], [[2, 'NH3']]) },
+  { lvl: 1, name: 'Oxidation von Ethanol zu Ethansäure', m: rx([[1, 'EtOH'], [1, 'O2']], [[1, 'HAc'], [1, 'H2Ol']]) },
+  { lvl: 1, name: 'Thermitreaktion', m: rx([[1, 'Fe2O3'], [2, 'Al']], [[1, 'Al2O3'], [2, 'Fe']]) },
+  { lvl: 2, name: 'Verbrennung von Methan', m: rx([[1, 'CH4'], [2, 'O2']], [[1, 'CO2'], [2, 'H2Ol']]) },
+  { lvl: 2, name: 'Verbrennung von Ethanol', m: rx([[1, 'EtOH'], [3, 'O2']], [[2, 'CO2'], [3, 'H2Ol']]) },
+  { lvl: 2, name: 'Oxidation von Ethanol zu Ethanal', m: rx([[2, 'EtOH'], [1, 'O2']], [[2, 'EtAl'], [2, 'H2Ol']]) },
+  { lvl: 2, name: 'Alkoholische Gärung', m: rx([[1, 'Glc']], [[2, 'EtOH'], [2, 'CO2']]) },
+  { lvl: 2, name: 'Zellatmung', m: rx([[1, 'Glc'], [6, 'O2']], [[6, 'CO2'], [6, 'H2Ol']]) },
+  { lvl: 2, name: 'Verbrennung von Propan', m: rx([[1, 'C3H8'], [5, 'O2']], [[3, 'CO2'], [4, 'H2Ol']]) },
+  { lvl: 2, name: 'Kontaktverfahren', m: rx([[2, 'SO2'], [1, 'O2']], [[2, 'SO3']]) },
+  { lvl: 2, name: 'Zersetzung von Wasserstoffperoxid', m: rx([[2, 'H2O2']], [[2, 'H2Ol'], [1, 'O2']]) },
+  { lvl: 3, name: 'Ostwald-Verfahren (1. Schritt)', m: rx([[4, 'NH3'], [5, 'O2']], [[4, 'NO'], [6, 'H2Og']]) },
+  { lvl: 3, name: 'Verbrennung von Octan (Wasserdampf)', m: rx([[2, 'C8H18'], [25, 'O2']], [[16, 'CO2'], [18, 'H2Og']]) },
+  { lvl: 3, name: 'Raketentreibstoff Hydrazin/Salpetersäure', m: rx([[5, 'N2H4'], [4, 'HNO3']], [[7, 'N2'], [12, 'H2Ol']]) },
+  { lvl: 3, name: 'Verbrennung von Schwefelwasserstoff', m: rx([[2, 'H2S'], [3, 'O2']], [[2, 'SO2'], [2, 'H2Ol']]) },
+  { lvl: 3, name: 'Verbrennung von Aceton', m: rx([[1, 'Aceton'], [4, 'O2']], [[3, 'CO2'], [3, 'H2Ol']]) },
+  { lvl: 3, name: 'Verbrennung von Benzol', m: rx([[2, 'Benzol'], [15, 'O2']], [[12, 'CO2'], [6, 'H2Ol']]) },
+  { lvl: 3, name: 'Verbrennung von Ethin', m: rx([[2, 'C2H2'], [5, 'O2']], [[4, 'CO2'], [2, 'H2Ol']]) }
+];
+
+const LEVEL_TXT = {
+  kalorimetrie: { leicht: 'Stufe leicht: Neutralisation wie im Schülerversuch – gleiche Volumina und Konzentrationen.', mittel: 'Stufe mittel: verschiedene Volumina oder Konzentrationen – welcher Stoff reagiert vollständig?', schwer: 'Stufe schwer: Verbrennungskalorimetrie (Knäckebrot, Brennstoffe) – Energie pro Masse und molare Verbrennungsenthalpie.' },
+  kurve:        { leicht: 'Stufe leicht: schnelle Reaktion; Vor- und Nachperiode werden zum Mischzeitpunkt verlängert.', mittel: 'Stufe mittel: langsame Reaktion – Halbflächenmethode mit angezeigten Flächen.', schwer: 'Stufe schwer: Halbflächenmethode ohne Flächenanzeige; Flächen nach Augenmaß ausgleichen.' },
+  fehler:       { leicht: 'Stufe leicht: einzelne Fehlerquellen bei der Neutralisation.', mittel: 'Stufe mittel: auch Fehler bei Volumen, Konzentration und Ablesen.', schwer: 'Stufe schwer: dazu Verbrennungskalorimetrie und eine Korrekturrechnung (Vertiefung).' },
+  bildung:      { leicht: 'Stufe leicht: wenige Stoffe, kleine Koeffizienten.', mittel: 'Stufe mittel: Verbrennungen und Oxidationen mit Koeffizienten.', schwer: 'Stufe schwer: große Koeffizienten, Wasser auch gasförmig, dazu Wärme für eine gegebene Masse.' },
+  hess:         { leicht: 'Stufe leicht: Teilreaktionen nur umdrehen oder mit ganzen Zahlen multiplizieren.', mittel: 'Stufe mittel: auch halbe Faktoren.', schwer: 'Stufe schwer: Bildungsenthalpie aus Verbrennungsenthalpien (drei Teilreaktionen).' }
+};
+const lvlNote = mode => el('div', { class: 'lvl' }, LEVEL_TXT[mode][LEVEL]);
+
+const MODES = [
+  { id: 'kalorimetrie', nr: 1, title: 'Kalorimetrie auswerten' },
+  { id: 'kurve', nr: 2, title: 'Temperaturkurve' },
+  { id: 'fehler', nr: 3, title: 'Fehlerquellen' },
+  { id: 'bildung', nr: 4, title: 'ΔrH aus ΔfH°' },
+  { id: 'hess', nr: 5, title: 'Satz von Hess' }
+];
+function renderLevels() {
+  const nav = document.getElementById('levels'); nav.innerHTML = '';
+  nav.append(el('span', null, 'Stufe'));
+  for (const l of ['leicht', 'mittel', 'schwer']) nav.append(el('button', { type: 'button', class: l === LEVEL ? 'on' : '', 'aria-pressed': String(l === LEVEL),
+    onclick: () => { LEVEL = l; try { localStorage.setItem('enTraining.level', l); } catch (e) {} renderLevels(); show(); } }, l));
+}
+function renderModes() {
+  const nav = document.getElementById('modes'); nav.innerHTML = '';
+  for (const m of MODES) {
+    const n = SCORE[m.id] || 0;
+    nav.append(el('button', { type: 'button', class: m.id === MODE ? 'on' : '', 'aria-pressed': String(m.id === MODE),
+      onclick: () => { MODE = m.id; try { localStorage.setItem('enTraining.mode', m.id); } catch (e) {} renderModes(); show(); } },
+      el('span', { class: 'nr' }, String(m.nr)), m.title, n ? el('span', { class: 'cnt' }, '✓ ' + n) : null));
+  }
+}
+function terms() {
+  return el('details', { class: 'terms' }, el('summary', null, 'Formeln und Begriffe'),
+    el('dl', null,
+      el('dt', null, 'Wärme der Lösung'), el('dd', { html: '<span class="formula">Q<sub>Lösung</sub> ≈ m · c<sub>W</sub> · ΔT</span> mit c<sub>W</sub> = 4,18 J/(g·K); die Lösung wird wie Wasser behandelt (Dichte 1 g/mL, also 100 mL ≈ 100 g).' }),
+      el('dt', null, 'Temperaturdifferenz'), el('dd', null, 'ΔT = Tmax − TAnfang. Eine Differenz ist in K und °C gleich groß – nicht 273 addieren.'),
+      el('dt', null, 'Wärme der Reaktion'), el('dd', { html: '<span class="formula">Q<sub>Reaktion</sub> = −Q<sub>Lösung</sub></span>: Was die Lösung aufnimmt, hat die Reaktion abgegeben. Exotherm: ΔT &gt; 0, Q<sub>Lösung</sub> &gt; 0, Q<sub>Reaktion</sub> &lt; 0.' }),
+      el('dt', null, 'Molare Enthalpie'), el('dd', { html: 'Bei konstantem Druck gilt Δ<sub>r</sub>H = Q<sub>p</sub>. Auf 1 mol bezogen: <span class="formula">Δ<sub>N</sub>H = Q<sub>Reaktion</sub> / n</span>, z. B. n = n(gebildetes H<sub>2</sub>O). Literaturwert der Neutralisation: −57 kJ/mol.' }),
+      el('dt', null, 'Stoffmenge'), el('dd', { html: 'n = c · V (V in L) bzw. n = m / M. Bei verschiedenen Mengen bestimmt der Stoff, der vollständig verbraucht wird, wie viel reagiert.' }),
+      el('dt', null, 'Bildungsenthalpien'), el('dd', { html: '<span class="formula">Δ<sub>r</sub>H° = Σ ν · Δ<sub>f</sub>H°(Produkte) − Σ ν · Δ<sub>f</sub>H°(Edukte)</span>; Elemente in ihrer stabilsten Form haben Δ<sub>f</sub>H° = 0. Einheit wie im Unterricht: kJ/mol (bezogen auf den molaren Formelumsatz).' }),
+      el('dt', null, 'Satz von Hess'), el('dd', null, 'Die Reaktionsenthalpie hängt nur vom Anfangs- und Endzustand ab. Teilreaktionen dürfen umgedreht (Vorzeichen von ΔH wechselt) und vervielfacht (ΔH wird mit demselben Faktor multipliziert) und dann addiert werden.')));
+}
+
+// =====================================================================
+//  1 Kalorimetrie auswerten
+// =====================================================================
+function measurementTable(times, temps, unit = 's', mark) {
+  const tb = el('table', { class: 'data', 'aria-label': 'Messwerte' });
+  tb.append(el('tr', null, el('th', null, `t in ${unit}`), ...times.map(t => el('th', null, de(t, Number.isInteger(t) ? 0 : 1)))));
+  tb.append(el('tr', null, el('th', null, 'ϑ in °C'), ...temps.map((T, i) => el('td', { class: mark && mark(i) ? 'hl' : '' }, de(T, 1)))));
+  return el('div', { class: 'scroll' }, tb);
+}
+// Messreihe für eine schnelle Reaktion: 1 min Vorperiode, Mischen bei 60 s, dann alle 15 s
+function fastSeries(T0, dT) {
+  const times = [], temps = [];
+  for (let t = 0; t <= 240; t += 15) {
+    times.push(t);
+    let T;
+    if (t < 60) T = T0;
+    else { const x = t - 60; T = T0 + dT * (1 - Math.exp(-x / 9)) - 0.0012 * Math.max(0, x - 30) * dT; }
+    temps.push(rnd(T, 1));
+  }
+  const iMax = temps.indexOf(Math.max(...temps));
+  return { times, temps, Tmax: temps[iMax], iMax };
+}
+function modeKalorimetrie(card) {
+  card.append(el('h2', null, 'Kalorimetrie auswerten'), lvlNote('kalorimetrie'));
+  if (LEVEL === 'schwer') return verbrennung(card);
+  // Neutralisation
+  const acid = LEVEL === 'leicht' ? pick([['Salzsäure', 'HCl(aq)', 'Natronlauge', 'NaOH(aq)']]) : pick([['Salzsäure', 'HCl(aq)', 'Natronlauge', 'NaOH(aq)'], ['Salpetersäure', 'HNO<sub>3</sub>(aq)', 'Kalilauge', 'KOH(aq)'], ['Salzsäure', 'HCl(aq)', 'Kalilauge', 'KOH(aq)']]);
+  let Vb, Va, cb, ca;
+  if (LEVEL === 'leicht') { Vb = Va = pick([50, 50, 100]); cb = ca = pick([1, 1, 0.5, 2]); }
+  else {
+    for (;;) { Vb = pick([25, 50, 75, 100]); Va = pick([25, 50, 75, 100]); cb = pick([0.5, 1, 2]); ca = pick([0.5, 1, 2]); if (Math.abs(Vb * cb - Va * ca) > 1e-9) break; }
+  }
+  const nb = cb * Vb / 1000, na = ca * Va / 1000, n = Math.min(na, nb), m = Va + Vb;
+  const dHtrue = RF(-56.5, -49);           // gemessener Wert (mit Wärmeverlusten)
+  const dT = rnd(-dHtrue * 1000 * n / (m * 4.18), 1);
+  const T0 = rnd(RF(19, 23), 1);
+  const s = fastSeries(T0, dT);
+  const dTm = rnd(s.Tmax - T0, 1);
+  const QL = m * 4.18 * dTm / 1000, QR = -QL, dH = QR / n;
+  card.append(el('p', { class: 'task-text', html: `${Vb} mL ${acid[2]} (c = ${de(cb, cb % 1 ? 1 : 0)} mol/L) werden mit ${Va} mL ${acid[0]} (c = ${de(ca, ca % 1 ? 1 : 0)} mol/L) gemischt (Mischen bei t = 60 s). Behandle die Lösung wie Wasser: c<sub>W</sub> = 4,18 J/(g·K), Dichte 1 g/mL. Gefäß und Wärmeverluste werden vernachlässigt.` }),
+    measurementTable(s.times, s.temps));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  addQ(qa, rows, 'Temperaturdifferenz ΔT', 'K', dTm,
+    [{ v: s.temps[s.temps.length - 1] - T0, why: 'Nimm die höchste Temperatur, nicht den letzten Messwert – danach kühlt die Lösung schon wieder ab.' },
+     { v: dTm + 273, why: 'Eine Temperaturdifferenz ist in K und °C gleich – nicht 273 addieren.' }],
+    `ΔT = ${de(s.Tmax, 1)} °C − ${de(T0, 1)} °C = ${de(dTm, 1)} K`, { abs: 0.05, rel: 0 });
+  addQ(qa, rows, 'Masse der Lösung m', 'g', m, [{ v: Vb, why: 'Beide Lösungen nehmen Wärme auf: Masse beider Portionen addieren.' }, { v: m / 1000, why: 'Mit c<sub>W</sub> in J/(g·K) rechnet man die Masse in Gramm.' }], `m = ${Vb} g + ${Va} g = ${m} g`, { abs: 0.5 });
+  addQ(qa, rows, 'Q<sub>Lösung</sub>', 'kJ', QL,
+    [{ v: QL * 1000, why: 'Das ist der Wert in J. Gefragt ist kJ: durch 1000 teilen.' }, { v: QL / 1000, why: 'Masse in g einsetzen, nicht in kg.' }, { v: Vb * 4.18 * dTm / 1000, why: 'Die Masse beider Lösungen verwenden.' }, { v: -QL, why: 'Die Lösung nimmt Wärme auf: Q<sub>Lösung</sub> ist positiv.' }],
+    `Q_Lösung ≈ m · c_W · ΔT = ${m} g · 4,18 J/(g·K) · ${de(dTm, 1)} K = ${de(QL * 1000, 0)} J = ${deAuto(QL)} kJ`, { rel: 0.015, abs: 0.01 });
+  addQ(qa, rows, 'Q<sub>Reaktion</sub>', 'kJ', QR, [{ v: QL, why: 'Vorzeichen: Die Reaktion gibt die Wärme ab, die die Lösung aufnimmt: Q_Reaktion = −Q_Lösung.' }, { v: QR * 1000, why: 'In kJ angeben.' }],
+    `Q_Reaktion = −Q_Lösung = ${deAuto(QR)} kJ`, { rel: 0.015, abs: 0.01 });
+  addQ(qa, rows, 'n(gebildetes H<sub>2</sub>O)', 'mol', n,
+    [{ v: na + nb, why: 'Es reagieren immer H₃O⁺ und OH⁻ im Verhältnis 1 : 1 – nicht beide Stoffmengen addieren.' }, { v: Math.max(na, nb), why: 'Der Stoff im Überschuss reagiert nicht vollständig. Maßgeblich ist die kleinere Stoffmenge.' }, { v: n * 1000, why: 'Volumen in Liter umrechnen: n = c · V mit V in L.' }, { v: (m / 1000) * cb, why: 'n = c · V nur mit dem Volumen der jeweiligen Lösung, nicht mit dem Gesamtvolumen.' }],
+    `n(OH⁻) = ${de(cb, 1)} mol/L · ${de(Vb / 1000, 3)} L = ${de(nb, 4)} mol;  n(H₃O⁺) = ${de(ca, 1)} mol/L · ${de(Va / 1000, 3)} L = ${de(na, 4)} mol\n→ es reagieren ${de(n, 4)} mol (die kleinere Stoffmenge).`, { rel: 0.001 });
+  addQ(qa, rows, 'molare Neutralisationsenthalpie Δ<sub>N</sub>H', 'kJ/mol', dH,
+    [{ v: -dH, why: 'Exotherm: Δ_NH ist negativ.' }, { v: dH * 1000, why: 'Q in kJ einsetzen, dann ergibt sich kJ/mol.' }, { v: QR / (na + nb), why: 'Durch die Stoffmenge des gebildeten Wassers teilen, nicht durch die Summe.' }, { v: QR / Math.max(na, nb), why: 'Durch die tatsächlich umgesetzte (kleinere) Stoffmenge teilen.' }],
+    `Δ_NH = Q_Reaktion / n = ${deAuto(QR)} kJ / ${de(n, 4)} mol = ${de(dH, 1)} kJ/mol  (Literatur: −57 kJ/mol; Wärmeverluste machen den Betrag kleiner)`, { rel: 0.02 });
+  card.append(el('h3', null, 'Auswertung'), qa, ...checkButton(card, rows, 'kalorimetrie'));
+}
+function verbrennung(card) {
+  const kind = pick(['knaecke', 'brennstoff', 'brennstoff']);
+  const qa = el('div', { class: 'qa' }), rows = [];
+  if (kind === 'knaecke') {
+    const mW = pick([350, 400, 400, 450]), mP = rnd(RF(0.42, 0.58), 2), e = RF(9, 13); // gemessene kJ/g
+    const dT = rnd(e * mP * 1000 / (mW * 4.18), 1), T0 = rnd(RF(17, 21), 1);
+    const Q = mW * 4.18 * dT / 1000, eM = Q / mP;
+    card.append(el('p', { class: 'task-text', html: `Knäckebrot (m = ${de(mP, 2)} g) wird im Verbrennungskalorimeter vollständig verbrannt. Das Wasser (m = ${mW} g) erwärmt sich von ${de(T0, 1)} °C auf ${de(T0 + dT, 1)} °C (ΔT nach Kurvenauswertung). Nur das Wasser wird berücksichtigt (Hauptweg).` }));
+    addQ(qa, rows, 'Q<sub>Wasser</sub>', 'kJ', Q, [{ v: Q * 1000, why: 'In kJ angeben.' }, { v: mW / 1000 * 4.18 * dT, why: 'Masse in g einsetzen.' }], `Q_Wasser = ${mW} g · 4,18 J/(g·K) · ${de(dT, 1)} K = ${deAuto(Q)} kJ`, { rel: 0.015 });
+    addQ(qa, rows, 'Q<sub>Reaktion</sub>', 'kJ', -Q, [{ v: Q, why: 'Q_Reaktion = −Q_Wasser.' }], `Q_Reaktion = ${deAuto(-Q)} kJ`, { rel: 0.015 });
+    addQ(qa, rows, 'freigesetzte Energie pro Masse e', 'kJ/g', eM, [{ v: Q / mW, why: 'Durch die Masse der verbrannten Probe teilen, nicht durch die Wassermasse.' }, { v: eM * 1000, why: 'Q in kJ einsetzen.' }, { v: -eM, why: 'e ≈ |Q_Reaktion| / m_Probe wird als Betrag angegeben.' }], `e ≈ |Q_Reaktion| / m_Probe = ${deAuto(Q)} kJ / ${de(mP, 2)} g = ${de(eM, 1)} kJ/g`, { rel: 0.02 });
+    card.append(el('h3', null, 'Auswertung'), qa, ...checkButton(card, rows, 'kalorimetrie', () => ({ ok: true, msg: `Zum Vergleich: Die Packung nennt rund 15 kJ/g. Physiologischer Brennwert und Verbrennungswärme sind nicht dieselbe Größe; dazu kommen unvollständige Verbrennung, heiße Abgase und Wärmeverluste.` })));
+    return;
+  }
+  const F = pick([{ s: 'EtOH', name: 'Ethanol', lit: -1367 }, { s: 'CH3OH', name: 'Methanol', lit: -726 }, { s: 'C8H18', name: 'Octan', lit: -5470 }]);
+  const M = SP[F.s].M, mW = pick([150, 200, 250]), mP = rnd(RF(0.6, 1.4), 2), eta = RF(0.45, 0.7);
+  const dT = rnd(-F.lit * eta * (mP / M) * 1000 / (mW * 4.18), 1);
+  const Q = mW * 4.18 * dT / 1000, nB = mP / M, dHc = -Q / nB;
+  card.append(el('p', { class: 'task-text', html: `Mit einem Brenner werden ${de(mP, 2)} g ${F.name} (M = ${M} g/mol) verbrannt. Damit wird eine Wasserportion (m = ${mW} g) in einer Metalldose um ΔT = ${de(dT, 1)} K erwärmt. Berechne die molare Verbrennungsenthalpie aus diesem Versuch (nur Wasser berücksichtigen).` }));
+  addQ(qa, rows, 'Q<sub>Wasser</sub>', 'kJ', Q, [{ v: Q * 1000, why: 'In kJ angeben.' }, { v: mW / 1000 * 4.18 * dT, why: 'Masse in g einsetzen.' }], `Q_Wasser = ${mW} g · 4,18 J/(g·K) · ${de(dT, 1)} K = ${deAuto(Q)} kJ`, { rel: 0.015 });
+  addQ(qa, rows, `n(${F.name})`, 'mol', nB, [{ v: mP * M, why: 'n = m / M, nicht m · M.' }, { v: mW / M, why: 'Die Masse des verbrannten Brennstoffs einsetzen, nicht die des Wassers.' }], `n = m / M = ${de(mP, 2)} g / ${M} g/mol = ${de(nB, 4)} mol`, { rel: 0.02 });
+  addQ(qa, rows, 'molare Verbrennungsenthalpie Δ<sub>c</sub>H', 'kJ/mol', dHc, [{ v: -dHc, why: 'Exotherm: negatives Vorzeichen.' }, { v: dHc * 1000, why: 'Q in kJ einsetzen.' }, { v: -Q / mP, why: 'Das ist die Energie pro Gramm; für den molaren Wert durch n teilen.' }],
+    `Δ_cH = −Q_Wasser / n = −${deAuto(Q)} kJ / ${de(nB, 4)} mol = ${de(dHc, 0)} kJ/mol`, { rel: 0.025 });
+  card.append(el('h3', null, 'Auswertung'), qa, ...checkButton(card, rows, 'kalorimetrie', () => ({ ok: true, msg: `Literaturwert: ${de(F.lit)} kJ/mol (Wasser flüssig). Der Versuch erfasst nur etwa ${de(100 * eta, 0)} % – vor allem heiße Abgase und die Umgebung erwärmen sich mit.` })));
+}
+
+// =====================================================================
+//  2 Temperaturkurve (Extrapolation / Halbflächenmethode)
+// =====================================================================
+function slowSeries() {
+  // langsame Verbrennung, Messung alle 30 s, Wärmeverlust nach Newton
+  const T0 = rnd(RF(17, 21), 1), dTtrue = RF(4, 12), k = RF(0.004, 0.012), dt = 30;
+  const ts = 60 * R(2, 3), dur = 60 * R(3, 4), tend = ts + dur + 60 * R(4, 5);
+  const times = [], temps = []; let T = T0;
+  for (let t = 0; t <= tend; t += 1) {
+    const F = t < ts ? 0 : t > ts + dur ? 0 : (Math.PI / (2 * dur)) * Math.sin(Math.PI * (t - ts) / dur);
+    T += dTtrue * F - k / 60 * (T - T0);
+    if (t % dt === 0) { times.push(t / 60); temps.push(rnd(T, 1)); }
+  }
+  return { times, temps, ts: ts / 60, te: (ts + dur) / 60 };
+}
+function fastCurve() {
+  const T0 = rnd(RF(19, 23), 1), dT = RF(5, 9), k = RF(0.02, 0.05);
+  const times = [], temps = [];
+  for (let t = 0; t <= 600; t += 30) {
+    let T = T0;
+    if (t >= 120) { const x = t - 120; T = T0 + dT * (1 - Math.exp(-x / 12)) * Math.exp(-k * x / 60); }
+    times.push(t / 60); temps.push(rnd(T, 1));
+  }
+  return { times, temps, ts: 2, te: 2.5 };
+}
+const linfit = (xs, ys) => { const n = xs.length, mx = xs.reduce((a, b) => a + b) / n, my = ys.reduce((a, b) => a + b) / n; let sxy = 0, sxx = 0; xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; }); const b = sxx ? sxy / sxx : 0; return { a: my - b * mx, b, at: x => my - b * mx + b * x }; };
+function analyzeCurve(S) {
+  const pre = S.times.map((t, i) => [t, S.temps[i]]).filter(([t]) => t <= S.ts);
+  const post = S.times.map((t, i) => [t, S.temps[i]]).filter(([t]) => t >= S.te + 0.999);
+  const lp = linfit(pre.map(p => p[0]), pre.map(p => p[1])), lq = linfit(post.map(p => p[0]), post.map(p => p[1]));
+  const t1 = S.ts, t2 = post[0][0];
+  const curve = t => { for (let i = 1; i < S.times.length; i++) if (t <= S.times[i]) { const f = (t - S.times[i - 1]) / (S.times[i] - S.times[i - 1]); return S.temps[i - 1] + f * (S.temps[i] - S.temps[i - 1]); } return S.temps[S.temps.length - 1]; };
+  const area = (f, a, b) => { let s = 0; const N = 400; for (let i = 0; i < N; i++) { const x = a + (i + 0.5) * (b - a) / N; s += f(x); } return s * (b - a) / N; };
+  const A1 = x => area(t => curve(t) - lp.at(t), t1, x), A2 = x => area(t => lq.at(t) - curve(t), x, t2);
+  let lo = t1, hi = t2; for (let i = 0; i < 50; i++) { const mid = (lo + hi) / 2; if (A1(mid) < A2(mid)) lo = mid; else hi = mid; }
+  const tStar = (lo + hi) / 2;
+  return { lp, lq, t1, t2, curve, A1, A2, tStar, dT: lq.at(tStar) - lp.at(tStar) };
+}
+function modeKurve(card) {
+  card.append(el('h2', null, 'Temperaturkurve auswerten'), lvlNote('kurve'));
+  const S = LEVEL === 'leicht' ? fastCurve() : slowSeries();
+  const A = analyzeCurve(S);
+  const fixed = LEVEL === 'leicht';
+  const tLine = fixed ? S.ts : rnd((A.t1 + A.t2) / 2, 2);
+  const want = fixed ? A.lq.at(S.ts) - A.lp.at(S.ts) : A.dT;
+  card.append(el('p', { class: 'task-text', html: fixed
+    ? 'Nach dem Mischen (bei 2 min) kühlt die Lösung schon ab, während die Temperatur noch steigt. Die Geraden verlängern Vor- und Nachperiode. Lies am Mischzeitpunkt die Temperaturdifferenz zwischen beiden Geraden ab. Fahre über das Diagramm, um Werte abzulesen.'
+    : 'Die Reaktion läuft über mehrere Minuten. Verschiebe die senkrechte Linie (ziehen oder Regler), bis die Flächen A<sub>1</sub> (zwischen Kurve und verlängerter Vorperiode) und A<sub>2</sub> (zwischen Kurve und verlängerter Nachperiode) gleich groß sind. Die Länge der Senkrechten zwischen den Geraden ist ΔT.' }));
+  const W = 720, H = 340, L = 56, Rr = 16, T = 14, B = 42;
+  const tmax = S.times[S.times.length - 1];
+  const ymin = Math.floor(Math.min(...S.temps) - 0.5), ymax = Math.ceil(Math.max(...S.temps, A.lq.at(A.t1)) + 0.5);
+  const X = t => L + t / tmax * (W - L - Rr), Y = v => T + (ymax - v) / (ymax - ymin) * (H - T - B);
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Temperatur-Zeit-Diagramm' });
+  const ystep = (ymax - ymin) > 10 ? 2 : 1;
+  for (let v = ymin; v <= ymax; v += ystep) { svg.append(svgEl('line', { x1: L, x2: W - Rr, y1: Y(v), y2: Y(v), stroke: '#e3e8e7' })); const tx = svgEl('text', { x: L - 6, y: Y(v) + 4, 'text-anchor': 'end' }); tx.textContent = de(v); svg.append(tx); }
+  for (let t = 0; t <= tmax + 1e-9; t += 1) { svg.append(svgEl('line', { y1: T, y2: H - B, x1: X(t), x2: X(t), stroke: '#e3e8e7' })); const tx = svgEl('text', { x: X(t), y: H - B + 16, 'text-anchor': 'middle' }); tx.textContent = de(t); svg.append(tx); }
+  const xl = svgEl('text', { x: (L + W) / 2, y: H - 6, 'text-anchor': 'middle', style: 'font-weight:600' }); xl.textContent = 't in min'; svg.append(xl);
+  const yl = svgEl('text', { x: 13, y: (T + H - B) / 2, 'text-anchor': 'middle', transform: `rotate(-90 13 ${(T + H - B) / 2})`, style: 'font-weight:600' }); yl.textContent = 'ϑ in °C'; svg.append(yl);
+  const areaG = svgEl('g', {}); svg.append(areaG);
+  svg.append(svgEl('line', { x1: X(0), x2: X(tmax), y1: Y(A.lp.at(0)), y2: Y(A.lp.at(tmax)), stroke: '#1f6fd1', 'stroke-width': 1.6, 'stroke-dasharray': '6 4' }));
+  svg.append(svgEl('line', { x1: X(0), x2: X(tmax), y1: Y(A.lq.at(0)), y2: Y(A.lq.at(tmax)), stroke: '#b26a00', 'stroke-width': 1.6, 'stroke-dasharray': '6 4' }));
+  svg.append(svgEl('polyline', { points: S.times.map((t, i) => `${X(t)},${Y(S.temps[i])}`).join(' '), fill: 'none', stroke: '#0f7a6a', 'stroke-width': 2.2 }));
+  S.times.forEach((t, i) => svg.append(svgEl('circle', { cx: X(t), cy: Y(S.temps[i]), r: 3.2, fill: '#0f7a6a' })));
+  const vline = svgEl('line', { y1: T, y2: H - B, stroke: '#333', 'stroke-width': 1.5 });
+  const seg = svgEl('line', { stroke: '#c62828', 'stroke-width': 4, 'stroke-linecap': 'round' });
+  svg.append(vline, seg);
+  const hover = el('div', { class: 'readout' }, ' ');
+  const readout = el('div', { class: 'readout' });
+  const slider = el('input', { type: 'range', min: A.t1, max: A.t2, step: 0.01, value: tLine, 'aria-label': 'Lage der Senkrechten in Minuten' });
+  let tx = tLine;
+  function draw() {
+    vline.setAttribute('x1', X(tx)); vline.setAttribute('x2', X(tx));
+    seg.setAttribute('x1', X(tx)); seg.setAttribute('x2', X(tx)); seg.setAttribute('y1', Y(A.lp.at(tx))); seg.setAttribute('y2', Y(A.lq.at(tx)));
+    areaG.innerHTML = '';
+    if (LEVEL === 'mittel') {
+      const pts1 = [], pts2 = [];
+      for (let t = A.t1; t <= tx; t += 0.02) pts1.push([t, A.curve(t)]);
+      const p1 = pts1.map(([t, v]) => `${X(t)},${Y(v)}`).concat(pts1.slice().reverse().map(([t]) => `${X(t)},${Y(A.lp.at(t))}`));
+      for (let t = tx; t <= A.t2; t += 0.02) pts2.push([t, A.curve(t)]);
+      const p2 = pts2.map(([t, v]) => `${X(t)},${Y(v)}`).concat(pts2.slice().reverse().map(([t]) => `${X(t)},${Y(A.lq.at(t))}`));
+      if (pts1.length > 1) areaG.append(svgEl('polygon', { points: p1.join(' '), fill: 'var(--a1)' }));
+      if (pts2.length > 1) areaG.append(svgEl('polygon', { points: p2.join(' '), fill: 'var(--a2)' }));
+    }
+    const d = A.lq.at(tx) - A.lp.at(tx);
+    readout.innerHTML = `Senkrechte bei t = ${de(tx, 2)} min` + (LEVEL === 'mittel' ? ` · A<sub>1</sub> = ${de(A.A1(tx), 2)} · A<sub>2</sub> = ${de(A.A2(tx), 2)} (K·min)` : '') + (fixed ? '' : ` · Abstand der Geraden: ${de(d, 1)} K`);
+  }
+  if (!fixed) {
+    let drag = false;
+    const toT = ev => { const r = svg.getBoundingClientRect(); const x = (ev.clientX - r.left) / r.width * W; return Math.max(A.t1, Math.min(A.t2, (x - L) / (W - L - Rr) * tmax)); };
+    svg.addEventListener('pointerdown', ev => { drag = true; svg.setPointerCapture(ev.pointerId); tx = toT(ev); slider.value = tx; draw(); });
+    svg.addEventListener('pointermove', ev => { if (drag) { tx = toT(ev); slider.value = tx; draw(); } });
+    svg.addEventListener('pointerup', () => { drag = false; });
+    slider.addEventListener('input', () => { tx = Number(slider.value); draw(); });
+  }
+  svg.addEventListener('mousemove', ev => { const r = svg.getBoundingClientRect(); const x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H; const t = (x - L) / (W - L - Rr) * tmax, v = ymax - (y - T) / (H - T - B) * (ymax - ymin); if (t >= 0 && t <= tmax) hover.textContent = `Maus: t = ${de(t, 2)} min, ϑ = ${de(v, 2)} °C`; });
+  draw();
+  card.append(...[el('div', { class: 'chart' }, svg), hover, fixed ? null : el('div', { class: 'bar' }, el('label', null, 'Senkrechte: '), slider), readout,
+    el('div', { class: 'note', html: 'Blau gestrichelt: verlängerte Vorperiode · Orange gestrichelt: verlängerte Nachperiode · Rot: ΔT' }),
+    measurementTable(S.times, S.temps, 'min')].filter(Boolean));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  const tmaxT = Math.max(...S.temps);
+  addQ(qa, rows, 'Temperaturdifferenz ΔT (korrigiert)', 'K', want,
+    [{ v: tmaxT - S.temps[0], why: 'Das ist Tmax − TAnfang. Wegen der Wärmeverluste während der Reaktion ist dieser Wert zu klein – die Kurvenauswertung gleicht das aus.' }],
+    fixed ? `Am Mischzeitpunkt: ${de(A.lq.at(S.ts), 2)} °C − ${de(A.lp.at(S.ts), 2)} °C ≈ ${de(want, 1)} K (zum Vergleich Tmax − TAnfang = ${de(tmaxT - S.temps[0], 1)} K)`
+          : `Bei gleichen Flächen liegt die Senkrechte bei t ≈ ${de(A.tStar, 2)} min; dort ist ΔT ≈ ${de(want, 1)} K (zum Vergleich Tmax − TAnfang = ${de(tmaxT - S.temps[0], 1)} K).`,
+    { abs: LEVEL === 'schwer' ? 0.25 : 0.15, rel: 0 });
+  card.append(el('h3', null, 'Ergebnis'), qa, ...checkButton(card, rows, 'kurve'));
+  card.__test = { want, tStar: A.tStar };
+}
+
+// =====================================================================
+//  3 Fehlerquellen
+// =====================================================================
+const ERR = [
+  { l: 1, t: 'Die Lösung gibt während der Messung Wärme an die Umgebung ab (offenes Becherglas, keine Isolierung).', a: 'klein', why: 'Ein Teil der Reaktionswärme geht verloren, bevor er gemessen wird: ΔT wird zu klein, also auch |Q| und |Δ_NH|.', fix: 'Isolieren (Styroporbecher, Deckel), schnell mischen, Kurve auswerten.' },
+  { l: 1, t: 'Die Wärme, die das Gefäß und das Thermometer aufnehmen, wird in der Rechnung vernachlässigt.', a: 'klein', why: 'Gefäß und Thermometer erwärmen sich mit. Diese Wärme fehlt in m · c_W · ΔT, der berechnete Betrag ist zu klein.', fix: 'Gefäß mit kleiner Wärmekapazität verwenden oder (Vertiefung) die Wärmekapazität des Kalorimeters bestimmen und mitrechnen.' },
+  { l: 1, t: 'Als Tmax wird der letzte Messwert nach 4 Minuten verwendet statt des höchsten Werts.', a: 'klein', why: 'Nach dem Maximum kühlt die Lösung ab. ΔT und damit |Δ_NH| werden zu klein.', fix: 'Den höchsten Wert bzw. die extrapolierte Temperatur verwenden.' },
+  { l: 1, t: 'Das Thermometer zeigt alle Temperaturen um 0,5 °C zu hoch an.', a: 'gleich', why: 'Gerechnet wird mit der Differenz ΔT. Ein gleichbleibender Ablesefehler hebt sich auf.', fix: 'Keine Korrektur nötig – wichtig ist dasselbe Thermometer für beide Werte.' },
+  { l: 1, t: 'Es wird nicht gerührt, das Thermometer steckt in einer kälteren Zone am Rand.', a: 'klein', why: 'Die gemessene Höchsttemperatur liegt unter der mittleren Temperatur der Lösung: ΔT zu klein.', fix: 'Gleichmäßig rühren (Rührstab oder Rührfisch).' },
+  { l: 2, t: 'Die Natronlauge hat in Wirklichkeit c = 0,9 mol/L, gerechnet wird aber mit 1,0 mol/L.', a: 'klein', why: 'Es reagiert weniger Stoff, als angenommen: Q ist kleiner, geteilt wird aber durch die zu große Stoffmenge. |Δ_NH| wird zu klein.', fix: 'Maßlösungen mit bekannter Konzentration verwenden (Titer prüfen).' },
+  { l: 2, t: 'Statt 50 mL wurden 60 mL Salzsäure abgemessen (gleiche Konzentration). Gerechnet wird trotzdem mit m = 100 g.', a: 'klein', why: 'Die Stoffmenge des gebildeten Wassers bleibt gleich (Natronlauge reagiert vollständig), aber 110 g Lösung nehmen die Wärme auf: ΔT ist kleiner, und mit 100 g gerechnet wird Q zu klein.', fix: 'Volumina genau abmessen bzw. mit der tatsächlichen Masse rechnen.' },
+  { l: 2, t: 'Die Salzsäure war vor dem Mischen 2 K wärmer als die Natronlauge; als Anfangstemperatur wird die Temperatur der Natronlauge verwendet.', a: 'gross', why: 'Ein Teil des Temperaturanstiegs kommt vom Mischen mit der wärmeren Säure, nicht von der Reaktion. ΔT und |Δ_NH| werden zu groß.', fix: 'Temperaturen beider Lösungen vorher angleichen bzw. den Mittelwert als Anfangstemperatur nehmen.' },
+  { l: 2, t: 'Die spezifische Wärmekapazität der Salzlösung ist etwas kleiner als die von Wasser; gerechnet wird mit 4,18 J/(g·K).', a: 'gross', why: 'Mit dem zu großen c-Wert wird Q überschätzt. |Δ_NH| wird etwas zu groß.', fix: 'Den Tabellenwert der Lösung verwenden (in der Schule meist vernachlässigbar).' },
+  { l: 2, t: 'Das Volumen wird in mL statt in L in n = c · V eingesetzt.', a: 'klein', why: 'n wird 1000-mal zu groß, Δ_NH = Q / n daher 1000-mal zu klein.', fix: 'Einheiten mitschreiben: V in L.' },
+  { l: 3, t: 'Verbrennung von Knäckebrot: Ein Teil verkohlt nur, die Verbrennung ist unvollständig. Gerechnet wird mit der ganzen Probenmasse.', a: 'klein', why: 'Nicht die ganze Probe hat ihre Energie abgegeben, geteilt wird aber durch die ganze Masse: e wird zu klein.', fix: 'Ausreichend Sauerstoff zuführen; Rückstand zurückwiegen.' },
+  { l: 3, t: 'Verbrennung: Die heißen Abgase verlassen die Apparatur, ohne ihre Wärme vollständig ans Wasser abzugeben.', a: 'klein', why: 'Die Wärme der Abgase wird nicht gemessen: |Q| und e werden zu klein.', fix: 'Abgase durch eine Kupferwendel im Wasser leiten, Apparatur abdecken.' },
+  { l: 3, t: 'Verbrennung: Das Knäckebrot wird mit einem Holzspan angezündet, der im Reagenzglas mitverbrennt; seine Masse wird nicht berücksichtigt.', a: 'gross', why: 'Die zusätzliche Zündwärme wird mitgemessen, geteilt wird aber nur durch die Masse des Knäckebrots: e wird zu groß.', fix: 'Zündwärme bestimmen und abziehen oder elektrisch zünden.' }
+];
+const DIR_TXT = { gross: 'Der Betrag wird zu groß', klein: 'Der Betrag wird zu klein', gleich: 'Kein Einfluss' };
+function modeFehler(card) {
+  card.append(el('h2', null, 'Fehlerquellen'), lvlNote('fehler'));
+  if (LEVEL === 'schwer' && Math.random() < 0.4) return korrektur(card);
+  const pool = ERR.filter(e => e.l <= (LEVEL === 'leicht' ? 1 : LEVEL === 'mittel' ? 2 : 3) && (LEVEL !== 'schwer' || e.l >= 2));
+  const E = pick(pool);
+  const fb = feedback();
+  card.append(el('p', { class: 'task-text' }, 'Wie wirkt sich der folgende Fehler auf den Betrag der berechneten Enthalpie (bzw. der Energie pro Masse) aus? Entscheide zuerst, wie sich ΔT, Q oder n ändern.'),
+    el('div', { class: 'scenario' }, E.t));
+  const choices = el('div', { class: 'choices' });
+  for (const k of ['gross', 'klein', 'gleich']) {
+    const b = el('button', { class: 'choice', type: 'button', onclick: () => {
+      if (card.done) return;
+      if (k === E.a) { b.classList.add('right'); fb.set('ok', 'Richtig! ' + E.why + '\nAbhilfe: ' + E.fix); card.classList.add('solved'); card.done = true; addScore('fehler'); }
+      else { b.classList.add('wrong'); b.disabled = true; fb.set('err', 'Noch nicht. Überlege: Wird ΔT (bzw. Q) größer oder kleiner? Ändert sich die Stoffmenge oder Masse, durch die geteilt wird?'); }
+    } }, el('b', null, DIR_TXT[k]));
+    choices.append(b);
+  }
+  card.append(choices, fb);
+}
+function korrektur(card) {
+  const C = pick([30, 40, 50, 60, 80]), m = 100, n = 0.05, dT = rnd(RF(5.8, 6.6), 1);
+  const Q1 = m * 4.18 * dT / 1000, Q2 = (m * 4.18 + C) * dT / 1000;
+  card.append(el('p', { class: 'task-text', html: `<b>Vertiefung (optional, nicht abiturrelevant):</b> Neutralisation mit je 50 mL (c = 1 mol/L), ΔT = ${de(dT, 1)} K. Das Kalorimeter hat die Wärmekapazität C<sub>Kal</sub> = ${C} J/K. Berechne Δ<sub>N</sub>H einmal ohne und einmal mit Kalorimeter: Q = (m · c<sub>W</sub> + C<sub>Kal</sub>) · ΔT.` }));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  addQ(qa, rows, 'Δ<sub>N</sub>H ohne Kalorimeter', 'kJ/mol', -Q1 / n, [{ v: Q1 / n, why: 'Exotherm: negatives Vorzeichen.' }], `−${m} g · 4,18 J/(g·K) · ${de(dT, 1)} K / 0,05 mol = ${de(-Q1 / n, 1)} kJ/mol`, { rel: 0.015 });
+  addQ(qa, rows, 'Δ<sub>N</sub>H mit Kalorimeter', 'kJ/mol', -Q2 / n, [{ v: Q2 / n, why: 'Exotherm: negatives Vorzeichen.' }, { v: -(Q1 + C * dT) / n, why: 'C·ΔT ergibt J – vor dem Addieren in kJ umrechnen.' }, { v: -(Q1 + C / 1000) / n, why: 'C_Kal wird mit ΔT multipliziert.' }],
+    `−(${m} g · 4,18 J/(g·K) + ${C} J/K) · ${de(dT, 1)} K / 0,05 mol = ${de(-Q2 / n, 1)} kJ/mol – der Betrag wird größer, also näher am Literaturwert.`, { rel: 0.015 });
+  card.append(qa, ...checkButton(card, rows, 'fehler'));
+}
+
+// =====================================================================
+//  4 Δr H aus Δf H°
+// =====================================================================
+function dataTable(species, hlWater) {
+  const tb = el('table', { class: 'data', 'aria-label': 'Standardbildungsenthalpien' });
+  tb.append(el('tr', null, el('th', null, 'Stoff'), ...species.map(s => el('th', { html: SP[s].f }))));
+  tb.append(el('tr', null, el('th', { html: 'Δ<sub>f</sub>H° in kJ/mol' }), ...species.map(s => el('td', null, de(SP[s].H)))));
+  return el('div', { class: 'scroll' }, tb);
+}
+function modeBildung(card) {
+  const lv = LEVEL === 'leicht' ? 1 : LEVEL === 'mittel' ? 2 : 3;
+  const Rx = pick(RXF.filter(r => r.lvl === lv));
+  const H = dHf(Rx.m);
+  let sp = Object.keys(Rx.m);
+  // Wasser: immer beide Zustände anbieten, damit genau hingeschaut wird
+  if (sp.includes('H2Ol') && !sp.includes('H2Og')) sp.push('H2Og'); else if (sp.includes('H2Og') && !sp.includes('H2Ol')) sp.push('H2Ol');
+  sp = sp.filter(s => !ELEM.has(s) || Rx.m[s]);
+  card.append(el('h2', null, 'Reaktionsenthalpie aus Bildungsenthalpien'), lvlNote('bildung'),
+    el('p', { class: 'task-text', html: `${Rx.name}:` }), el('div', { class: 'eq', html: eqHTML(Rx.m) }),
+    el('p', { class: 'task-text', html: 'Berechne die Standardreaktionsenthalpie Δ<sub>r</sub>H° für diese Reaktionsgleichung. Elemente in ihrer stabilsten Form haben Δ<sub>f</sub>H° = 0.' }),
+    dataTable(sp));
+  const qa = el('div', { class: 'qa' }), rows = [];
+  const terms = (side) => Object.entries(Rx.m).filter(([, c]) => side > 0 ? c > 0 : c < 0).map(([s, c]) => `${frac(Math.abs(c))} · (${de(SP[s].H)} kJ/mol)`).join(' + ');
+  const noCoeff = Object.entries(Rx.m).reduce((a, [s, c]) => a + Math.sign(c) * SP[s].H, 0);
+  const wSwap = (() => { const m = Object.assign({}, Rx.m); if (m.H2Ol) { m.H2Og = (m.H2Og || 0) + m.H2Ol; delete m.H2Ol; } else if (m.H2Og) { m.H2Ol = (m.H2Ol || 0) + m.H2Og; delete m.H2Og; } else return NaN; return dHf(m); })();
+  addQ(qa, rows, 'Δ<sub>r</sub>H°', 'kJ/mol', H,
+    [{ v: -H, why: 'Reihenfolge: Produkte minus Edukte.' }, { v: noCoeff, why: 'Jede Bildungsenthalpie mit ihrem Koeffizienten ν aus der Reaktionsgleichung multiplizieren.' },
+     { v: wSwap, why: 'Achte auf den Aggregatzustand des Wassers in der Reaktionsgleichung: H₂O(l) und H₂O(g) haben verschiedene Bildungsenthalpien.' }],
+    `Δ_rH° = Σ ν·Δ_fH°(Produkte) − Σ ν·Δ_fH°(Edukte)\n      = [${terms(1)}] − [${terms(-1)}]\n      = ${de(H)} kJ/mol`, { rel: 0, abs: 0.6 });
+  let ex = null;
+  if (lv === 3) {
+    // Wärme für eine gegebene Masse eines Edukts (wie Aufgaben 6 und 8)
+    const [s, c] = Object.entries(Rx.m).find(([s, c]) => c < 0 && !ELEM.has(s));
+    const mass = pick([1, 10, 100, 1000]);
+    const nS = mass / SP[s].M, Q = H / Math.abs(c) * nS;
+    const unit = Math.abs(Q) >= 1000 ? 'MJ' : 'kJ', fct = unit === 'MJ' ? 1000 : 1;
+    card.append(el('p', { class: 'task-text', html: `Zusatz: Welche Wärme wird bei der Umsetzung von <b>${mass >= 1000 ? de(mass / 1000) + ' kg' : de(mass) + ' g'}</b> ${SP[s].f} frei? (M = ${SP[s].M} g/mol; Angabe als Q<sub>Reaktion</sub> mit Vorzeichen)` }));
+    addQ(qa, rows, `Q<sub>Reaktion</sub>`, unit, Q / fct,
+      [{ v: H * nS / fct, why: `Δ_rH° gilt für ${frac(Math.abs(c))} mol ${SP[s].f.replace(/<[^>]+>/g, '')} (Formelumsatz) – erst durch ${frac(Math.abs(c))} teilen.` }, { v: -Q / fct, why: 'Exotherm: Q_Reaktion ist negativ.' }, { v: Q, why: `In ${unit} angeben.` }],
+      `n = ${mass} g / ${SP[s].M} g/mol = ${de(nS, 3)} mol;  pro mol ${SP[s].f.replace(/<[^>]+>/g, '')}: ${de(H)} kJ / ${frac(Math.abs(c))} = ${de(H / Math.abs(c), 1)} kJ\nQ = ${de(nS, 3)} mol · ${de(H / Math.abs(c), 1)} kJ/mol = ${de(Q / fct, unit === 'MJ' ? 2 : 0)} ${unit}`, { rel: 0.02 });
+  }
+  card.append(el('h3', null, 'Deine Rechnung'), qa, ...checkButton(card, rows, 'bildung', ex));
+}
+
+// =====================================================================
+//  5 Satz von Hess
+// =====================================================================
+const COMB = (s) => { // Verbrennung zu CO2 und H2O(l): Koeffizienten aus Summenformel
+  const F = { CH4: [1, 4, 0], C2H6: [2, 6, 0], C3H8: [3, 8, 0], C2H2: [2, 2, 0], C2H4: [2, 4, 0], CH3OH: [1, 4, 1], EtOH: [2, 6, 1], Aceton: [3, 6, 1], Benzol: [6, 6, 0], Glc: [6, 12, 6], HAc: [2, 4, 2] }[s];
+  const [c, h, o] = F, o2 = c + h / 4 - o / 2;
+  return { form: F, m: rx([[1, s], [o2, 'O2']], [[c, 'CO2'], [h / 2, 'H2Ol']]) };
+};
+const NAMES = { CH4: 'Methan', C2H6: 'Ethan', C3H8: 'Propan', C2H2: 'Ethin', C2H4: 'Ethen', CH3OH: 'Methanol', EtOH: 'Ethanol', Aceton: 'Aceton', Benzol: 'Benzol', Glc: 'Glucose', HAc: 'Ethansäure' };
+function hessTasks() {
+  const T = [];
+  const mk = (lvl, name, target, given) => T.push({ lvl, name, target, given: given.map(g => Object.assign(g, { H: g.H != null ? g.H : dHf(g.m) })) });
+  mk(1, 'Bildungsenthalpie von Butan (Unterrichtsbeispiel 1)', rx([[4, 'C'], [5, 'H2']], [[1, 'C4H10']]), [{ m: rx([[1, 'C4H10']], [[4, 'C'], [5, 'H2']]) }]);
+  mk(1, 'Bildung von Stickstoffdioxid', rx([[1, 'N2'], [2, 'O2']], [[2, 'NO2']]), [{ m: rx([[1, 'N2'], [1, 'O2']], [[2, 'NO']]) }, { m: rx([[2, 'NO'], [1, 'O2']], [[2, 'NO2']]) }]);
+  mk(1, 'Hydrierung von Ethen aus Verbrennungsenthalpien', rx([[1, 'C2H4'], [1, 'H2']], [[1, 'C2H6']]), [{ m: COMB('C2H4').m }, { m: rx([[1, 'H2'], [0.5, 'O2']], [[1, 'H2Ol']]) }, { m: COMB('C2H6').m }]);
+  mk(1, 'Zerlegung von Wasser', rx([[2, 'H2Ol']], [[2, 'H2'], [1, 'O2']]), [{ m: rx([[1, 'H2'], [0.5, 'O2']], [[1, 'H2Ol']]) }]);
+  mk(1, 'Bildung von Kohlenstoffmonooxid (Unterrichtsbeispiel 2)', rx([[2, 'C'], [1, 'O2']], [[2, 'CO']]), [{ m: rx([[1, 'C'], [1, 'O2']], [[1, 'CO2']]) }, { m: rx([[2, 'CO'], [1, 'O2']], [[2, 'CO2']]) }]);
+  mk(2, 'Bildungsenthalpie von Schwefeltrioxid', rx([[1, 'S'], [1.5, 'O2']], [[1, 'SO3']]), [{ m: rx([[1, 'S'], [1, 'O2']], [[1, 'SO2']]) }, { m: rx([[2, 'SO2'], [1, 'O2']], [[2, 'SO3']]) }]);
+  mk(2, 'Bildungsenthalpie von Ozon', rx([[1.5, 'O2']], [[1, 'O3']]), [{ m: rx([[1, 'O2']], [[2, 'O']]) }, { m: rx([[1, 'O3']], [[1, 'O2'], [1, 'O']]) }]);
+  mk(2, 'Bildungsenthalpie von Kohlenstoffmonooxid', rx([[1, 'C'], [0.5, 'O2']], [[1, 'CO']]), [{ m: rx([[1, 'C'], [1, 'O2']], [[1, 'CO2']]) }, { m: rx([[2, 'CO'], [1, 'O2']], [[2, 'CO2']]) }]);
+  mk(2, 'Bildungsenthalpie von Stickstoffdioxid', rx([[0.5, 'N2'], [1, 'O2']], [[1, 'NO2']]), [{ m: rx([[1, 'N2'], [1, 'O2']], [[2, 'NO']]) }, { m: rx([[2, 'NO'], [1, 'O2']], [[2, 'NO2']]) }]);
+  mk(2, 'Hydrierung von Ethin aus Verbrennungsenthalpien', rx([[1, 'C2H2'], [2, 'H2']], [[1, 'C2H6']]), [{ m: COMB('C2H2').m }, { m: rx([[1, 'H2'], [0.5, 'O2']], [[1, 'H2Ol']]) }, { m: COMB('C2H6').m }]);
+  for (const s of ['CH4', 'C2H6', 'C3H8', 'C2H2', 'C2H4', 'CH3OH', 'EtOH', 'Aceton', 'Benzol', 'Glc', 'HAc']) {
+    const { form: [c, h, o] } = COMB(s);
+    const target = rx([[c, 'C'], [h / 2, 'H2']].concat(o ? [[o / 2, 'O2']] : []), [[1, s]]);
+    mk(3, `Bildungsenthalpie von ${NAMES[s]} aus Verbrennungsenthalpien`, target,
+      [{ m: rx([[1, 'C'], [1, 'O2']], [[1, 'CO2']]) }, { m: rx([[1, 'H2'], [0.5, 'O2']], [[1, 'H2Ol']]) }, { m: COMB(s).m }]);
+  }
+  return T;
+}
+const HESS = hessTasks();
+function combine(given, fs) { const m = {}; given.forEach((g, i) => { for (const s in g.m) m[s] = (m[s] || 0) + fs[i] * g.m[s]; }); for (const s in m) if (Math.abs(m[s]) < 1e-9) delete m[s]; return m; }
+function sameRx(a, b) { const ks = new Set([...Object.keys(a), ...Object.keys(b)]); for (const k of ks) if (Math.abs((a[k] || 0) - (b[k] || 0)) > 1e-9) return false; return true; }
+function modeHess(card) {
+  const lv = LEVEL === 'leicht' ? 1 : LEVEL === 'mittel' ? 2 : 3;
+  const Tk = pick(HESS.filter(t => t.lvl === lv));
+  const want = dHf(Tk.target);
+  card.append(el('h2', null, 'Satz von Hess'), lvlNote('hess'),
+    el('p', { class: 'task-text', html: `${Tk.name}. Gesucht ist Δ<sub>r</sub>H der Zielreaktion. Gib für jede bekannte Reaktion einen Faktor ein (z. B. <code>2</code>, <code>-1</code>, <code>1/2</code>, <code>0</code>): Ein negativer Faktor dreht die Reaktion um. Die Summe wird sofort angezeigt.` }),
+    el('div', { class: 'lbl-small' }, 'Zielreaktion'), el('div', { class: 'eq', html: eqHTML(Tk.target) }));
+  const grid = el('div', { class: 'hess' }), fins = [];
+  Tk.given.forEach((g, i) => {
+    const inp = el('input', { class: 'num small', type: 'text', inputmode: 'decimal', 'aria-label': `Faktor für Reaktion ${i + 1}` });
+    fins.push(inp);
+    grid.append(el('span', { class: 'unitbox' }, inp, el('span', { class: 'unit' }, '·')), el('div', { class: 'rx', html: `(${i + 1})&nbsp; ${eqHTML(g.m)}` }), el('div', { class: 'dh', html: `Δ<sub>r</sub>H = ${de(g.H)} kJ/mol` }));
+  });
+  const sum = el('div', { class: 'sumline' }), left = el('div', { class: 'left' });
+  function upd() {
+    const fs = fins.map(f => { const v = readNum(f.value); return isNaN(v) ? 0 : v; });
+    const m = combine(Tk.given, fs);
+    const ok = sameRx(m, Tk.target);
+    sum.className = 'sumline' + (ok ? ' match' : '');
+    sum.innerHTML = `<span class="lbl-small">Summe</span><br>${Object.keys(m).length ? eqHTML(m) : '–'}` + `<br><span class="unit">Δ<sub>r</sub>H = ${fs.map((f, i) => f ? `${frac(f)} · (${de(Tk.given[i].H)})` : null).filter(Boolean).join(' + ') || '–'} kJ/mol</span>`;
+    const diff = combine([{ m }, { m: Tk.target }], [1, -1]);
+    const filled = fins.every(f => !isNaN(readNum(f.value)));
+    left.textContent = ok || !filled ? '' : 'Stimmt noch nicht mit der Zielreaktion überein. Nicht ausgeglichen: ' + Object.keys(diff).map(sp => SP[sp].f.replace(/<[^>]+>/g, '')).join(', ') + '.';
+    return { fs, ok };
+  }
+  fins.forEach(f => f.addEventListener('input', upd));
+  upd();
+  const qa = el('div', { class: 'qa' }), rows = [];
+  const solFs = (() => { // Lösung finden (für Rückmeldung): kleine Suche über Faktoren
+    const opts = []; for (let k = -12; k <= 12; k++) opts.push(k / 2);
+    const n = Tk.given.length; const idx = Array(n).fill(0);
+    for (;;) { const fs = idx.map(i => opts[i]); if (sameRx(combine(Tk.given, fs), Tk.target)) return fs; let j = 0; while (j < n && ++idx[j] === opts.length) { idx[j] = 0; j++; } if (j === n) return null; }
+  })();
+  const altSign = solFs ? Tk.given.reduce((a, g, i) => a + Math.abs(solFs[i]) * g.H, 0) : NaN;
+  addQ(qa, rows, 'Δ<sub>r</sub>H der Zielreaktion', 'kJ/mol', want,
+    [{ v: -want, why: 'Vorzeichen prüfen: Beim Umdrehen einer Reaktion wechselt das Vorzeichen von ΔH.' }, { v: altSign, why: 'Eine umgedrehte Reaktion (negativer Faktor) muss mit −ΔH eingehen.' }],
+    solFs ? `Faktoren ${solFs.map(frac).join(', ')}:  Δ_rH = ${solFs.map((f, i) => `${frac(f)} · (${de(Tk.given[i].H)})`).join(' + ')} = ${de(want)} kJ/mol` : `Δ_rH = ${de(want)} kJ/mol`, { rel: 0, abs: 1 });
+  const extra = () => { const r = upd(); const filled = fins.every(f => !isNaN(readNum(f.value))); fins.forEach((f, i) => { f.className = 'num small ' + (r.ok ? 'right' : (filled && solFs && Math.abs(readNum(f.value) - solFs[i]) > 1e-9 ? 'wrong' : '')); }); return { ok: r.ok, empty: !filled, msg: r.ok ? 'Die Teilreaktionen ergeben genau die Zielreaktion.' : 'Die Faktoren ergeben noch nicht die Zielreaktion.' }; };
+  card.append(grid, sum, left, el('h3', null, 'Ergebnis'), qa, ...checkButton(card, rows, 'hess', extra));
+  card.__test = { solFs, want };
+}
+
+// =====================================================================
+function show() {
+  const main = document.getElementById('main'); main.innerHTML = '';
+  main.append(terms());
+  const card = el('section', { class: 'card' });
+  ({ kalorimetrie: modeKalorimetrie, kurve: modeKurve, fehler: modeFehler, bildung: modeBildung, hess: modeHess }[MODE] || modeKalorimetrie)(card);
+  main.append(card);
+  window.__card = card;
+}
+document.getElementById('btn-new').addEventListener('click', show);
+if (!MODES.some(m => m.id === MODE)) MODE = 'kalorimetrie';
+renderLevels(); renderModes(); show();
+window.__en = { SP, RXF, HESS, dHf, combine, sameRx, setLevel: l => { LEVEL = l; renderLevels(); }, setMode: m => { MODE = m; renderModes(); show(); } };
+})();
+</script>
+</body>
+</html>

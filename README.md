@@ -24,6 +24,7 @@ Die HTML-Tools sind eigenständige Dateien ohne Abhängigkeiten. Man kann sie di
 
 | Thema | Tool | Stufe | Art | Online |
 |---|---|---|---|---|
+| Energetik | [Energetik-Rechentrainer](chemie/energetik/rechentrainer/) | Kursstufe (LF) | Übungsaufgaben (zufällig erzeugt): Kalorimetrie, Satz von Hess | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/chemie/energetik/rechentrainer/) |
 | Energetik | [Gibbs-Helmholtz-Explorer](chemie/energetik/gibbs-helmholtz/) | Kursstufe (LF) | Interaktive Visualisierung + Übungsaufgaben | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/chemie/energetik/gibbs-helmholtz/) |
 
 ### Mathematik
