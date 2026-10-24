@@ -93,6 +93,13 @@
   table.data th, table.data td { border: 1px solid var(--line); padding: 3px 9px; text-align: center; }
   table.data th { background: #f1f5f4; font-weight: 600; }
   .scroll { overflow-x: auto; max-width: 100%; }
+  details.tab { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; margin-bottom: 14px; }
+  details.tab summary { cursor: pointer; font-weight: 600; }
+  .tabgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px 18px; margin-top: 8px; align-items: start; }
+  .tabgrid h4 { margin: 0 0 4px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .tabgrid table.data { width: 100%; }
+  .tabgrid table.data td:first-child { text-align: left; }
+  table.data tr.hl td { background: var(--accent-soft); font-weight: 600; }
 
   .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
   .choice { text-align: left; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
@@ -342,6 +349,24 @@ function dataTable(ids) {
   tb.append(el('tr', null, el('th', { html: 'S° in J/(mol·K)' }), ...ids.map(s => el('td', null, de(SP[s].S)))));
   return el('div', { class: 'scroll' }, tb);
 }
+// vollständige Tabelle aller hinterlegten Stoffe, nach Aggregatzustand gruppiert
+function allTable(hl, open) {
+  const hs = new Set(hl || []);
+  const groups = [['Elemente', k => ELEMENTS.has(k)], ['Gase', k => !ELEMENTS.has(k) && SP[k].f.includes('(g)')], ['Flüssigkeiten', k => SP[k].f.includes('(l)')], ['Feststoffe', k => !ELEMENTS.has(k) && SP[k].f.includes('(s)')]];
+  const grid = el('div', { class: 'tabgrid' });
+  for (const [title, test] of groups) {
+    const keys = Object.keys(SP).filter(test).sort((a, b) => SP[a].H - SP[b].H || SP[a].S - SP[b].S);
+    if (!keys.length) continue;
+    const tb = el('table', { class: 'data', 'aria-label': 'Standardwerte ' + title },
+      el('tr', null, el('th', null, 'Stoff'), el('th', { html: 'Δ<sub>f</sub>H° in kJ/mol' }), el('th', { html: 'S° in J/(mol·K)' })),
+      ...keys.map(k => el('tr', { class: hs.has(k) ? 'hl' : '' }, el('td', { html: SP[k].f }), el('td', null, de(SP[k].H)), el('td', null, de(SP[k].S)))));
+    grid.append(el('div', null, el('h4', null, title), tb));
+  }
+  const d = el('details', { class: 'tab' }, el('summary', null, 'Tabellenwerte (Standardbedingungen, 298 K)'),
+    el('p', { class: 'note', html: 'Δ<sub>f</sub>H° = 0 für Elemente in ihrer stabilsten Form; ihre Standardentropie S° ist aber <b>nicht</b> 0. Gase haben deutlich größere S°-Werte als Flüssigkeiten und Feststoffe.' + (hs.size ? ' Die Stoffe der gewählten Reaktion sind hervorgehoben.' : '') }), grid);
+  if (open) d.open = true;
+  return d;
+}
 const speciesOf = r => [...new Set([...r.e, ...r.p].map(x => x[1]))];
 function thermoCalc(r) {
   const t = (side, k) => side.map(([n, s]) => (n > 1 ? n + '·' : '') + '(' + de(SP[s][k]) + ')').join(' + ');
@@ -406,6 +431,7 @@ function modeErkunden(card) {
   const chartBox = el('div', { class: 'chart' }), legend = el('div', { class: 'legend' });
   const cmpBox = el('div', { class: 'bar' });
   const calcBox = el('details', null, el('summary', null, 'Rechenweg aus den Tabellenwerten'), el('div', { class: 'calc' }));
+  const rxTab = el('div'), allBox = el('div');
   const casesBox = el('div');
   const cmpSel = el('select', { 'aria-label': 'Vergleichsreaktion' }, el('option', { value: '' }, 'Reaktion zum Vergleich hinzufügen …'), ...RX.map(r => el('option', { value: r.id }, r.name)));
   cmpSel.addEventListener('change', () => { if (cmpSel.value && !EXP.cmp.includes(cmpSel.value) && EXP.cmp.length < 4) EXP.cmp.push(cmpSel.value); cmpSel.value = ''; update(); });
@@ -420,6 +446,9 @@ function modeErkunden(card) {
     const c = current();
     eq.innerHTML = EXP.own ? 'eigene Reaktion' : eqHTML(c.r);
     if (!EXP.own) calcBox.querySelector('.calc').textContent = thermoCalc(c.r);
+    rxTab.innerHTML = ''; if (!EXP.own) rxTab.append(dataTable(speciesOf(c.r)));
+    const wasOpen = allBox.firstChild ? allBox.firstChild.open : false;
+    allBox.innerHTML = ''; allBox.append(allTable(EXP.own ? [] : speciesOf(c.r), wasOpen));
     vals.innerHTML = `<span>Δ<sub>r</sub>H° = <b class="h">${sgn(c.H)} kJ</b></span><span>Δ<sub>r</sub>S° = <b class="s">${sgn(c.S)} J/K</b></span>`;
     const lines = [Object.assign({ color: COLORS[0] }, c)].concat(EXP.cmp.filter(id => EXP.own || id !== EXP.rx).map((id, k) => { const r = RX.find(q => q.id === id); return Object.assign(thermo(r), { label: r.name, color: COLORS[(k + 1) % COLORS.length] }); }));
     const svg = makeChart(lines, { Tmax: EXP.Tmax, cursor: EXP.T });
@@ -440,10 +469,11 @@ function modeErkunden(card) {
   [sel, tmaxSel].forEach(i => i.addEventListener('change', update));
   [hR, sR].forEach(i => i.addEventListener('input', update));
   tR.addEventListener('input', update);
-  card.append(el('div', { class: 'bar' }, el('label', null, 'Reaktion: ', sel)), el('div', { class: 'row' }, eq), own, vals, calcBox,
+  card.append(el('div', { class: 'bar' }, el('label', null, 'Reaktion: ', sel)), el('div', { class: 'row' }, eq), rxTab, own, vals, calcBox,
     el('div', { class: 'row' }, el('div', { class: 'col grow' }, chartBox, legend, cmpBox,
       el('div', { class: 'bar' }, el('label', null, 'Temperatur: '), tR, tmaxSel), readout),
       el('div', { class: 'col' }, verdict, el('span', { class: 'lbl-small' }, 'Die vier Fälle'), casesBox)));
+  card.append(allBox);
   update();
 }
 
@@ -616,6 +646,7 @@ function show() {
   const card = el('section', { class: 'card' });
   ({ erkunden: modeErkunden, faelle: modeFaelle, dg: modeDG, grenz: modeGrenz }[MODE] || modeErkunden)(card);
   main.append(card);
+  if (MODE !== 'erkunden' && LEVEL === 'schwer') main.append(allTable([]));
 }
 document.getElementById('btn-new').addEventListener('click', show);
 if (!MODES.some(m => m.id === MODE)) MODE = 'erkunden';
