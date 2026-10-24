@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zählschleife – Übungen</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/processing.js/1.6.6/processing.min.js"></script>
+<style>
+  :root { --blau:#1f5fa8; --hell:#eef3fa; --rand:#c9d6e8; --text:#1d2533; --fehler:#b3261e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, "Segoe UI", sans-serif; color:var(--text); background:#f6f8fb; }
+  header { background:linear-gradient(90deg,#174f8f,#2f7fd0); color:#fff; padding:10px 16px; display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
+  header b { letter-spacing:.12em; font-size:1.1rem; }
+  main { display:grid; grid-template-columns: 300px minmax(0,1fr); gap:12px; padding:12px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .karte { background:#fff; border:1px solid var(--rand); border-radius:8px; padding:12px; }
+  h2 { font-size:1rem; margin:0 0 8px; }
+  .aufgabe { border-left:3px solid var(--rand); padding:6px 8px; margin:6px 0; font-size:.9rem; line-height:1.35; }
+  .aufgabe code { background:var(--hell); padding:0 3px; border-radius:3px; }
+  .erinnerung pre { background:var(--hell); padding:6px 8px; border-radius:6px; margin:6px 0; font-size:.85rem; }
+  .arbeit { display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .leiste { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  button { font:inherit; border:1px solid var(--blau); background:#fff; color:var(--blau); border-radius:6px; padding:6px 12px; cursor:pointer; }
+  button.haupt { background:var(--blau); color:#fff; }
+  button:hover { filter:brightness(.95); }
+  textarea { width:100%; height:420px; font-family: Consolas, "Courier New", monospace; font-size:14px; line-height:1.45;
+             border:1px solid var(--rand); border-radius:6px; padding:8px; tab-size:2; resize:vertical; white-space:pre; }
+  #meldung { font-size:.9rem; min-height:1.3em; }
+  #meldung.fehler { color:var(--fehler); }
+  .leinwand { overflow:auto; background:#e4e8ee; border-radius:6px; padding:8px; }
+  canvas { display:block; background:#ccc; box-shadow:0 1px 4px rgba(0,0,0,.25); }
+  .hinweis { font-size:.8rem; color:#5a6578; }
+</style>
+</head>
+<body>
+<header><b>ALGORITHMEN</b><span>Zählschleifen in Java – weitere Übungen</span></header>
+<main>
+  <aside class="karte">
+    <div class="erinnerung">
+      <h2>Zur Erinnerung</h2>
+      <pre>for (int i=0; i&lt;=2; i++) {
+
+}</pre>
+      <div class="hinweis">Startwert <code>i=0</code>, Bedingung <code>i&lt;=2</code>, Schrittweite <code>i++</code>: i nimmt die Werte 0, 1, 2 an.</div>
+    </div>
+    <h2 style="margin-top:14px">Aufgaben</h2>
+    <div class="aufgabe"><b>1a</b> <code>zeichneQuadrate()</code>: 10 gleich große Quadrate direkt nebeneinander.</div>
+    <div class="aufgabe"><b>1b</b> <code>zeichneFarbQuadrate()</code>: 10 weitere Quadrate, die von links nach rechts immer dunkler werden.</div>
+    <div class="aufgabe"><b>2a</b> <code>zeichneKreise()</code>: 20 Kreise ineinander, die immer kleiner werden (vorher <code>fill(255)</code>).</div>
+    <div class="aufgabe"><b>2b</b> <code>zeichneFarbKreise()</code>: 10 Kreise ineinander, die immer dunkler oder heller werden (Tipp: <code>noStroke()</code>).</div>
+    <div class="aufgabe"><b>3</b> <code>zeichneTreppenstufen()</code>: Treppenstufen, die nach oben führen (z.&nbsp;B. <code>stroke(0)</code>).</div>
+    <div class="aufgabe"><b>4</b> <code>reihenhaussiedlung()</code>: fünf gleiche Häuser nebeneinander.</div>
+    <div class="aufgabe"><b>5</b> <code>seifenblasen()</code>: 100 verschiedenfarbige Kreise an zufälligen Stellen (<code>random(255)</code>).</div>
+    <p class="hinweis">Eine Methode wird nur ausgeführt, wenn du in <code>setup()</code> die Kommentarstriche <code>//</code> vor ihrem Aufruf entfernst.</p>
+  </aside>
+
+  <section class="arbeit">
+    <div class="karte">
+      <div class="leiste">
+        <button class="haupt" id="start">▶ Ausführen</button>
+        <button id="zurueck">Vorlage wiederherstellen</button>
+        <button id="loesung">Musterlösung ansehen</button>
+        <span class="hinweis">Strg+Enter führt aus · dein Code wird im Browser gespeichert</span>
+      </div>
+      <textarea id="code" spellcheck="false"></textarea>
+      <div id="meldung"></div>
+    </div>
+    <div class="karte">
+      <h2 id="titel">Ausgabe</h2>
+      <div class="leinwand"><canvas id="bild"></canvas></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const VORLAGE = `void setup() {
+  size(1000, 600);
+  zeichneQuadrate();
+  //zeichneFarbQuadrate();
+  //zeichneKreise();
+  //zeichneFarbKreise();
+  //zeichneTreppenstufen();
+  //reihenhaussiedlung();
+  //seifenblasen();
+}
+
+// Programmiere die folgenden Methoden und rufe sie in der setup-Methode auf
+// (Dazu entfernst du nur die Kommentarstriche zu Beginn der Zeile.)
+
+// Aufgabe 1a:
+void zeichneQuadrate() {
+  // hier folgt dein Code:
+
+}
+
+// Aufgabe 1b:
+void zeichneFarbQuadrate() {
+  // hier folgt dein Code:
+
+}
+
+// Aufgabe 2a:
+void zeichneKreise() {
+  // hier folgt dein Code:
+
+}
+
+// Aufgabe 2b:
+void zeichneFarbKreise() {
+  // hier folgt dein Code:
+
+}
+
+// Aufgabe 3:
+void zeichneTreppenstufen(){
+  // hier folgt dein Code:
+
+}
+
+// Aufgabe 4:
+void reihenhaussiedlung(){
+  // hier folgt dein Code:
+
+}
+
+// Aufgabe 5:
+void seifenblasen(){
+  // hier folgt dein Code:
+
+}
+`;
+
+const LOESUNG = `void setup() {
+  size(1000, 600);
+  zeichneQuadrate();
+  zeichneFarbQuadrate();
+  zeichneKreise();
+  zeichneFarbKreise();
+  zeichneTreppenstufen();
+  reihenhaussiedlung();
+}
+
+void zeichneQuadrate() {
+  for (int i=0; i<10; i++) {
+    rect(10+i*20, 10, 20, 20);
+  }
+}
+
+void zeichneFarbQuadrate() {
+  for (int i=0; i<10; i++) {
+    fill(255-i*16, 0, 0);
+    rect(220+i*20, 10, 20, 20);
+  }
+}
+
+void zeichneKreise() {
+  fill(255);
+  for (int i=0; i<20; i++) {
+    ellipse(120, 200, 210-i*10, 210-i*10);
+  }
+}
+
+void zeichneFarbKreise() {
+  noStroke();
+  for (int i=0; i<20; i++) {
+    fill(67+i*16, 138-i*8, 222-i*16);
+    ellipse(350, 200, 210-i*10, 210-i*10);
+  }
+}
+
+void zeichneTreppenstufen() {
+  stroke(0);
+  for (int i=0; i<6; i++) {
+    line(10+i*30, 590-i*20, 10+i*30, 570-i*20);
+    line(10+i*30, 570-i*20, 40+i*30, 570-i*20);
+  }
+}
+
+void reihenhaussiedlung() {
+  for (int i=0; i<5; i++) {
+    fill(#8AB8F0);
+    rect(250+i*100, 450, 100, 100);
+    fill(#621009);
+    triangle(250+i*100, 450, 250+i*100+50, 410, 250+i*100+100, 450);
+    fill(#132564);
+    rect(250+i*100+60, 510, 20, 40);
+    fill(#F9FC45);
+    rect(250+i*100+20, 480, 20, 20);
+  }
+}
+
+// Aufgabe 5 (eigenes Fenster in der Originaldatei):
+void seifenblasen() {
+  for (int i=0; i<100; i++) {
+    fill(random(255), random(255), random(255));
+    circle(random(width), random(height), random(50));
+  }
+}
+`;
+
+// Processing.js kennt circle() und square() aus Processing 3.5 noch nicht.
+const ERGAENZUNG = `
+void circle(float x, float y, float d) { ellipse(x, y, d, d); }
+void square(float x, float y, float s) { rect(x, y, s, s); }
+`;
+
+const SPEICHER = "zaehlschleife-uebungen-code";
+const feld = document.getElementById("code");
+const meldung = document.getElementById("meldung");
+const titel = document.getElementById("titel");
+let instanz = null;
+
+function laden() {
+  try { return localStorage.getItem(SPEICHER); } catch (e) { return null; }
+}
+function speichern() {
+  try { localStorage.setItem(SPEICHER, feld.value); } catch (e) {}
+}
+
+function melde(text, fehler) {
+  meldung.textContent = text;
+  meldung.className = fehler ? "fehler" : "";
+}
+
+function ausfuehren(quelltext, ueberschrift) {
+  if (typeof Processing === "undefined") {
+    melde("Processing.js konnte nicht geladen werden – besteht eine Internetverbindung?", true);
+    return;
+  }
+  if (instanz) { try { instanz.exit(); } catch (e) {} instanz = null; }
+  const alt = document.getElementById("bild");
+  const neu = document.createElement("canvas");
+  neu.id = "bild";
+  alt.replaceWith(neu);
+  titel.textContent = ueberschrift;
+  try {
+    instanz = new Processing(neu, quelltext + ERGAENZUNG);
+    melde("Programm ausgeführt.", false);
+  } catch (e) {
+    // Processing.js liefert bei Tippfehlern oft nur technische Meldungen
+    melde("Das Programm enthält einen Fehler. Prüfe Semikolons, Klammern und die Schreibweise der Befehle. (Technische Meldung: " + (e && e.message ? e.message : e) + ")", true);
+  }
+}
+
+feld.value = laden() || VORLAGE;
+
+document.getElementById("start").onclick = () => { speichern(); ausfuehren(feld.value, "Ausgabe"); };
+document.getElementById("zurueck").onclick = () => {
+  if (confirm("Deinen Code durch die leere Vorlage ersetzen?")) { feld.value = VORLAGE; speichern(); melde("Vorlage wiederhergestellt.", false); }
+};
+document.getElementById("loesung").onclick = () => ausfuehren(LOESUNG, "Musterlösung (dein Code bleibt im Editor)");
+
+feld.addEventListener("input", speichern);
+feld.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault(); document.getElementById("start").click();
+  } else if (e.key === "Tab") {
+    e.preventDefault();
+    const a = feld.selectionStart, b = feld.selectionEnd;
+    feld.value = feld.value.slice(0, a) + "  " + feld.value.slice(b);
+    feld.selectionStart = feld.selectionEnd = a + 2;
+    speichern();
+  }
+});
+
+window.addEventListener("error", (e) => melde("Fehler: " + e.message, true));
+</script>
+</body>
+</html>

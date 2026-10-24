@@ -502,12 +502,47 @@ function pixels(res, o = {}) {
   const ctx = c.getContext('2d'); paint(ctx, res, o);
   return ctx.getImageData(0, 0, res.W, res.H).data;
 }
-function samePicture(a, b, oa = {}, ob = {}) {
-  if (!a || !b || a.W !== b.W || a.H !== b.H) return false;
+function diffCount(a, b, oa = {}, ob = {}) {
   const pa = pixels(a, oa), pb = pixels(b, ob);
   let diff = 0;
   for (let k = 0; k < pa.length; k += 4) if (Math.abs(pa[k] - pb[k]) > 40 || Math.abs(pa[k + 1] - pb[k + 1]) > 40 || Math.abs(pa[k + 2] - pb[k + 2]) > 40) diff++;
-  return diff <= 2;
+  return diff;
+}
+// Menge der gezeichneten Formen (unabhängig von der Zeichenreihenfolge), mit Darstellungsoptionen
+function geomKey(res, o = {}) {
+  const r2 = v => Math.round(v * 100) / 100, H = res.H, out = new Set();
+  for (const op of res.ops) {
+    if (op.t === 'background') continue;
+    const a = op.a.slice(); let k;
+    if (op.t === 'rect') {
+      let [x, y, w, h] = a; if (o.anchorSwap) { x -= w / 2; y -= h / 2; }
+      if (w < 0) { x += w; w = -w; } if (h < 0) { y += h; h = -h; }
+      if (o.flipY) y = H - y - h;
+      k = ['r', x, y, w, h];
+    } else if (op.t === 'ellipse') {
+      let [x, y, w, h] = a; if (o.anchorSwap) { x += w / 2; y += h / 2; }
+      if (o.flipY) y = H - y;
+      k = ['e', x, y, Math.abs(w), Math.abs(h)];
+    } else if (op.t === 'line') {
+      let p = [[a[0], a[1]], [a[2], a[3]]].map(([x, y]) => [x, o.flipY ? H - y : y]).sort((u, v) => u[0] - v[0] || u[1] - v[1]);
+      k = ['l', ...p[0], ...p[1]];
+    } else k = [op.t, ...a];
+    out.add(k.map(v => typeof v === 'number' ? r2(v) : v).join(',') + '|' + (op.fill || '-') + '|' + (op.stroke || '-') + '|' + op.sw);
+  }
+  return [...out].sort().join(';');
+}
+// Für Lösungsprüfungen: gleiches Bild (gleiche Formen in anderer Reihenfolge nur, wenn das Bild praktisch gleich aussieht)
+function samePicture(a, b, oa = {}, ob = {}) {
+  if (!a || !b || a.W !== b.W || a.H !== b.H) return false;
+  const d = diffCount(a, b, oa, ob);
+  if (d <= 2) return true;
+  return d <= 0.01 * a.W * a.H && geomKey(a, oa) === geomKey(b, ob);
+}
+// Für das Aussortieren doppelter Auswahlbilder: auch fast gleiche Bilder gelten als gleich
+function looksAlike(a, b, oa = {}, ob = {}) {
+  if (!a || !b || a.W !== b.W || a.H !== b.H) return false;
+  if (geomKey(a, oa) === geomKey(b, ob)) return true;
+  return diffCount(a, b, oa, ob) <= 0.005 * a.W * a.H;
 }
 
 // =====================================================================
@@ -799,8 +834,11 @@ mode('bild', 'Was wird gezeichnet?',
       if (s.cmd !== 'line') cands.push({ res: right.res, o: { anchorSwap: true }, why: s.cmd === 'rect' ? 'Hier wurde rect() vom Mittelpunkt aus gezeichnet. Die ersten beiden Werte von <code>rect()</code> sind aber die <b>linke obere Ecke</b>.' : 'Hier wurde ellipse() von der linken oberen Ecke aus gezeichnet. Die ersten beiden Werte von <code>ellipse()</code> sind aber der <b>Mittelpunkt</b>.' });
       cands.push({ res: right.res, o: { flipY: true }, why: 'Dieses Bild steht auf dem Kopf. In Processing liegt (0|0) <b>links oben</b>, die y-Achse zeigt nach unten.' });
       const chosen = [right];
-      for (const c of shuffle(cands)) { if (chosen.length >= 4) break; if (!chosen.some(x => samePicture(x.res, c.res, x.o, c.o))) chosen.push(c); }
+      for (const c of shuffle(cands)) { if (chosen.length >= 4) break; if (!chosen.some(x => looksAlike(x.res, c.res, x.o, c.o))) chosen.push(c); }
       if (chosen.length === 4) { opts = shuffle(chosen); break; }
+    }
+    LAST = { opts };
+    {
     }
     card.append(el('p', { class: 'task-text', html: 'Welches Bild zeichnet dieses Programm?' }));
     const fb = feedback();
@@ -843,8 +881,11 @@ mode('wenn', 'Was passiert, wenn …?',
       const right = { res: resOf(change.spec, W, H), ok: true };
       const cands = [{ res: resOf(s, W, H), why: 'Das ist das Bild <b>ohne</b> Änderung.' }, ...others.map(o => ({ res: resOf(o.spec, W, H), why: 'So sähe es aus bei: ' + changeText(s, o.key).html.replace(/^Im Schleifenkopf wird /, '').replace(/^Die Zeile /, '') }))];
       const chosen = [right];
-      for (const c of cands) { if (chosen.length >= 4) break; if (!chosen.some(x => samePicture(x.res, c.res))) chosen.push(c); }
+      for (const c of cands) { if (chosen.length >= 4) break; if (!chosen.some(x => looksAlike(x.res, c.res))) chosen.push(c); }
       if (chosen.length === 4) { opts = shuffle(chosen); change.why = MODS[key].why; break; }
+    }
+    LAST = { opts };
+    {
     }
     const base = makeWin(resOf(s, W, H), { label: 'Ursprüngliches Bild', maxW: 300, maxH: 200 });
     card.append(el('div', { class: 'row' }, codeBox(programLines(s, W, H)), base.wrap));
@@ -879,8 +920,11 @@ mode('zuordnen', 'Schleifen und Bilder zuordnen',
       const dist = modded(base, dk);
       pics = [...specs.map((s, k) => ({ res: resOf(s, W, H), loop: k })), { res: resOf(dist, W, H), loop: -1 }];
       let distinct = true;
-      for (let a = 0; a < pics.length && distinct; a++) for (let b = a + 1; b < pics.length; b++) if (samePicture(pics[a].res, pics[b].res)) { distinct = false; break; }
+      for (let a = 0; a < pics.length && distinct; a++) for (let b = a + 1; b < pics.length; b++) if (looksAlike(pics[a].res, pics[b].res)) { distinct = false; break; }
       if (distinct) { pics = shuffle(pics); break; }
+    }
+    LAST = { pics };
+    {
     }
     const loops = el('div', { class: 'row' });
     specs.forEach((s, k) => loops.append(el('div', { class: 'col' }, el('b', null, `(${k + 1})`), codeBox(loopLines(s)))));
@@ -1021,7 +1065,7 @@ mode('fehler', 'Fehler finden',
       if (bugs.includes('start1') && bugs.includes('le')) continue;
       bugged = clone(s); bugs.forEach(k => MODS[k].apply(bugged));
       ({ W, H } = fitWindow([s]));
-      if (!samePicture(resOf(s, W, H), resOf(bugged, W, H))) break;
+      if (!looksAlike(resOf(s, W, H), resOf(bugged, W, H))) break;
     }
     LAST = { s, W, H };
     const who = pick(NAMES);
