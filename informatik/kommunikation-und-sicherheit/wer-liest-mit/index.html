@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wer liest mit? – Transport- und Ende-zu-Ende-Verschlüsselung</title>
+<style>
+:root{
+  --bg:#F7F5EF; --card:#FFFFFF; --ink:#1E2A3A; --soft:#4A5568; --line:#C9D3DF;
+  --blue:#2B6CB0; --orange:#B34A18; --green:#2F7D4F; --grey:#6B7280; --tint:#E6EDF3; --warm:#FCEFE3;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141B26; --card:#1E2A3A; --ink:#EEF2F6; --soft:#C3CCD8; --line:#3A4A60;
+    --blue:#7FB0E6; --orange:#F2A66B; --green:#79C59A; --grey:#9AA6B2; --tint:#22314A; --warm:#3A2A20; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141B26; --card:#1E2A3A; --ink:#EEF2F6; --soft:#C3CCD8; --line:#3A4A60;
+  --blue:#7FB0E6; --orange:#F2A66B; --green:#79C59A; --grey:#9AA6B2; --tint:#22314A; --warm:#3A2A20; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Calibri,Arial,sans-serif;line-height:1.45}
+main{max-width:1080px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+h1{font-family:Georgia,"Cambria",serif;font-size:clamp(24px,4vw,36px);margin:0 0 6px}
+.lead{color:var(--soft);margin:0 0 20px;font-size:17px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.modes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.modes button{flex:1 1 200px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:16px;font-weight:600;cursor:pointer}
+.modes button[aria-pressed="true"]{border-color:var(--blue);background:var(--tint)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label{font-weight:600}
+input[type=text]{flex:1 1 260px;font-size:16px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-size:16px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}
+.btn.secondary{background:transparent;color:var(--blue);border:2px solid var(--blue)}
+.btn:disabled{opacity:.5;cursor:default}
+.stagewrap{overflow-x:auto}
+.stage{position:relative;min-width:680px;height:370px}
+.track{position:absolute;left:12.5%;right:12.5%;top:132px;height:8px;border-radius:4px;background:var(--line)}
+.seg{position:absolute;top:132px;height:8px;border-radius:4px;transition:background .3s}
+.seg1{left:12.5%;width:25%}.seg2{left:37.5%;width:25%}.seg3{left:62.5%;width:25%}
+.station{position:absolute;top:0;width:25%;text-align:center}
+.st0{left:0}.st1{left:25%}.st2{left:50%}.st3{left:75%}
+.station .icon{width:72px;height:72px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:2px solid var(--line)}
+.station .name{font-weight:700;margin-top:84px}
+.station .sub{font-size:13px;color:var(--soft)}
+.see{position:absolute;top:212px;width:23%;margin-left:1%;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;min-height:96px}
+.see b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--soft)}
+.see .content{font-family:Consolas,"Courier New",monospace;word-break:break-all;margin:3px 0}
+.see .meta{color:var(--soft);font-size:12.5px}
+.clear{color:var(--green);font-weight:700}
+.secret{color:var(--grey)}
+.verdict{font-size:12.5px;font-weight:700;margin-top:4px}
+.verdict.yes{color:var(--orange)}.verdict.no{color:var(--green)}
+.msg{position:absolute;top:86px;left:12.5%;transform:translateX(-50%);transition:left 1.2s ease-in-out;z-index:3;pointer-events:none}
+.msg .card{display:flex;align-items:center;gap:6px;background:var(--warm);border:2px solid var(--orange);border-radius:10px;padding:5px 8px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.status{margin-top:4px;min-height:24px;font-weight:600;color:var(--blue)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:var(--tint)}
+.quiz .q{margin:14px 0 4px;font-weight:700}
+.quiz .opts{display:flex;flex-wrap:wrap;gap:8px}
+.quiz .opts button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 12px;font-size:15px;cursor:pointer}
+.quiz .opts button.right{border-color:var(--green);background:rgba(47,125,79,.12)}
+.quiz .opts button.wrong{border-color:var(--orange);background:rgba(179,74,24,.10)}
+.quiz .fb{font-size:14.5px;min-height:20px;margin-top:4px;color:var(--soft)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--soft);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:22px;height:8px;border-radius:4px;display:inline-block}
+footer{font-size:13px;color:var(--soft);margin-top:24px}
+.themebtn{float:right;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<button class="themebtn" id="themeBtn" aria-label="Hell- oder Dunkelmodus umschalten">Hell/Dunkel</button>
+<h1>Wer liest mit?</h1>
+<p class="lead">Anna schickt Ben über einen Messenger eine Nachricht. Unterwegs sitzt jemand im gleichen Café-WLAN, und die Nachricht läuft über den Server der Messenger-Firma. Wer kann den Inhalt lesen?</p>
+
+<section class="panel" aria-label="Einstellungen">
+  <div class="modes" role="group" aria-label="Art der Verschlüsselung">
+    <button data-mode="none" aria-pressed="true">Ohne Verschlüsselung</button>
+    <button data-mode="transport" aria-pressed="false">Transportverschlüsselung</button>
+    <button data-mode="e2e" aria-pressed="false">Ende-zu-Ende-Verschlüsselung</button>
+  </div>
+  <div class="row">
+    <label for="text">Nachricht:</label>
+    <input id="text" type="text" maxlength="40" value="TREFFEN UM 15 UHR AM BRUNNEN">
+    <button class="btn" id="send">Nachricht senden</button>
+    <button class="btn secondary" id="reset">Zurücksetzen</button>
+  </div>
+  <p class="status" id="status" aria-live="polite">Wähle eine Art der Verschlüsselung und sende die Nachricht.</p>
+</section>
+
+<section class="panel" aria-label="Weg der Nachricht">
+  <div class="stagewrap">
+    <div class="stage" id="stage">
+      <div class="track"></div>
+      <div class="seg seg1" id="seg1"></div>
+      <div class="seg seg2" id="seg2"></div>
+      <div class="seg seg3" id="seg3"></div>
+
+      <div class="station st0"><div class="icon" aria-hidden="true">
+        <svg width="34" height="40" viewBox="0 0 34 40"><rect x="5" y="2" width="24" height="36" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="32" r="2" fill="currentColor"/></svg></div>
+        <div class="name">Anna</div><div class="sub">Absenderin</div></div>
+      <div class="station st1"><div class="icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="14" r="7" fill="none" stroke="currentColor" stroke-width="3"/><path d="M6 38c2-9 8-13 14-13s12 4 14 13" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="13" r="1.6" fill="currentColor"/><circle cx="23" cy="13" r="1.6" fill="currentColor"/></svg></div>
+        <div class="name">Lauscher</div><div class="sub">im Café-WLAN</div></div>
+      <div class="station st2"><div class="icon" aria-hidden="true">
+        <svg width="36" height="40" viewBox="0 0 36 40"><rect x="4" y="3" width="28" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><rect x="4" y="15" width="28" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><rect x="4" y="27" width="28" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="10" cy="8" r="1.6" fill="currentColor"/><circle cx="10" cy="20" r="1.6" fill="currentColor"/><circle cx="10" cy="32" r="1.6" fill="currentColor"/></svg></div>
+        <div class="name">Server</div><div class="sub">der Messenger-Firma</div></div>
+      <div class="station st3"><div class="icon" aria-hidden="true">
+        <svg width="34" height="40" viewBox="0 0 34 40"><rect x="5" y="2" width="24" height="36" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="32" r="2" fill="currentColor"/></svg></div>
+        <div class="name">Ben</div><div class="sub">Empfänger</div></div>
+
+      <div class="see" style="left:0" id="see0"><b>Was sieht Anna?</b><div class="content clear" id="c0"></div><div class="meta" id="m0"></div></div>
+      <div class="see" style="left:25%" id="see1"><b>Was sieht der Lauscher?</b><div class="content" id="c1">–</div><div class="meta" id="m1"></div><div class="verdict" id="v1"></div></div>
+      <div class="see" style="left:50%" id="see2"><b>Was sieht der Server?</b><div class="content" id="c2">–</div><div class="meta" id="m2"></div><div class="verdict" id="v2"></div></div>
+      <div class="see" style="left:75%" id="see3"><b>Was sieht Ben?</b><div class="content" id="c3">–</div><div class="meta" id="m3"></div></div>
+
+      <div class="msg" id="msg"><div class="card" id="msgcard">Postkarte</div></div>
+    </div>
+  </div>
+  <div class="legend" id="legend"></div>
+</section>
+
+<section class="grid2">
+  <div class="panel" id="explain" aria-live="polite"></div>
+  <div class="panel">
+    <h2 style="margin:0 0 8px;font-size:20px">Deine Beobachtungen</h2>
+    <p style="margin:0 0 8px;font-size:15px;color:var(--soft)">Probiere alle drei Arten aus. Die Tabelle füllt sich nach jedem Senden.</p>
+    <table>
+      <thead><tr><th>Wer kann den Inhalt lesen?</th><th>Ohne</th><th>Transport</th><th>Ende-zu-Ende</th></tr></thead>
+      <tbody>
+        <tr><td>Lauscher im WLAN</td><td id="t-none-1">?</td><td id="t-transport-1">?</td><td id="t-e2e-1">?</td></tr>
+        <tr><td>Server der Firma</td><td id="t-none-2">?</td><td id="t-transport-2">?</td><td id="t-e2e-2">?</td></tr>
+        <tr><td>Ben</td><td id="t-none-3">?</td><td id="t-transport-3">?</td><td id="t-e2e-3">?</td></tr>
+        <tr><td>Absender und Uhrzeit sichtbar für den Server?</td><td id="t-none-4">?</td><td id="t-transport-4">?</td><td id="t-e2e-4">?</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel quiz" aria-label="Quiz">
+  <h2 style="margin:0;font-size:20px">Teste dich</h2>
+  <div id="quiz"></div>
+</section>
+
+<p class="panel" style="margin-top:8px">Schon fertig? Weiter mit dem <a href="../metadaten-detektiv/" style="color:var(--blue);font-weight:700">Metadaten-Detektiv</a>: Was weiß der Server trotz Ende-zu-Ende-Verschlüsselung?</p>
+<footer>Vereinfachtes Modell für Klasse 7: Der Geheimtext wird hier mit einer Verschiebung wie beim Caesar-Verfahren angedeutet; echte Verfahren sind viel sicherer. Wie Anna und Ben ihren gemeinsamen Schlüssel bekommen, ist ausgeblendet. Viele Messenger kombinieren Ende-zu-Ende- und Transportverschlüsselung. · M. Zimmer · IuM 7 · 2026</footer>
+</main>
+
+<script>
+(function(){
+  var COL = {none:'', t1:'var(--blue)', t2:'var(--orange)', e2e:'var(--green)'};
+  var mode = 'none', busy = false;
+  var $ = function(id){return document.getElementById(id);};
+  var stations = [12.5, 37.5, 62.5, 87.5];
+
+  function lock(color){
+    return '<svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M4 8V5a4 4 0 0 1 8 0v3" fill="none" stroke="'+color+'" stroke-width="2.2"/><rect x="2" y="8" width="12" height="9" rx="2" fill="'+color+'"/></svg>';
+  }
+  function shift(s, k){
+    return s.toUpperCase().replace(/[A-ZÄÖÜ]/g, function(c){
+      var m = {'Ä':'A','Ö':'O','Ü':'U'}; c = m[c] || c;
+      return String.fromCharCode((c.charCodeAt(0)-65+k)%26+65);
+    });
+  }
+  function now(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' Uhr';}
+  var META = '';
+
+  var EXPLAIN = {
+    none: '<h2 style="margin:0 0 6px;font-size:20px">Ohne Verschlüsselung</h2><p style="margin:0">Die Nachricht reist wie eine <b>Postkarte</b>. Jeder, der sie unterwegs in die Hände bekommt, kann sie lesen: der Lauscher im WLAN, der Server – und natürlich Ben.</p>',
+    transport: '<h2 style="margin:0 0 6px;font-size:20px">Transportverschlüsselung</h2><p style="margin:0">Jede <b>Teilstrecke</b> ist verschlüsselt – wie ein Umschlag nur für diesen Weg. Der Lauscher im WLAN sieht nur Geheimtext. Der <b>Server</b> öffnet den Umschlag aber, liest den Klartext und steckt die Nachricht für Ben in einen neuen Umschlag. Beispiel: das Schloss-Symbol im Browser (HTTPS).</p>',
+    e2e: '<h2 style="margin:0 0 6px;font-size:20px">Ende-zu-Ende-Verschlüsselung</h2><p style="margin:0">Anna verschließt die Nachricht so, dass <b>nur Ben</b> sie öffnen kann – wie eine Schatulle, zu der nur Ben den Schlüssel hat. Auch der Server sieht nur Geheimtext und leitet ihn weiter. <b>Aber:</b> Wer an wen und wann schreibt (Metadaten), sieht der Server trotzdem.</p>'
+  };
+
+  function legend(){
+    var l = $('legend');
+    if(mode==='none') l.innerHTML = '<span><i class="sw" style="background:var(--line)"></i>unverschlüsselte Strecke</span>';
+    if(mode==='transport') l.innerHTML = '<span><i class="sw" style="background:var(--blue)"></i>Schlüssel zwischen Anna und Server</span><span><i class="sw" style="background:var(--orange)"></i>Schlüssel zwischen Server und Ben</span>';
+    if(mode==='e2e') l.innerHTML = '<span><i class="sw" style="background:var(--green)"></i>Schlüssel nur bei Anna und Ben</span>';
+  }
+
+  function reset(){
+    ['seg1','seg2','seg3'].forEach(function(s){$(s).style.background='';});
+    for(var i=1;i<4;i++){ $('c'+i).textContent='–'; $('c'+i).className='content'; $('m'+i).textContent=''; var v=$('v'+i); if(v){v.textContent='';v.className='verdict';} }
+    var t = $('text').value.trim() || 'HALLO BEN';
+    $('c0').textContent = t.toUpperCase(); $('m0').textContent = '';
+    var m = $('msg'); m.style.transition='none'; m.style.left = stations[0]+'%'; void m.offsetWidth; m.style.transition='';
+    setCard(0);
+    $('explain').innerHTML = EXPLAIN[mode];
+    legend();
+  }
+
+  function setCard(leg){
+    var c = $('msgcard');
+    if(mode==='none'){ c.innerHTML = '&#9993; Postkarte, offen'; c.style.borderColor='var(--orange)'; }
+    else if(mode==='transport'){ var col = leg<2 ? COL.t1 : COL.t2; c.innerHTML = lock(col)+' Umschlag: '+(leg<2?'Anna → Server':'Server → Ben'); c.style.borderColor=col; }
+    else { c.innerHTML = lock(COL.e2e)+' Schatulle für Ben'; c.style.borderColor=COL.e2e; }
+  }
+
+  function show(i, text, readable){
+    var el = $('c'+i); el.textContent = text; el.className = 'content ' + (readable ? 'clear' : 'secret');
+    $('m'+i).textContent = META;
+    var v = $('v'+i);
+    if(v){ v.textContent = readable ? 'kann den Inhalt lesen' : 'kann den Inhalt nicht lesen'; v.className = 'verdict ' + (readable ? 'yes' : 'no'); }
+  }
+
+  function moveTo(idx){
+    return new Promise(function(res){ $('msg').style.left = stations[idx]+'%'; setTimeout(res, 1300); });
+  }
+  function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function status(t){ $('status').textContent = t; }
+
+  function mark(cell, yes){ var e=$(cell); e.textContent = yes ? 'ja' : 'nein'; e.style.fontWeight='700'; e.style.color = yes ? 'var(--orange)' : 'var(--green)'; }
+
+  async function send(){
+    if(busy) return; busy = true; $('send').disabled = true; reset();
+    var plain = $('text').value.trim().toUpperCase() || 'HALLO BEN';
+    META = 'Von Anna an Ben · ' + now();
+    $('m0').textContent = META;
+    var g1 = shift(plain, 7), g2 = shift(plain, 13), ge = shift(plain, 11);
+
+    if(mode==='transport'){ $('seg1').style.background = COL.t1; $('seg2').style.background = COL.t1; $('seg3').style.background = COL.t2; }
+    if(mode==='e2e'){ ['seg1','seg2','seg3'].forEach(function(s){$(s).style.background=COL.e2e;}); }
+
+    status(mode==='none' ? 'Anna schickt die Nachricht offen los …' : mode==='transport' ? 'Anna verschlüsselt für die Strecke bis zum Server …' : 'Anna verschlüsselt so, dass nur Ben entschlüsseln kann …');
+    await wait(700);
+    await moveTo(1);
+    if(mode==='none') show(1, plain, true); else show(1, mode==='transport' ? g1 : ge, false);
+    status('Die Nachricht kommt am Lauscher im WLAN vorbei.');
+    await wait(900);
+    await moveTo(2);
+    if(mode==='none'){ show(2, plain, true); status('Der Server leitet die offene Nachricht weiter.'); }
+    if(mode==='transport'){
+      show(2, plain, true); status('Der Server entschlüsselt, kann lesen – und verschlüsselt neu für Ben.');
+      await wait(1400); setCard(2);
+    }
+    if(mode==='e2e'){ show(2, ge, false); status('Der Server hat keinen Schlüssel. Er sieht nur Geheimtext und leitet weiter.'); }
+    await wait(1000);
+    await moveTo(3);
+    show(3, plain, true);
+    status(mode==='none' ? 'Ben liest die Nachricht – alle anderen konnten mitlesen.' : mode==='transport' ? 'Ben entschlüsselt und liest. Der Lauscher konnte nicht mitlesen, der Server schon.' : 'Ben entschlüsselt mit seinem Schlüssel. Nur Anna und Ben kennen den Inhalt.');
+    mark('t-'+mode+'-1', mode==='none'); mark('t-'+mode+'-2', mode!=='e2e'); mark('t-'+mode+'-3', true); mark('t-'+mode+'-4', true);
+    busy = false; $('send').disabled = false;
+  }
+
+  document.querySelectorAll('.modes button').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(busy) return;
+      document.querySelectorAll('.modes button').forEach(function(x){x.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed','true'); mode = b.getAttribute('data-mode'); reset();
+      status('Modus: ' + b.textContent + '. Sende die Nachricht.');
+    });
+  });
+  $('send').addEventListener('click', send);
+  $('reset').addEventListener('click', function(){ if(!busy){ reset(); status('Zurückgesetzt.'); } });
+  $('text').addEventListener('input', function(){ if(!busy) $('c0').textContent = $('text').value.toUpperCase(); });
+
+  // Quiz
+  var Q = [
+    {q:'Bei Transportverschlüsselung: Wer kann den Inhalt der Nachricht lesen?', o:['nur Ben','Ben und der Server','alle, auch der Lauscher'], a:1,
+     f:['Nicht ganz: Der Server entschlüsselt die Nachricht, bevor er sie weiterschickt.','Richtig: Jede Strecke ist geschützt, aber der Server öffnet den „Umschlag“.','Nein: Auf den Strecken ist die Nachricht verschlüsselt. Der Lauscher sieht nur Geheimtext.']},
+    {q:'Bei Ende-zu-Ende-Verschlüsselung: Was sieht der Server?', o:['den Klartext','nur Geheimtext – aber wer an wen und wann schreibt','gar nichts'], a:1,
+     f:['Nein: Der Server hat den Schlüssel nicht.','Richtig: Den Inhalt kann er nicht lesen, die Metadaten aber schon.','Nicht ganz: Er sieht den Geheimtext und die Metadaten, sonst könnte er nicht weiterleiten.']},
+    {q:'Was schützt das Schloss-Symbol im Browser (HTTPS)?', o:['die Strecke zwischen dir und der Webseite','die Daten auf dem Server der Webseite','deine Daten vor der Webseite selbst'], a:0,
+     f:['Richtig: HTTPS ist eine Transportverschlüsselung.','Nein: Auf dem Server liegen die Daten wieder im Klartext vor.','Nein: Die Webseite bekommt deine Daten ja – nur unterwegs sind sie geschützt.']},
+    {q:'Der Lauscher sitzt im gleichen WLAN. Wann kann er mitlesen?', o:['nur ohne Verschlüsselung','auch bei Transportverschlüsselung','auch bei Ende-zu-Ende-Verschlüsselung'], a:0,
+     f:['Richtig: Sobald die Strecke verschlüsselt ist, sieht er nur Geheimtext.','Nein: Die Strecke, an der er lauscht, ist verschlüsselt.','Nein: Die Nachricht ist von Anna bis Ben verschlüsselt.']},
+    {q:'Welche Aussage stimmt?', o:['Ende-zu-Ende macht völlig anonym.','Auch bei Ende-zu-Ende bleiben Metadaten sichtbar.','Transportverschlüsselung schützt vor der Firma, die den Server betreibt.'], a:1,
+     f:['Nein: Wer mit wem und wann kommuniziert, kann trotzdem sichtbar sein.','Richtig: Metadaten wie Absender, Empfänger und Uhrzeit sind weiter erkennbar.','Nein: Bei Transportverschlüsselung liest der Server den Klartext.']}
+  ];
+  var qz = $('quiz');
+  Q.forEach(function(item, qi){
+    var d = document.createElement('div');
+    d.innerHTML = '<p class="q">'+(qi+1)+'. '+item.q+'</p><div class="opts"></div><p class="fb" aria-live="polite"></p>';
+    var opts = d.querySelector('.opts'), fb = d.querySelector('.fb');
+    item.o.forEach(function(t, oi){
+      var b = document.createElement('button'); b.type='button'; b.textContent = t;
+      b.addEventListener('click', function(){
+        opts.querySelectorAll('button').forEach(function(x){x.classList.remove('right','wrong');});
+        b.classList.add(oi===item.a ? 'right' : 'wrong'); fb.textContent = item.f[oi];
+      });
+      opts.appendChild(b);
+    });
+    qz.appendChild(d);
+  });
+
+  // Theme toggle (nur für diese Sitzung)
+  $('themeBtn').addEventListener('click', function(){
+    var r = document.documentElement, cur = r.getAttribute('data-theme');
+    var dark = cur ? cur==='dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    r.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+
+  reset();
+})();
+</script>
+</body>
+</html>

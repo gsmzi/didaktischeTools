@@ -18,6 +18,8 @@ Die HTML-Tools sind eigenständige Dateien ohne Abhängigkeiten. Man kann sie di
 | Bildverarbeitung | [Faltungs-Trainer](informatik/bildverarbeitung/faltungs-trainer/) | Kl. 10 (IMP) | Übungsaufgaben (zufällig erzeugt) | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/bildverarbeitung/faltungs-trainer/) |
 | Datenstrukturen | [ADT-Programmierbeispiele](informatik/datenstrukturen/adt-programmierbeispiele/) | Kursstufe | Processing-Vorlagen + Lösungen | – |
 | Netze und Internet | [Internet-Simulator (Palastnetzwerk)](informatik/netze-und-internet/internet-simulator/) | Kl. 7 (IuM) | Client-Server-Rollenspiel im Klassennetz | – (lokaler Node.js-Server) |
+| Kommunikation und Sicherheit | [Wer liest mit?](informatik/kommunikation-und-sicherheit/wer-liest-mit/) | Kl. 7 (IuM) | Simulation + Arbeitsblatt: Transport- und Ende-zu-Ende-Verschlüsselung | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/kommunikation-und-sicherheit/wer-liest-mit/) |
+| Kommunikation und Sicherheit | [Metadaten-Detektiv](informatik/kommunikation-und-sicherheit/metadaten-detektiv/) | Kl. 7 (IuM) | Interaktive Ermittlung + Arbeitsblatt: Was Metadaten verraten | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/kommunikation-und-sicherheit/metadaten-detektiv/) |
 | Technische Informatik | [Mehrbit-Addierer](informatik/technische-informatik/mehrbit-addierer/) | Sek II | Interaktive Visualisierung | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/technische-informatik/mehrbit-addierer/) |
 | Technische Informatik | [RS-Flipflop](informatik/technische-informatik/rs-flipflop/) | Sek II | Interaktive Visualisierung | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/informatik/technische-informatik/rs-flipflop/) |
 
