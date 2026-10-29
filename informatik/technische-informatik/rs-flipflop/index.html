@@ -698,7 +698,7 @@
             <span id="valQ" class="small">0 (Aus)</span>
           </div>
           <div class="led-card">
-            <span>Ausgang P</span>
+            <span>Ausgang Q̅</span>
             <div class="led-indicator led-p" id="ledP"></div>
             <span id="valP" class="small">1 (Ein)</span>
           </div>
@@ -745,8 +745,8 @@
                 <path id="wireRS_Q" class="wire low" d="M 268,230 L 340,230 L 340,70 L 496,70" />
                 <path id="wireRS_P" class="wire low" d="M 268,110 L 310,110 L 310,290 L 496,290" />
                 <!-- Feedback paths -->
-                <path id="wireRS_FBQ" class="wire low" d="M 340,230 L 340,150 L 140,150 L 140,125 L 170,125" />
-                <path id="wireRS_FBP" class="wire low" d="M 310,110 L 310,190 L 120,190 L 120,215 L 170,215" />
+                <path id="wireRS_FBQ" class="wire low" d="M 340,230 L 340,165 L 140,165 L 140,125 L 170,125" />
+                <path id="wireRS_FBP" class="wire low" d="M 310,110 L 310,177 L 120,177 L 120,215 L 170,215" />
                 <!-- Square dots -->
                 <rect id="dotRS_Q" class="conn-dot" x="337" y="227" width="6" height="6" />
                 <rect id="dotRS_P" class="conn-dot" x="307" y="107" width="6" height="6" />
@@ -945,7 +945,7 @@
               </g>
               <g id="ledVisualP" transform="translate(10,0)">
                 <circle cx="515" cy="290" r="14" fill="#cbd5e1" stroke="#475569" stroke-width="2" />
-                <text x="515" y="294" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle">P</text>
+                <text x="515" y="294" font-size="11" font-weight="bold" fill="#334155" text-anchor="middle"><tspan text-decoration="overline">Q</tspan></text>
               </g>
             </svg>
           </div>
@@ -1039,13 +1039,13 @@
       
       // Dynamic Truth Table definitions for Quiz and Sim modes
       norSteps: [
-        { label: "0 (Start)", R: 0, S: 0, expectedQ: 0, expectedP: 1 },
-        { label: "1", R: 1, S: 0, expectedQ: 0, expectedP: 1 },
-        { label: "2", R: 0, S: 0, expectedQ: 0, expectedP: 1 },
-        { label: "3", R: 0, S: 1, expectedQ: 1, expectedP: 0 },
-        { label: "4", R: 0, S: 0, expectedQ: 1, expectedP: 0 },
-        { label: "5", R: 1, S: 0, expectedQ: 0, expectedP: 1 },
-        { label: "6", R: 0, S: 0, expectedQ: 0, expectedP: 1 }
+        { label: "0 (Start)", S: 0, R: 0, expectedQ: 0, expectedP: 1 },
+        { label: "1", S: 1, R: 0, expectedQ: 1, expectedP: 0 },
+        { label: "2", S: 0, R: 0, expectedQ: 1, expectedP: 0 },
+        { label: "3", S: 0, R: 1, expectedQ: 0, expectedP: 1 },
+        { label: "4", S: 0, R: 0, expectedQ: 0, expectedP: 1 },
+        { label: "5", S: 1, R: 0, expectedQ: 1, expectedP: 0 },
+        { label: "6 (verboten)", S: 1, R: 1, expectedQ: 0, expectedP: 0 }
       ],
       nandSteps: [
         { label: "0 (Start)", R: 1, S: 1, expectedQ: 0, expectedP: 1 },
@@ -1315,7 +1315,7 @@
             </div>
             <div class="switch-card" style="align-items: flex-start; text-align: left; background: #fff;">
               <span style="color: var(--bad);">⚠️ Verbotener Zustand (R=1, S=1)</span>
-              <p class="small" style="margin: 4px 0 0;">Zwingt beide Ausgänge auf 0 (NOR) oder 1 (NAND). Das widerspricht der Bedingung P = Q̅.</p>
+              <p class="small" style="margin: 4px 0 0;">Zwingt beide Ausgänge auf 0 (NOR) oder 1 (NAND). Dann ist Q̅ nicht mehr die Negation von Q – deshalb ist dieser Zustand „verboten“.</p>
             </div>
           </div>
         `;
@@ -1428,7 +1428,7 @@
       els.btnModeQuiz.classList.toggle("active", isQuiz);
       
       els.tableModeHint.textContent = isQuiz 
-        ? "Aufgabenmodus aktiv: Fülle die leeren Q- und P-Felder in der Tabelle aus und klicke auf 'Eingaben prüfen'." 
+        ? "Aufgabenmodus aktiv: Fülle die leeren Q- und Q̅-Felder in der Tabelle aus und klicke auf 'Eingaben prüfen'."
         : "Simulation aktiv: Klicke auf eine Tabellenzeile, um das Flipflop in diesen Zustand zu versetzen.";
       
       els.btnCheckQuiz.hidden = !isQuiz;
@@ -1675,7 +1675,7 @@
       // Determine columns based on flipflop type
       const cols = ["Schritt"];
       if (state.ffType === "RS") {
-        cols.push("R", "S");
+        cols.push("S", "R");
       } else if (state.ffType === "GatedRS") {
         cols.push("C (Clock)", "S", "R");
       } else if (state.ffType === "DLatch") {
@@ -1685,7 +1685,7 @@
       } else if (state.ffType === "T") {
         cols.push("C (Clock)", "T");
       }
-      cols.push("Q (Ausgang oben)", "P (Ausgang unten)");
+      cols.push("Q (Ausgang oben)", "Q̅ (Ausgang unten)");
       
       // Create Header
       const trHead = document.createElement("tr");
@@ -1717,8 +1717,8 @@
         
         // Input columns
         if (state.ffType === "RS") {
-          const tdR = document.createElement("td"); tdR.textContent = step.R; tr.appendChild(tdR);
           const tdS = document.createElement("td"); tdS.textContent = step.S; tr.appendChild(tdS);
+          const tdR = document.createElement("td"); tdR.textContent = step.R; tr.appendChild(tdR);
         } else if (state.ffType === "GatedRS") {
           const tdC = document.createElement("td"); tdC.textContent = step.CLK; tr.appendChild(tdC);
           const tdS = document.createElement("td"); tdS.textContent = step.S; tr.appendChild(tdS);
@@ -2123,13 +2123,13 @@
           if (state.S === 1 && state.R === 1) {
             els.infoBox.classList.add("error"); els.stateTag.textContent = "Verboten";
             els.infoTitle.textContent = "Verbotener Zustand (S=1, R=1)";
-            els.infoText.textContent = "Beide Ausgänge Q und P werden auf 0 gezogen. Das widerspricht P = Q̅.";
+            els.infoText.textContent = "Beide Ausgänge Q und Q̅ werden auf 0 gezogen. Dann ist Q̅ nicht mehr die Negation von Q – verbotener Zustand.";
           } else if (state.S === 1) {
             els.stateTag.textContent = "Setzen"; els.infoTitle.textContent = "Setzen aktiv (S=1, R=0)";
-            els.infoText.textContent = "Ausgang Q wechselt auf 1, P (unten) auf 0.";
+            els.infoText.textContent = "Ausgang Q wechselt auf 1, Q̅ (unten) auf 0.";
           } else if (state.R === 1) {
             els.stateTag.textContent = "Rücksetzen"; els.infoTitle.textContent = "Rücksetzen aktiv (S=0, R=1)";
-            els.infoText.textContent = "Ausgang Q wechselt auf 0, P (unten) auf 1.";
+            els.infoText.textContent = "Ausgang Q wechselt auf 0, Q̅ (unten) auf 1.";
           } else {
             els.stateTag.textContent = "Speichern"; els.infoTitle.textContent = "Speichern (S=0, R=0)";
             els.infoText.textContent = `Kein Eingang aktiv. Gespeichert ist: ${state.Q}.`;
@@ -2245,7 +2245,7 @@
         txt.setAttribute("fill", "#94a3b8");
         txt.setAttribute("font-size", "11");
         txt.setAttribute("font-weight", "bold");
-        txt.textContent = sig === "CLK" ? "C" : sig;
+        txt.textContent = sig === "CLK" ? "C" : (sig === "P" ? "Q̅" : sig);
         els.waveYLabels.appendChild(txt);
         
         // Dotted grid line
