@@ -50,6 +50,11 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
     button:focus-visible,
     input:focus-visible {
       outline: 2px solid var(--accent);
@@ -178,7 +183,7 @@
     }
 
     .segmented button.active,
-    .ghost:hover {
+    .ghost:hover:not(:disabled) {
       background: #fff;
       border-color: var(--line);
       box-shadow: 0 3px 10px rgba(20, 33, 48, 0.08);
@@ -424,7 +429,8 @@
       outline: 2px solid rgba(255,255,255,0.46);
     }
 
-    .binary-string span.highlight {
+    .binary-string span.highlight,
+    .binary-string span.animation-active {
       box-shadow: 0 0 0 2px var(--accent) inset;
       background: rgba(18, 103, 177, 0.2);
     }
@@ -506,7 +512,8 @@
       box-shadow: inset 0 0 0 2px rgba(18, 103, 177, 0.12);
     }
 
-    .stage.highlight {
+    .stage.highlight,
+    .stage.animation-active {
       box-shadow: 0 0 0 3px var(--accent) inset;
       border-color: var(--accent);
     }
@@ -826,7 +833,7 @@
           <div class="section-title">
             <h2>Schriftliche Bitrechnung</h2>
             <div style="display: flex; gap: 8px;">
-              <button type="button" class="ghost" id="playBtn">▶ Animation</button>
+              <button type="button" class="ghost" id="playBtn" aria-describedby="animationStatus">▶ Animation</button>
               <button type="button" class="ghost" id="randomBtn">Neue Aufgabe</button>
             </div>
           </div>
@@ -852,6 +859,7 @@
               <span class="binary-string" id="sumLine"></span>
             </div>
           </div>
+          <p class="hint" id="animationStatus" role="status" aria-live="polite">Die Animation rechnet von Bit 0 (rechts) nach links.</p>
           <p class="hint operation-hint" id="operationHint"></p>
         </section>
 
@@ -973,8 +981,23 @@
       newTaskBtn: document.getElementById("newTaskBtn"),
       checkTaskBtn: document.getElementById("checkTaskBtn"),
       playBtn: document.getElementById("playBtn"),
+      animationStatus: document.getElementById("animationStatus"),
       randomBtn: document.getElementById("randomBtn")
     };
+
+    let animInterval = null;
+
+    function stopAnimation() {
+      if (animInterval !== null) clearInterval(animInterval);
+      animInterval = null;
+      state.animStep = null;
+    }
+
+    function resetCalculation() {
+      stopAnimation();
+      state.task.feedback = "";
+      els.animationStatus.textContent = "Die Animation rechnet von Bit 0 (rechts) nach links.";
+    }
 
     function mask() {
       return (1 << state.width) - 1;
@@ -1052,6 +1075,7 @@
     }
 
     function setBit(valueName, bit) {
+      resetCalculation();
       state[valueName] = state[valueName] ^ (1 << bit);
       state.task.feedback = "";
       render();
@@ -1092,6 +1116,7 @@
         }
         span.dataset.hoverBit = bitIndex;
         if (highlightSignBit && index === 0) span.className = "sign-bit";
+        span.classList.toggle("animation-active", bitIndex === state.animStep);
         container.appendChild(span);
       });
     }
@@ -1109,10 +1134,11 @@
       const finalStage = stages[stages.length - 1];
       const overflowSpan = document.createElement("span");
       overflowSpan.className = "carry-bit";
-      overflowSpan.textContent = (answersHidden() || (state.animStep !== null && state.animStep < state.width)) ? "?" : finalStage.carryOut;
+      overflowSpan.textContent = (answersHidden() || (state.animStep !== null && state.animStep < finalStage.bit)) ? "?" : finalStage.carryOut;
       overflowSpan.title = `ü_${finalStage.bit} aus dem höchsten Bit`;
       overflowSpan.setAttribute("style", carryStyle(finalStage.bit));
       overflowSpan.dataset.hoverBit = finalStage.bit;
+      overflowSpan.classList.toggle("animation-active", finalStage.bit === state.animStep);
       container.appendChild(overflowSpan);
 
       stages.slice(1).reverse().forEach(stage => {
@@ -1122,6 +1148,7 @@
         span.title = `ü_${stage.bit - 1}`;
         span.setAttribute("style", carryStyle(stage.bit - 1));
         span.dataset.hoverBit = stage.bit - 1;
+        span.classList.toggle("animation-active", stage.bit - 1 === state.animStep);
         container.appendChild(span);
       });
 
@@ -1210,7 +1237,28 @@
       renderBitControls(els.aBits, els.aBitIndex, "a");
       renderBitControls(els.bBits, els.bBitIndex, "b");
 
-      const hideAnswers = answersHidden();
+      const taskHidden = answersHidden();
+      if (taskHidden) stopAnimation();
+      const wasDisabled = els.playBtn.disabled;
+      els.playBtn.disabled = taskHidden;
+      els.playBtn.title = taskHidden ? "Prüfe zuerst deine Antwort, um die Animation freizuschalten." : "Rechnung schrittweise animieren";
+      if (taskHidden) {
+        els.animationStatus.textContent = "Die Animation ist im Aufgabenmodus gesperrt, solange die Antwort ungeprüft ist. Klicke auf „Prüfen“, um sie freizuschalten.";
+      } else if (wasDisabled) {
+        els.animationStatus.textContent = "Die Animation rechnet von Bit 0 (rechts) nach links.";
+      }
+      const hideAnswers = taskHidden || (state.animStep !== null && state.animStep < state.width - 1);
+      els.playBtn.textContent = state.animStep !== null ? "⏹ Stopp" : "▶ Animation";
+      els.playBtn.setAttribute("aria-pressed", String(state.animStep !== null));
+      if (state.animStep !== null) {
+        if (state.animStep < 0) {
+          els.animationStatus.textContent = "Start bei Bit 0 (rechts). Summe und Überträge werden schrittweise sichtbar.";
+        } else {
+          const stage = stages[state.animStep];
+          const carryText = stage.bit === 0 && state.op === "add" ? "" : ` + ${stage.carryIn} (Übertrag)`;
+          els.animationStatus.textContent = `Bit ${stage.bit}: ${stage.ai} + ${stage.bi}${carryText} ergibt Summe ${stage.sum} und Übertrag ${stage.carryOut}.`;
+        }
+      }
       els.aValue.textContent = displayValue(state.a);
       els.bValue.textContent = displayValue(state.b);
       els.sumValue.textContent = hideAnswers ? "?" : displayValue(resultRaw);
@@ -1223,9 +1271,9 @@
       els.overflowLabel.textContent = overflowName;
       els.overflowValue.textContent = hideAnswers ? "?" : (activeOverflow ? "ja" : "nein");
       els.activeOverflow.classList.toggle("bad", !hideAnswers && activeOverflow);
-      els.activeOverflow.textContent = hideAnswers ? "Antwort offen" : (activeOverflow ? overflowName : `kein ${overflowName}`);
+      els.activeOverflow.textContent = hideAnswers ? (taskHidden ? "Antwort offen" : "Berechnung läuft") : (activeOverflow ? overflowName : `kein ${overflowName}`);
       if (hideAnswers) {
-        els.overflowText.textContent = "Prüfe zuerst deine Antwort im Aufgabenmodus.";
+        els.overflowText.textContent = answersHidden() ? "Prüfe zuerst deine Antwort im Aufgabenmodus." : "Die Berechnung läuft von rechts nach links.";
       } else if (state.mode === "signed") {
         els.overflowText.innerHTML = `Am Vorzeichenbit gilt: ü<sub>x-1</sub> = ${signCarryIn} (Carry in), ü<sub>x</sub> = ${finalCarry} (Carry out).`;
       } else if (state.op === "sub") {
@@ -1270,11 +1318,13 @@
         const isHalfAdder = stage.bit === 0 && state.op === "add";
         const isSignStage = stage.bit === state.width - 1;
         const stageType = isHalfAdder ? "Halbaddierer" : "Volladdierer";
+        const showCarryIn = !answersHidden() && (state.animStep === null || stage.bit - 1 <= state.animStep);
         const inputCarry = isHalfAdder ? "" : `
-            <div class="signal carry" style="${carryStyle(stage.bit - 1)}" title="Dieselbe Farbe wie ü_${stage.bit - 1} an der vorherigen Stufe"><small>ü<sub>${stage.bit - 1}</sub><br>Carry in</small><b>${stage.carryIn}</b></div>`;
+            <div class="signal carry" style="${carryStyle(stage.bit - 1)}" title="Dieselbe Farbe wie ü_${stage.bit - 1} an der vorherigen Stufe"><small>ü<sub>${stage.bit - 1}</sub><br>Carry in</small><b>${stage.bit === 0 || showCarryIn ? stage.carryIn : "?"}</b></div>`;
         const article = document.createElement("article");
         article.className = `stage${isSignStage ? " sign-stage" : ""}${isHalfAdder ? " half-stage" : ""}`;
         article.dataset.hoverBit = stage.bit;
+        article.classList.toggle("animation-active", stage.bit === state.animStep);
 
         const showResult = !answersHidden() && (state.animStep === null || stage.bit <= state.animStep);
         const dispSum = showResult ? stage.sum : "?";
@@ -1304,6 +1354,7 @@ ${inputCarry}
     }
 
     function setWidth(width) {
+      resetCalculation();
       state.width = width;
       state.a &= mask();
       state.b &= mask();
@@ -1313,6 +1364,7 @@ ${inputCarry}
     }
 
     function setMode(mode) {
+      resetCalculation();
       state.mode = mode;
       state.task.overflowGuess = null;
       state.task.feedback = "";
@@ -1320,6 +1372,7 @@ ${inputCarry}
     }
 
     function setOp(op) {
+      resetCalculation();
       state.op = op;
       state.task.overflowGuess = null;
       state.task.feedback = "";
@@ -1327,6 +1380,7 @@ ${inputCarry}
     }
 
     function setTaskEnabled(enabled) {
+      resetCalculation();
       state.task.enabled = enabled;
       state.task.active = false;
       state.task.guess = Array(state.width).fill(0);
@@ -1337,6 +1391,7 @@ ${inputCarry}
     }
 
     function startTask() {
+      resetCalculation();
       state.task.enabled = true;
       state.a = Math.floor(Math.random() * (mask() + 1));
       state.b = Math.floor(Math.random() * (mask() + 1));
@@ -1380,30 +1435,35 @@ ${inputCarry}
     });
 
     els.aNumber.addEventListener("input", event => {
+      resetCalculation();
       state.a = fromDisplayed(event.target.value);
       state.task.feedback = "";
       render();
     });
 
     els.bNumber.addEventListener("input", event => {
+      resetCalculation();
       state.b = fromDisplayed(event.target.value);
       state.task.feedback = "";
       render();
     });
 
     els.aRange.addEventListener("input", event => {
+      resetCalculation();
       state.a = fromDisplayed(event.target.value);
       state.task.feedback = "";
       render();
     });
 
     els.bRange.addEventListener("input", event => {
+      resetCalculation();
       state.b = fromDisplayed(event.target.value);
       state.task.feedback = "";
       render();
     });
 
     els.randomBtn.addEventListener("click", () => {
+      resetCalculation();
       state.a = Math.floor(Math.random() * (mask() + 1));
       state.b = Math.floor(Math.random() * (mask() + 1));
       state.task.feedback = "";
@@ -1438,25 +1498,20 @@ ${inputCarry}
       }
     });
 
-    let animInterval = null;
     els.playBtn.addEventListener("click", () => {
-      if (animInterval) {
-        clearInterval(animInterval);
-        animInterval = null;
-        state.animStep = null;
-        els.playBtn.textContent = "▶ Animation";
+      if (answersHidden()) return;
+      if (animInterval !== null) {
+        stopAnimation();
+        els.animationStatus.textContent = "Animation gestoppt. Das vollständige Ergebnis ist sichtbar.";
         render();
       } else {
         state.animStep = -1;
-        els.playBtn.textContent = "⏹ Stopp";
         render();
         animInterval = setInterval(() => {
           state.animStep++;
           if (state.animStep >= state.width) {
-            clearInterval(animInterval);
-            animInterval = null;
-            state.animStep = null;
-            els.playBtn.textContent = "▶ Animation";
+            stopAnimation();
+            els.animationStatus.textContent = "Animation abgeschlossen. Alle Summenbits und Überträge sind sichtbar.";
           }
           render();
         }, 800);
