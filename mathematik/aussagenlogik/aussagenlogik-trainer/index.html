@@ -64,6 +64,15 @@ canvas{max-width:100%;height:auto;border-radius:8px;touch-action:manipulation}
 .swatch{display:inline-block;width:56px;height:36px;border-radius:6px;border:1px solid var(--line);vertical-align:middle}
 footer{max-width:980px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:.85rem}
 .ylab{height:42px;display:flex;align-items:center}
+#side{display:none}
+.work.two #side{display:block;margin-top:12px}
+.work.two .term{display:inline-block;white-space:normal}
+#side p{margin:0 0 6px}
+.lawpick{max-height:45vh;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:4px}
+.lawpick label{display:flex;gap:8px;align-items:baseline;padding:4px 8px;border-radius:6px;font-size:.92rem;cursor:pointer}
+.lawpick label:hover{background:var(--accent-soft)}
+.lawpick label:has(input:checked){background:var(--accent-soft);outline:1px solid var(--accent)}
+@media (min-width:800px){.work.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}.work.two #main{position:sticky;top:12px}.work.two #side{margin-top:0}.lawpick{max-height:none}}
 @media (max-width:600px){.grid div,.grid input{width:36px;height:36px}.axis span{width:36px}.ylab{height:36px}}
 </style></head>
 <body>
@@ -75,9 +84,10 @@ footer{max-width:980px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font
   <label><input type="checkbox" id="predict"> Erst vorhersagen (bei Wahrheitstafeln)</label>
   <span class="score" id="score"></span>
 </div>
-<section class="card"><div id="task"></div>
+<section class="card"><div class="work" id="work"><div id="main"><div id="task"></div>
   <div class="btns"><button class="btn" id="check">Prüfen</button><button class="btn sec" id="tip">Tipp</button><button class="btn sec" id="new">Neue Aufgabe</button></div>
-  <div class="fb" id="fb"></div>
+  <div class="fb" id="fb"></div></div>
+  <div id="side"></div></div>
 </section>
 <section class="card" id="lawbox"><details><summary>Rechengesetze (Tabelle wie in der Klassenarbeit)</summary>
   <div class="scroll"><table class="tt" id="lawtable"></table></div></details></section>
@@ -406,11 +416,10 @@ function showScore() { const s = APP.score[APP.mode] || {r: 0, n: 0}; $('#score'
 function fb(kind, html) { const f = $('#fb'); f.className = 'fb ' + kind; f.innerHTML = html; }
 function T(x) { return `<span class="term">${str(x)}</span>`; }
 function lawText(id) { const l = LAW[id]; return `(${id}) ${l.name}: ${str(l.L).replace(/A/g,'a').replace(/B/g,'b').replace(/C/g,'c')} ⇔ ${str(l.R).replace(/A/g,'a').replace(/B/g,'b').replace(/C/g,'c')}`; }
-function lawSelect(id) {
-  const s = el('select', {id});
-  s.append(el('option', {value: ''}, '– Gesetz wählen –'));
-  for (const l of LAWS) s.append(el('option', {value: l.id}, lawText(l.id)));
-  return s;
+function lawPicker(name) {
+  const box = el('div', {class: 'lawpick', role: 'radiogroup', 'aria-label': 'Rechengesetz wählen'});
+  for (const l of LAWS) box.append(el('label', {}, el('input', {type: 'radio', name, value: l.id}), lawText(l.id)));
+  return box;
 }
 function envText(e) { return Object.entries(e).map(([k, v]) => `${k} = ${v}`).join(', '); }
 
@@ -560,10 +569,10 @@ function renderGesetz() {
   const t = APP.task, box = $('#task'); box.innerHTML = '';
   box.append(el('p', {class: 'task', html: `Welches Rechengesetz wurde bei diesem Umformungsschritt angewendet?`}));
   box.append(el('p', {class: 'task', html: `${T(t.t1)} &nbsp;⇔&nbsp; ${T(t.t2)}`}));
-  box.append(lawSelect('lawsel'));
+  $('#side').append(lawPicker('lawsel'));
 }
 function checkGesetz() {
-  const t = APP.task, v = $('#lawsel').value;
+  const t = APP.task, v = $('input[name=lawsel]:checked')?.value;
   if (!v) return fb('bad', 'Bitte wähle ein Gesetz aus.');
   if (t.ok.includes(v)) { count(true); return fb('ok', `Richtig: ${lawText(v)}.` + (t.ok.length > 1 ? ` (Ebenfalls passend: ${t.ok.filter(x => x !== v).map(x => '(' + x + ')').join(', ')}.)` : '')); }
   count(false);
@@ -633,9 +642,10 @@ function renderFehler() {
   }
   const ex = el('div', {id: 'fextra'}); box.append(ex);
   function extra() {
-    ex.innerHTML = '';
+    ex.innerHTML = ''; $('#side').innerHTML = '';
     const ty = APP.level === 'leicht' ? t.type : t.selType;
-    if (ty === 'gesetz') { ex.append(el('p', {}, 'Welches Gesetz wurde in dieser Zeile tatsächlich angewendet?')); ex.append(lawSelect('flaw')); }
+    $('#work').classList.toggle('two', ty === 'gesetz');
+    if (ty === 'gesetz') $('#side').append(el('p', {}, 'Welches Gesetz wurde in dieser Zeile tatsächlich angewendet?'), lawPicker('flaw'));
     if (ty === 'umformung' && APP.level === 'schwer') {
       ex.append(el('p', {}, 'Wie lautet die Zeile richtig? (Eingabe z. B. mit ! & | oder den Knöpfen)'));
       const inp = el('input', {type: 'text', id: 'fterm', size: 30}); ex.append(symbols(inp), inp);
@@ -659,7 +669,7 @@ function checkFehler() {
     return fb('bad', why + ' Versuche es noch einmal.');
   }
   if (ty === 'gesetz') {
-    const v = $('#flaw') && $('#flaw').value;
+    const v = $('input[name=flaw]:checked')?.value;
     if (!v) return fb('bad', 'Richtige Zeile! Wähle jetzt noch das tatsächlich angewendete Gesetz.');
     if (!stepFits(t.lines[t.errIdx - 1].term, t.lines[t.errIdx].term, v)) { count(false); return fb('bad', `Richtige Zeile, aber (${v}) passt auch nicht. Vergleiche Z${t.errIdx} und Z${t.errIdx + 1} genau.`); }
   }
@@ -850,7 +860,7 @@ const GEN = {wt: genWT, gesetz: genGesetz, fehler: genFehler, venn: genVenn, gle
 const REN = {wt: renderWT, gesetz: renderGesetz, fehler: renderFehler, venn: renderVenn, gleich: renderGleich};
 const CHK = {wt: checkWT, gesetz: checkGesetz, fehler: checkFehler, venn: checkVenn, gleich: checkGleich};
 const TIP = {wt: tipWT, gesetz: tipGesetz, fehler: tipFehler, venn: tipVenn, gleich: tipGleich};
-function newTask() { APP.task = GEN[APP.mode](); $('#fb').className = 'fb'; REN[APP.mode](); showScore(); }
+function newTask() { APP.task = GEN[APP.mode](); $('#fb').className = 'fb'; $('#side').innerHTML = ''; $('#work').classList.toggle('two', APP.mode === 'gesetz'); REN[APP.mode](); showScore(); }
 function setMode(m) {
   APP.mode = m;
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
