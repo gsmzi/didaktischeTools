@@ -6,7 +6,7 @@ Passend zur Einheit *Aussagenlogik* in IMP, Klasse 10 (ZPG-Blätter M10aug01–0
 
 **Aufgabentypen**
 
-1. Wahrheitstafel – Spalten ausfüllen und entscheiden, ob der Term allgemeingültig ist (Terme aus Rechengesetzen und Subjunktionen, teils verfälscht)
+1. Wahrheitstafel – Spalten ausfüllen und entscheiden, ob der Term allgemeingültig ist (Terme aus Rechengesetzen und Subjunktionen, teils verfälscht); geprüft wird erst bei voller Tafel, und die Rückmeldung nennt nur die erste falsche Spalte, nicht die einzelnen Zellen
 2. Gesetz erkennen – zu einem Umformungsschritt das Gesetz aus der Tabelle wählen; passen mehrere, werden alle akzeptiert
 3. Fehler finden – Umformungskette mit genau einem Fehler: typische falsche Umformung (z. B. De Morgan ohne Tausch von ∧ und ∨) oder falsch angegebenes Gesetz; nach einer falschen Umformung wird mit dem falschen Term korrekt weitergerechnet. Stufe schwer: korrigierte Zeile eingeben
 4. Venn-Diagramm – Bereiche zu einem Term färben oder zu einer Färbung einen Term eingeben (schwer: drei Mengen)

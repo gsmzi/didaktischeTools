@@ -34,8 +34,8 @@ table.tt th,table.tt td{border:1px solid var(--line);padding:4px 8px;text-align:
 table.tt th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
 table.tt td.cell{cursor:pointer;user-select:none}
 table.tt td.cell:hover{outline:2px solid var(--accent)}
-td.wrong{background:var(--bad-soft)}
-td.right{background:var(--ok-soft)}
+table.tt th.wrong{background:var(--bad-soft)}
+table.tt th.right{background:var(--ok-soft)}
 .scroll{overflow-x:auto}
 .choice{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .choice button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer}
@@ -487,14 +487,14 @@ function renderWT() {
     return;
   }
   const tbl = el('table', {class: 'tt'});
-  tbl.append(el('tr', {}, ...t.vs.map(v => el('th', {}, v)), ...t.cols.map(c => el('th', {}, str(c)))));
+  tbl.append(el('tr', {}, ...t.vs.map(v => el('th', {}, v)), ...t.cols.map((c, k) => el('th', {'data-col': k}, str(c)))));
   t.rows.forEach((env, r) => {
     const tr = el('tr');
     t.vs.forEach(v => tr.append(el('td', {}, String(env[v]))));
     t.cols.forEach((c, k) => {
       const key = r + ',' + k;
       const td = el('td', {class: 'cell', 'data-key': key}, t.cells[key] ?? '');
-      td.addEventListener('click', () => { t.cells[key] = t.cells[key] === '1' ? '0' : '1'; td.textContent = t.cells[key]; td.classList.remove('wrong', 'right'); });
+      td.addEventListener('click', () => { t.cells[key] = t.cells[key] === '1' ? '0' : '1'; td.textContent = t.cells[key]; tbl.querySelectorAll('th').forEach(h => h.classList.remove('wrong', 'right')); });
       tr.append(td);
     });
     tbl.append(tr);
@@ -508,17 +508,13 @@ function renderWT() {
   function selAns(e, v) { t.answer = v; ch.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b === e.target)); }
 }
 function checkWT() {
-  const t = APP.task; let wrong = 0, empty = 0;
-  t.rows.forEach((env, r) => t.cols.forEach((c, k) => {
-    const key = r + ',' + k, td = document.querySelector(`td[data-key="${key}"]`);
-    const v = t.cells[key];
-    if (v == null) { empty++; return; }
-    const ok = +v === ev(c, env);
-    td.classList.toggle('wrong', !ok); td.classList.toggle('right', ok);
-    if (!ok) wrong++;
-  }));
-  if (empty) return fb('bad', `Es sind noch ${empty} Zellen leer.`);
-  if (wrong) { count(false); return fb('bad', `${wrong} Zelle(n) sind falsch (rot markiert). Prüfe sie Spalte für Spalte.`); }
+  const t = APP.task;
+  const empty = t.rows.length * t.cols.length - Object.keys(t.cells).length;
+  if (empty) return fb('bad', `Fülle zuerst die ganze Tafel aus. Es sind noch ${empty} Zellen leer.`);
+  // Nur die erste falsche Spalte nennen, nicht einzelne Zellen: sonst verrät die Färbung die Lösung
+  const bad = t.cols.findIndex((c, k) => t.rows.some((env, r) => +t.cells[r + ',' + k] !== ev(c, env)));
+  document.querySelectorAll('th[data-col]').forEach(h => { const k = +h.dataset.col; h.classList.toggle('wrong', k === bad); h.classList.toggle('right', bad < 0 || k < bad); });
+  if (bad >= 0) { count(false); return fb('bad', `Die Spalte ${T(t.cols[bad])} stimmt noch nicht. Prüfe sie Zeile für Zeile.`); }
   if (t.answer === null) return fb('bad', 'Die Tafel stimmt. Entscheide jetzt noch, ob der Term allgemeingültig ist.');
   if (t.answer !== t.taut) { count(false); return fb('bad', t.taut ? 'Schau dir die letzte Spalte an: Steht dort überall 1?' : 'Schau dir die letzte Spalte an: Es gibt eine Zeile mit 0.'); }
   count(true);
