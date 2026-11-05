@@ -129,7 +129,7 @@ function str(x, top = true) {
   switch (x.t) {
     case 'var': case 'mv': return x.n;
     case 'const': return String(x.v);
-    case 'not': return '¬' + (isBin(x.a) ? '(' + str(x.a, false) + ')' : str(x.a, false));
+    case 'not': return '¬' + (isBin(x.a) || x.a.t === 'not' ? '(' + str(x.a, false) + ')' : str(x.a, false));
     default: {
       const s = (isBin(x.a) ? '(' + str(x.a, false) + ')' : str(x.a, false)) + ' ' + SYM[x.t] + ' ' +
                 (isBin(x.b) ? '(' + str(x.b, false) + ')' : str(x.b, false));
