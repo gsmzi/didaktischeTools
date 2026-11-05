@@ -1,0 +1,90 @@
+---
+name: didaktische-tools
+description: Erfahrungswerte und Konventionen für die interaktiven Unterrichtstools in diesem Repository (Trainer, Simulationen, Visualisierungen in eigenständigen HTML-Dateien). Immer nutzen, wenn ein Tool neu gebaut, geändert, erweitert oder getestet wird, auch bei kleinen Wünschen zu Layout, Rückmeldung, Aufgabengenerator, Prüfen-Button oder Schreibweisen, und auch wenn das Wort „Tool“ nicht fällt (z. B. „beim Pixel-Trainer sollte …“, „im Flipflop fehlt …“). Nicht für Arbeitsblätter oder Klausuren, dafür gibt es unterrichtsmaterial-zimmer und klausurerstellung.
+---
+
+# Didaktische Tools
+
+Die Tools werden von Schülerinnen und Schülern selbstständig genutzt, meist zur Vorbereitung auf eine Klassenarbeit auf Papier. Ein Tool ist dann gut, wenn man nur durch Nachdenken ans Ziel kommt. Alle Regeln unten folgen daraus.
+
+Die Regeln stammen aus Rückmeldungen von M. Zimmer. Ältere Tools erfüllen nicht alle davon. Bei einer Änderung gilt: das Gewünschte umsetzen und auf andere Tools mit demselben Problem hinweisen, sie aber nicht ungefragt mitändern.
+
+## Lösungen dürfen nicht erratbar sein
+
+Vor dem Fertigstellen fragen: Wie käme jemand ohne Nachdenken zur Lösung? Typische Schlupflöcher:
+
+- **Durchklicken:** Nach einer falschen Antwort ist „Prüfen“ 10 Sekunden gesperrt, mit Countdown auf dem Button. Muster siehe unten.
+- **Rückmeldung verrät die Lösung:** Wenn jede falsche Zelle rot wird, reicht es, überall 1 einzutragen und die roten Zellen umzudrehen. Daher so grob wie möglich zurückmelden, z. B. nur die erste falsche Spalte nennen. Die Rückmeldung soll trotzdem helfen und sagen, wo man weiterdenken muss.
+- **Unvollständige Eingaben:** Sie werden weder gewertet noch gefärbt und lösen keine Sperre aus. Es kommt nur ein Hinweis wie „Es sind noch 15 Zellen leer.“ Färbung vor dieser Prüfung ist ein Leck, weil es ohne Sperre Teilergebnisse verrät.
+- **Hilfen im Aufgabenmodus:** Animationen oder Anzeigen, die das Ergebnis zeigen, sind dort klar gesperrt. Gesperrtes nennt den Grund oder die Restzeit, sonst wirkt es wie ein Fehler.
+- **Selbst bestimmen statt ablesen:** Was geübt werden soll, wird abgefragt und nicht vorgegeben. Auf Stufe schwer darf mehr selbst bestimmt werden als auf leicht.
+- **Aufbau der Aufgabe verrät die Lösung:** Schon die Auswahl der Felder darf nichts zeigen, z. B. welche Atome sich ändern. Auf Stufe schwer kommen deshalb Ablenker dazu.
+- **Auswahlmöglichkeiten:** Keine doppelten Optionen, und die Reihenfolge verrät nichts.
+
+Punkte zählen nur beim ersten Versuch.
+
+## Sperre von „Prüfen“
+
+So umgesetzt im Aussagenlogik- und im Pixel-Trainer (dort in `count(ok)`, das bei jeder gewerteten Antwort läuft). Andere Trainer prüfen anders aufgebaut; dann die Stelle suchen, an der eine falsche Antwort gewertet wird.
+
+```js
+const LOCK_SECONDS = 10;
+let lockTimer = null;
+function unlockCheck() { clearInterval(lockTimer); const b = $('#check'); b.disabled = false; b.textContent = 'Prüfen'; }
+function lockCheck() {
+  unlockCheck();
+  const b = $('#check'); let left = LOCK_SECONDS;
+  const show = () => { b.textContent = `Prüfen (${left} s)`; };
+  b.disabled = true; show();
+  lockTimer = setInterval(() => { if (--left > 0) show(); else unlockCheck(); }, 1000);
+}
+```
+
+Dazu `if (!ok) lockCheck();` beim Werten, `unlockCheck();` am Anfang von `newTask()` (eine neue Aufgabe hebt die Sperre auf, das Warten hätte dann keinen Zweck) und `.btn:disabled{opacity:.55;cursor:not-allowed}` im CSS. Tipp und Eingaben bleiben während der Sperre bedienbar.
+
+## Bedienung
+
+- **Die Aufgabe bleibt beim Antworten sichtbar.** Keine aufklappenden Menüs mit vielen Einträgen, denn sie legen sich über die Aufgabe. Längere Auswahlen stehen als feste Liste daneben (ab 800 px Breite zwei Spalten, darunter untereinander mit eigenem Scrollbereich; Muster: `.work.two` und `.lawpick` im Aussagenlogik-Trainer).
+- Desktop und Handy müssen beide funktionieren, ohne waagerechtes Scrollen der Seite. Lange Terme und Formeln dürfen in schmalen Spalten umbrechen. Grid-Spalten mit `minmax(0,1fr)` und `min-width:0` anlegen, denn `1fr` wird nicht schmaler als der Inhalt; breite Teile scrollen in ihrem eigenen Panel.
+- Aufbau der Trainer: Reiter für Aufgabentypen, Stufen leicht / mittel / schwer (nur das for-Schleifen-Puzzle: Einfach / Mittel / Profi), Aufgabe, Knöpfe „Prüfen“, „Tipp“, „Neue Aufgabe“, Rückmeldung, aufklappbare Begriffe. Punktestand nur in `localStorage`, Zugriffe in `try/catch`.
+- **Die Stufenwahl muss auffallen,** z. B. als eigener Block mit Karten direkt über der Aufgabe (Muster: for-Schleifen-Puzzle). Einen kleinen Umschalter in der Kopfzeile haben dort alle Lernenden übersehen.
+- Bei festen Aufgabensätzen bekommt jede Stufe eigene Aufgaben, damit man die Stufen nacheinander lösen kann.
+- Löschende Knöpfe (Leeren, Zurücksetzen) stehen weit weg von oft benutzten Knöpfen, weil sie sonst versehentlich getroffen werden.
+- Neue Tools unterstützen den Dunkelmodus über CSS-Variablen.
+
+## Fachliche Schreibweisen
+
+Das Tool richtet sich nach dem Unterricht und der Klassenarbeit, nicht nach der üblichsten Schreibweise. Bei Abweichungen nachfragen.
+
+- Keine zwei Vorzeichen oder Negationen ohne Klammer hintereinander: `¬(¬a)` statt `¬¬a`, wie in Mathe bei zwei Minuszeichen. Eingaben von Lernenden dürfen großzügiger sein als die Ausgabe des Tools.
+- Im gezeigten Code steht `i=i+2` und `i=i-2`, nicht `i+=2` und `i-=2`; diese Kurzform ist im Unterricht nicht erwünscht. `i++` bleibt erlaubt.
+- Nummerierungen und Namen (z. B. der Rechengesetze) wie in den Unterlagen der Klasse.
+- Was nicht Inhalt der Klassenarbeit ist, wird als solches gekennzeichnet.
+- Texte auf Deutsch mit echten Umlauten, die Lernenden werden geduzt, Rückmeldungen sind sachlich und ermutigend.
+- Aufgaben werden nach Möglichkeit zufällig erzeugt. Antworten werden inhaltlich geprüft (alle Belegungen, Ausführen des Codes), nicht per Textvergleich. Gleichwertige Lösungen gelten als richtig.
+
+## Technik und Ablage
+
+- Eine eigenständige `index.html` ohne Abhängigkeiten und ohne Build-Schritt; sie muss per Doppelklick und über GitHub Pages laufen. Keine gemeinsamen JS-Dateien zwischen Tools, wiederkehrende Muster werden kopiert. Bestehende Ausnahmen: Internet-Simulator (braucht Node), Zählschleife-Übungen (laden Processing.js von einem CDN, laufen also nicht offline).
+- Beim Ändern den Stil der Datei übernehmen, die Trainer sind kompakt geschrieben.
+- Ordner `<fach>/<thema>/<tool-name>/`: klein, ohne Umlaute, mit Bindestrichen.
+- Neues Tool: Schritte unter „Neues Tool hinzufügen“ in der Haupt-`README.md` (README im Ordner, Zeile im Katalog, Karte in der Start-`index.html`).
+- Ändert sich das Verhalten für Lernende, die README des Tools mitpflegen.
+- Material nach fremden Vorlagen nennt Quelle und Lizenz im README des Ordners.
+
+## Testen
+
+Vor dem Abschluss im eingebauten Browser mit der `file://`-Adresse prüfen, nicht nur den Code lesen:
+
+- Zufällige Aufgaben per JavaScript in Masse erzeugen (einige hundert, alle Aufgabentypen und Stufen) und auf Fehler, Überlauf und unerwünschte Ausgaben durchsuchen. Die längsten Aufgaben zeigen sich meist erst auf Stufe schwer.
+- Die Wege durchspielen: leer, unvollständig, falsch, richtig, neue Aufgabe, Wechsel von Stufe und Aufgabentyp.
+- Desktop-Breite und Handy-Breite ansehen, Konsole auf Fehler prüfen.
+- Im Abschlussbericht sagen, was tatsächlich getestet wurde und was nicht.
+
+## Git
+
+Direkt auf `main`, nur auf Wunsch committen und pushen; von dort geht es über GitHub Pages online. Commit-Nachrichten auf Deutsch im Stil `Tool-Name: was sich geändert hat`.
+
+## Skill pflegen
+
+Kommt eine neue Rückmeldung mit allgemeiner Bedeutung für die Tools, dem Nutzer vorschlagen, sie hier als kurze Regel mit Begründung aufzunehmen.
