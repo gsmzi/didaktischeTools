@@ -398,6 +398,7 @@ function genFarbe() {
 function renderFarbe() {
   const t = APP.task, box = $('#task'); box.innerHTML = '';
   box.append(el('p', {class: 'task', html: t.q}));
+  if (t.kind === 'hex2rgb' || t.kind === 'rgb2hex') box.append(el('p', {class: 'small'}, 'Hinweis: Hexadezimalcodes sind nicht Inhalt der Klassenarbeit.'));
   box.append(el('p', {}, el('span', {class: 'swatch', style: `background:${css(t.c)}`}), ' Ausgangsfarbe'));
   if (t.n === 1) box.append(el('label', {}, 'Grauwert ', el('input', {type: 'number', id: 'f0', style: 'width:90px'})));
   if (t.n === 3) box.append(el('div', {class: 'bar'}, ...['Rot', 'Grün', 'Blau'].map((n, i) => el('label', {}, n + ' ', el('input', {type: 'number', id: 'f' + i, style: 'width:80px'})))));
