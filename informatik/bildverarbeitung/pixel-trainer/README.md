@@ -16,6 +16,7 @@ Passend zur Unterrichtseinheit *Digitale Bildbearbeitung* in IMP, Klasse 10, und
 
 - **Stufen** leicht / mittel / schwer: Spiegeln und 180° · zusätzlich Drehen um 90° · zusätzlich Spiegeln an den Diagonalen und größere Bilder.
 - **Erst vorhersagen** (zuschaltbar, Code → Bild): erst auf Papier skizzieren, dann die Auswahl zeigen.
+- **Prüfen** ist nach einer falschen Antwort 10 Sekunden gesperrt, damit nicht alle Lösungen durchgeklickt werden (Dauer: `LOCK_SECONDS` in der Datei).
 - **Begriffe** (aufklappbar), u. a. Breite/Höhe, Ergebnisarray, Index-Fehler, RGB, Hexcode, Kappen; Hinweis, dass Methoden in Processing in `setup()` aufgerufen werden müssen.
 
 Die Seite führt nur die Indexlogik und die Farbrechnungen aus, kein vollständiges Processing. Der Lernfortschritt wird nur im Browser gespeichert.

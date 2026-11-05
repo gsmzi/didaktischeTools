@@ -17,6 +17,7 @@ Passend zur Einheit *Aussagenlogik* in IMP, Klasse 10 (ZPG-Blätter M10aug01–0
 - **Stufen** leicht / mittel / schwer: zwei Variablen · auch Negationen und drei Variablen · zusammengesetzte Teilterme, Subjunktion, eigene Eingaben.
 - **Erst vorhersagen** (zuschaltbar, Wahrheitstafel): erst vermuten, ob eine Tautologie vorliegt, dann rechnen und vergleichen.
 - **Begriffe** und **Tabelle der Rechengesetze** (aufklappbar). Die Nummerierung entspricht der Tabelle in der Klassenarbeit; bei Abweichung `LAWS` in der Datei anpassen.
+- **Prüfen** ist nach einer falschen Antwort 10 Sekunden gesperrt, damit nicht alle Lösungen durchgeklickt werden (Dauer: `LOCK_SECONDS` in der Datei).
 - Geprüft wird über alle Belegungen bzw. über eine Mustererkennung der Gesetze, nicht über einen Textvergleich. Eingaben gehen auch mit `! & | ->`.
 
 Der Lernfortschritt wird nur im Browser gespeichert.

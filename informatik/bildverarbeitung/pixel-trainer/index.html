@@ -22,6 +22,7 @@ select,input[type=text],input[type=number]{font:inherit;padding:5px 8px;border:1
 pre.code{font-family:var(--mono);font-size:.95rem;background:var(--accent-soft);padding:10px 12px;border-radius:8px;overflow-x:auto;margin:8px 0}
 .btn{font:inherit;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer}
 .btn.sec{background:var(--card);color:var(--accent)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .fb{margin-top:12px;padding:10px 12px;border-radius:8px;display:none}
 .fb.ok{display:block;background:var(--ok-soft);border-left:4px solid var(--ok)}
@@ -180,7 +181,18 @@ const APP = {mode: 'c2b', level: 'leicht', predict: false, task: null, score: {}
 const MODES = [['c2b', 'Code → Bild'], ['b2c', 'Bild → Code'], ['koord', 'Koordinaten'], ['farbe', 'Farben rechnen'], ['luecke', 'Lückenprogramm']];
 function loadScore() { try { APP.score = JSON.parse(localStorage.getItem('px-score') || '{}'); } catch (e) { APP.score = {}; } }
 function saveScore() { try { localStorage.setItem('px-score', JSON.stringify(APP.score)); } catch (e) {} }
-function count(ok) { const s = APP.score[APP.mode] || (APP.score[APP.mode] = {r: 0, n: 0}); if (!APP.task.counted) { s.n++; if (ok) s.r++; APP.task.counted = true; saveScore(); } showScore(); }
+// Nach einer falschen Antwort ist „Prüfen“ kurz gesperrt, damit man nicht alle Lösungen durchklicken kann
+const LOCK_SECONDS = 10;
+let lockTimer = null;
+function unlockCheck() { clearInterval(lockTimer); const b = $('#check'); b.disabled = false; b.textContent = 'Prüfen'; }
+function lockCheck() {
+  unlockCheck();
+  const b = $('#check'); let left = LOCK_SECONDS;
+  const show = () => { b.textContent = `Prüfen (${left} s)`; };
+  b.disabled = true; show();
+  lockTimer = setInterval(() => { if (--left > 0) show(); else unlockCheck(); }, 1000);
+}
+function count(ok) { if (!ok) lockCheck(); const s = APP.score[APP.mode] || (APP.score[APP.mode] = {r: 0, n: 0}); if (!APP.task.counted) { s.n++; if (ok) s.r++; APP.task.counted = true; saveScore(); } showScore(); }
 function showScore() { const s = APP.score[APP.mode] || {r: 0, n: 0}; $('#score').textContent = `Richtig beim ersten Versuch: ${s.r} von ${s.n}`; }
 function fb(kind, html) { const f = $('#fb'); f.className = 'fb ' + kind; f.innerHTML = html; }
 const C = s => `<code>${s}</code>`;
@@ -558,7 +570,7 @@ const GEN = {c2b: genC2B, b2c: genB2C, koord: genKoord, farbe: genFarbe, luecke:
 const REN = {c2b: renderC2B, b2c: renderB2C, koord: renderKoord, farbe: renderFarbe, luecke: renderLuecke};
 const CHK = {c2b: checkC2B, b2c: checkB2C, koord: checkKoord, farbe: checkFarbe, luecke: checkLuecke};
 const TIP = {c2b: tipC2B, b2c: tipB2C, koord: tipKoord, farbe: tipFarbe, luecke: tipLuecke};
-function newTask() { APP.task = GEN[APP.mode](); $('#fb').className = 'fb'; REN[APP.mode](); showScore(); }
+function newTask() { unlockCheck(); APP.task = GEN[APP.mode](); $('#fb').className = 'fb'; REN[APP.mode](); showScore(); }
 function setMode(m) { APP.mode = m; document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); newTask(); }
 function init() {
   loadScore();
