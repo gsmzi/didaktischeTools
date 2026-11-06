@@ -38,6 +38,12 @@ Die HTML-Tools sind eigenständige Dateien ohne Abhängigkeiten. Man kann sie di
 |---|---|---|---|---|
 | Aussagenlogik | [Aussagenlogik-Trainer](mathematik/aussagenlogik/aussagenlogik-trainer/) | Kl. 10 (IMP) | Übungsaufgaben (zufällig erzeugt) | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/mathematik/aussagenlogik/aussagenlogik-trainer/) |
 
+### AES
+
+| Thema | Tool | Stufe | Art | Online |
+|---|---|---|---|---|
+| Prüfungsvorbereitung | [AES-Prüfungstrainer](aes/pruefungsvorbereitung/aes-pruefungstrainer/) | Kl. 10 (Realschule) | Übungsaufgaben (zufällig erzeugt), installierbar und offline nutzbar | [▶ öffnen](https://gsmzi.github.io/didaktischeTools/aes/pruefungsvorbereitung/aes-pruefungstrainer/) |
+
 ## Struktur
 
 ```

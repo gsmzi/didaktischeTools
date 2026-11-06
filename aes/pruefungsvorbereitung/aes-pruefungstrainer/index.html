@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AES-Prüfungstrainer</title>
+<meta name="description" content="Übungen zur Realschulabschlussprüfung im Fach AES: Etiketten, Fälle, Grafiken und Wissen.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#1b7a5a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AES-Trainer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>:root{--bg:#f4f6f3;--card:#fff;--ink:#1c2520;--muted:#57635c;--line:#d5dcd6;--accent:#1b7a5a;--accent-soft:#e2f1ea;--ok:#1e7a3c;--ok-soft:#e5f4ea;--bad:#b3261e;--bad-soft:#fbe9e7;--warn-soft:#fff5e0;--c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--surface:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131815;--card:#1c231f;--ink:#e6ebe7;--muted:#9eaaa2;--line:#343f38;--accent:#62c9a2;--accent-soft:#1f3a2f;--ok:#6fcf8f;--ok-soft:#1d3426;--bad:#f2968e;--bad-soft:#3d2120;--warn-soft:#3a3018;--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--c5:#d55181;--surface:#1c231f}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{padding:14px 16px 4px;max-width:1040px;margin:0 auto}
+header h1{margin:0;font-size:1.35rem}
+header p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+main{max-width:1040px;margin:0 auto;padding:0 16px 32px}
+nav.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:10px 0}
+nav.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 4px;border-radius:9px;cursor:pointer;font:inherit;font-size:.84rem;line-height:1.2;min-height:48px;min-width:0;overflow-wrap:anywhere}
+nav.tabs button b{display:block;font-size:1.15rem;font-weight:400}
+nav.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) nav.tabs button.on,:root:not([data-theme="light"]) .btn:not(.sec){color:#0e1a14}}
+.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}
+.levels button{font:inherit;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 4px;cursor:pointer;min-height:44px;font-size:.9rem;line-height:1.2}
+.levels button small{display:block;color:var(--muted);font-size:.74rem}
+.levels button.on{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.chips::-webkit-scrollbar{display:none}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px;margin:4px 0;-webkit-overflow-scrolling:touch}
+.chips button{flex:none;font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;min-height:36px}
+.chips button.on{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;min-width:0}
+.card h2{margin:0 0 8px;font-size:1.08rem}
+.work{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.work>*{min-width:0}
+.work .card{margin-bottom:0}
+@media (min-width:800px){.work.two{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}.work.two .stim{position:sticky;top:8px;max-height:calc(100vh - 16px)}}
+.stim{overflow:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:799px){.work.two .stim{max-height:38vh;position:sticky;top:4px;z-index:2;box-shadow:0 3px 10px rgba(0,0,0,.18)}}
+@media (max-width:600px){header{padding-top:8px}header h1{font-size:1.1rem}header p{display:none}nav.tabs{margin:6px 0}nav.tabs button{min-height:44px;font-size:.78rem;padding:4px 2px}nav.tabs button b{font-size:.95rem}.levels{margin:6px 0}.levels button{min-height:38px;padding:3px}.levels button small{display:none}.score{margin:0 0 5px;font-size:.8rem}.card{padding:11px}.front{min-height:0}}
+.q{font-size:1.04rem;font-weight:600;margin:0 0 8px}
+.sub{font-size:.88rem;color:var(--muted);margin:0 0 8px}
+.opts{display:grid;gap:7px;margin:8px 0;grid-template-columns:minmax(0,1fr)}
+.opt{font:inherit;text-align:left;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:9px 11px;border-radius:9px;cursor:pointer;min-height:44px;overflow-wrap:anywhere}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default;color:var(--ink);opacity:1}
+.row{border-top:1px solid var(--line);padding:8px 0}
+.row:first-child{border-top:0}
+.row p{margin:0 0 5px}
+.seg{display:flex;flex-wrap:wrap;gap:5px}
+.seg button{font:inherit;font-size:.88rem;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 9px;cursor:pointer;min-height:38px}
+.seg button.sel{border-color:var(--accent);background:var(--accent-soft)}
+.seg button.right{border-color:var(--ok);background:var(--ok-soft)}
+input[type=text],textarea{font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);max-width:100%}
+textarea{width:100%;min-height:92px;resize:vertical}
+.numin{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.numin input{width:9em}
+.btn{font:inherit;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:9px 14px;border-radius:9px;cursor:pointer;min-height:44px}
+.btn.sec{background:var(--card);color:var(--accent)}
+.btn.warn{background:var(--card);color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fb{margin-top:12px;padding:10px 12px;border-radius:8px;display:none;overflow-wrap:anywhere}
+.fb.ok{display:block;background:var(--ok-soft);border-left:4px solid var(--ok)}
+.fb.bad{display:block;background:var(--bad-soft);border-left:4px solid var(--bad)}
+.fb.tip{display:block;background:var(--warn-soft);border-left:4px solid #c98a00}
+.score{font-size:.85rem;color:var(--muted);margin:2px 0 8px}
+.small{font-size:.88rem;color:var(--muted)}
+details{margin:4px 0}
+details summary{cursor:pointer;color:var(--accent);min-height:30px}
+.case{background:var(--accent-soft);border-radius:9px;padding:10px 12px;margin:0}
+.case b{display:block;margin-bottom:2px}
+.seq{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;min-height:44px;padding:6px;border:1px dashed var(--line);border-radius:9px}
+.seq span{background:var(--accent-soft);border-radius:7px;padding:4px 8px;font-size:.9rem}
+.seal{display:inline-block;vertical-align:middle}
+.sealbig{display:flex;justify-content:center;margin:6px 0 10px}
+.sealbig svg{width:150px;height:auto;max-height:150px}
+/* Packung */
+.pack{display:grid;grid-template-columns:minmax(0,132px) minmax(0,1fr);gap:10px}
+.front{color:#fff;border-radius:10px;padding:9px;min-height:230px;display:flex;flex-direction:column;gap:5px;background:var(--pc,#555);text-align:center}
+.front .br{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+.front .nm{font-weight:800;font-size:1rem;line-height:1.12;overflow-wrap:anywhere}
+.front .pic{font-size:2.2rem;line-height:1.15}
+.front .cl{background:#fff;color:#1c2520;border-radius:7px;font-size:.72rem;font-weight:700;padding:2px 5px;line-height:1.2}
+.front .sz{margin-top:auto;font-size:.76rem;font-weight:700}
+.front .sl{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center}
+.front .sl svg{height:38px;width:auto;max-width:100%;background:#fff;border-radius:4px}
+.back{font-size:.83rem;line-height:1.35;min-width:0}
+.back p{margin:0 0 5px}
+.back table{border-collapse:collapse;width:100%;margin:3px 0 5px;font-size:.8rem}
+.back td{border-top:1px solid var(--line);padding:1px 3px}
+.back td:last-child{text-align:right;white-space:nowrap}
+/* Grafik */
+.chart svg{display:block;width:100%;height:auto}
+.chart text{fill:var(--ink);font:12px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.chart .ax{fill:var(--muted);font-size:11px}
+.legend{display:grid;gap:3px;margin:6px 0 0;padding:0;list-style:none;font-size:.9rem}
+.legend li{display:flex;align-items:center;gap:7px}
+.legend i{width:13px;height:13px;border-radius:4px;flex:none}
+.legend b{margin-left:auto;font-weight:600}
+table.st{border-collapse:collapse;width:100%;font-size:.92rem}
+table.st th,table.st td{border-bottom:1px solid var(--line);padding:5px 4px;text-align:left}
+table.st td:last-child,table.st th:last-child{text-align:right;white-space:nowrap}
+.barmini{height:7px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:3px}
+.barmini i{display:block;height:100%;background:var(--accent)}
+footer{max-width:1040px;margin:0 auto;padding:0 16px 24px;color:var(--muted);font-size:.8rem}
+</style></head>
+<body>
+<header><h1>AES-Prüfungstrainer</h1><p>Realschulabschluss Baden-Württemberg · Schwerpunkte 2027</p></header>
+<main>
+<nav class="tabs" aria-label="Bereich"></nav>
+<div id="train">
+  <div class="levels" role="group" aria-label="Stufe"></div>
+  <div class="chips" id="chips"></div>
+  <div class="score" id="score"></div>
+  <div class="work" id="work">
+    <section class="card stim" id="stim" hidden></section>
+    <section class="card" id="qcard">
+      <div id="qa"></div>
+      <div class="btns">
+        <button class="btn" id="check">Prüfen</button>
+        <button class="btn sec" id="tip">Tipp</button>
+        <button class="btn sec" id="next">Neue Aufgabe</button>
+        <button class="btn sec" id="solve" hidden>Lösung zeigen</button>
+      </div>
+      <div class="fb" id="fb" role="status"></div>
+    </section>
+  </div>
+  <section class="card" style="margin-top:12px"><details><summary>Begriffe und Prüfungsformat</summary><div id="terms"></div></details></section>
+</div>
+<div id="stand" hidden></div>
+</main>
+<footer>Alle Marken, Produkte und Zahlen in den Aufgaben sind erfunden. Siegel sind vereinfacht nachgezeichnet und dienen nur dem Lernen. Der Fortschritt bleibt auf diesem Gerät.</footer>
+<script>
+'use strict';
+/* ---------- Hilfen ---------- */
+const $ = s => document.querySelector(s);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sample = (a, n) => shuffle(a).slice(0, n);
+const fmt = (x, d = 2) => x.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
+const euro = x => fmt(x, Number.isInteger(x) ? 0 : 2) + ' €';
+const hash = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 ^ s.charCodeAt(i)) >>> 0; return h.toString(36); };
+
+/* ---------- Siegel: vereinfacht nachgezeichnet. mask=true verdeckt den Schriftzug ---------- */
+const F = 'font-family="Arial,Helvetica,sans-serif"';
+const TX = (m, x, y, s, t, fill = '#fff', extra = '') => m
+  ? `<rect x="${x - t.length * s * .27}" y="${y - s * .78}" width="${t.length * s * .54}" height="${s * .82}" rx="2" fill="${fill}" opacity=".6"/>`
+  : `<text x="${x}" y="${y}" font-size="${s}" font-weight="700" text-anchor="middle" fill="${fill}" ${F} ${extra}>${t}</text>`;
+const star = (x, y, r) => { let p = ''; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * .42 : r; p += `${(x + q * Math.cos(a)).toFixed(1)},${(y + q * Math.sin(a)).toFixed(1)} `; } return `<polygon points="${p}" fill="#fff"/>`; };
+const SVG = (w, h, b, l) => `<svg class="seal" viewBox="0 0 ${w} ${h}" role="img" aria-label="${l}" xmlns="http://www.w3.org/2000/svg">${b}</svg>`;
+const SEAL = {
+  eubio: m => SVG(100, 67, `<rect width="100" height="67" fill="#9cc73b"/>` + [[13, 47], [20, 29], [28, 15], [41, 8], [58, 7], [73, 9], [90, 8], [82, 21], [74, 33], [66, 41], [52, 46], [34, 45]].map(p => star(p[0] + 1, p[1] + 5, 4.6)).join('') + `<path d="M14 53Q32 34 60 27" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>`, 'EU-Bio-Siegel'),
+  bio: m => SVG(100, 88, `<polygon points="25,3 75,3 98,44 75,85 25,85 2,44" fill="#fff" stroke="#3d8f3d" stroke-width="4"/>` + TX(m, 50, 52, 30, 'BiO', '#2e7d32') + TX(m, 50, 68, 7, 'nach EG-Öko-VO', '#2e7d32'), 'Deutsches Bio-Siegel'),
+  bioland: m => SVG(100, 60, `<path d="M0 8Q50 -2 100 8V60H0Z" fill="#0a7f3f"/>` + TX(m, 50, 41, 21, 'Bioland'), 'Bioland'),
+  demeter: m => SVG(100, 56, `<rect width="100" height="56" fill="#e2772e"/><path d="M0 56V48Q50 42 100 34V56Z" fill="#2b7a5b"/>` + TX(m, 50, 33, 22, 'demeter', '#fff', 'font-style="italic"'), 'Demeter'),
+  naturland: m => SVG(90, 100, `<rect width="90" height="100" fill="#fff"/><rect x="3" y="3" width="84" height="76" rx="7" fill="#1f9a4a"/><path d="M45 72C14 62 12 36 22 12C40 24 50 44 45 72Z" fill="#fff"/><path d="M47 72C74 60 80 38 72 18C56 28 44 46 47 72Z" fill="#c6e7c9"/>` + TX(m, 45, 95, 15, 'Naturland', '#1c2520'), 'Naturland'),
+  ohnegen: m => SVG(100, 100, `<rect x="16" y="16" width="68" height="68" rx="9" transform="rotate(45 50 50)" fill="#77ae3f"/>` + TX(m, 50, 40, 12, 'Ohne') + TX(m, 50, 54, 11.5, 'Gentechnik') + `<path d="M50 88V66M50 66C44 74 37 74 33 72C37 66 44 64 50 66ZM50 66C56 74 63 74 67 72C63 66 56 64 50 66ZM50 66C45 62 46 58 50 57C54 58 55 62 50 66Z" fill="#fff" stroke="#fff"/>`, 'Ohne Gentechnik'),
+  fairtrade: m => SVG(84, 100, `<rect width="84" height="100" fill="#111"/><path d="M12 56C12 30 30 13 50 13C32 22 28 42 40 54C30 58 22 58 12 56Z" fill="#00b4e0"/><path d="M72 42C74 68 54 84 34 80C52 74 58 56 46 44C54 38 64 38 72 42Z" fill="#a2cc3a"/><path d="M28 72C38 56 46 44 58 26" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>` + TX(m, 42, 96, 12, 'FAIRTRADE'), 'Fairtrade'),
+  vvegan: m => vlabel(m, 'VEGAN'),
+  vvegetarisch: m => vlabel(m, 'VEGETARISCH'),
+  gknopf: m => SVG(100, 100, `<circle cx="50" cy="42" r="38" fill="#12a150"/><circle cx="50" cy="42" r="29" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="41" cy="33" r="4.6" fill="#fff"/><circle cx="59" cy="33" r="4.6" fill="#fff"/><circle cx="41" cy="51" r="4.6" fill="#fff"/><circle cx="59" cy="51" r="4.6" fill="#fff"/>` + TX(m, 50, 96, 13.5, 'Grüner Knopf', '#12784a'), 'Grüner Knopf'),
+  gots: m => SVG(100, 100, `<circle cx="50" cy="50" r="31" fill="#86c400"/><path d="M38 28L24 40L31 49L37 45V73H48V28ZM62 28L76 40L69 49L63 45V73H52V28Z" fill="#fff"/>` + (m ? `<circle cx="50" cy="50" r="42" fill="none" stroke="#666" stroke-width="7" stroke-dasharray="6 4" opacity=".6"/>` : `<defs><path id="gr" d="M50 94A44 44 0 1 1 50.1 94"/></defs><text font-size="10.6" font-weight="700" fill="#555" ${F}><textPath href="#gr" textLength="268" lengthAdjust="spacing">GLOBAL ORGANIC TEXTILE STANDARD · GOTS ·</textPath></text>`), 'GOTS'),
+  fairwear: m => SVG(120, 60, `<rect width="120" height="60" rx="6" fill="#1d3557"/><path d="M12 42Q30 16 48 42" stroke="#f4a261" stroke-width="5" fill="none"/>` + TX(m, 82, 28, 15, 'FAIR') + TX(m, 82, 46, 15, 'WEAR'), 'Fair Wear Foundation'),
+  mehrweg: m => SVG(100, 100, `<circle cx="50" cy="50" r="40" fill="none" stroke="#1b6fb5" stroke-width="13"/><path d="M50 10A40 40 0 0 1 90 50" fill="none" stroke="#3aa935" stroke-width="13"/><path d="M50 90A40 40 0 0 1 10 50" fill="none" stroke="#3aa935" stroke-width="13"/>` + TX(m, 50, 55, 12.5, 'MEHRWEG', '#1b6fb5'), 'Mehrweg-Zeichen'),
+  einweg: m => SVG(100, 100, `<rect x="6" y="6" width="88" height="88" rx="6" fill="#fff" stroke="#14528f" stroke-width="5"/><path d="M50 12L86 46H68V70H32V46H14Z" fill="#14528f"/><rect x="42" y="50" width="16" height="30" rx="4" fill="#fff"/><rect x="46" y="44" width="8" height="8" fill="#fff"/>`, 'Einweg-Pfandzeichen'),
+  gruenerpunkt: m => SVG(100, 100, `<circle cx="50" cy="50" r="46" fill="#fff" stroke="#159b48" stroke-width="3"/><path d="M50 16A34 34 0 0 0 50 84V68A18 18 0 0 1 50 32V44L70 24L50 4Z" fill="#159b48"/><path d="M50 84A34 34 0 0 0 50 16V32A18 18 0 0 1 50 68V56L30 76L50 96Z" fill="#7fc241"/>`, 'Grüner Punkt')
+};
+function vlabel(m, t) { return SVG(100, 100, `<circle cx="50" cy="43" r="38" fill="#f7d600" stroke="#1c2520" stroke-width="2"/><path d="M28 24L47 68L73 16" fill="none" stroke="#1c2520" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M60 40C58 26 70 18 82 20C82 34 72 42 60 40Z" fill="#5aa832"/><rect x="${t.length > 6 ? 8 : 24}" y="83" width="${t.length > 6 ? 84 : 52}" height="16" rx="3" fill="#f7d600" stroke="#1c2520" stroke-width="1.5"/>` + TX(m, 50, 95, t.length > 6 ? 10.5 : 12, t, '#1c2520'), 'V-Label ' + t); }
+const NUTRI = s => { const c = { A: '#038141', B: '#85bb2f', C: '#fecb02', D: '#ee8100', E: '#e63e11' }; let o = '', x = 3; for (const l of 'ABCDE') { const on = l === s, w = on ? 26 : 18; o += `<rect x="${x}" y="${on ? 13 : 17}" width="${w}" height="${on ? 28 : 20}" rx="${on ? 6 : 2}" fill="${c[l]}" stroke="${on ? '#fff' : 'none'}" stroke-width="2"/><text x="${x + w / 2}" y="${on ? 33 : 32}" font-size="${on ? 18 : 13}" font-weight="700" text-anchor="middle" fill="#fff" ${F}>${l}</text>`; x += w + 1; } return SVG(108, 44, `<rect width="108" height="44" rx="6" fill="#fff" stroke="#999"/><text x="54" y="11" font-size="9" font-weight="700" text-anchor="middle" fill="#555" ${F}>NUTRI-SCORE</text>` + o, 'Nutri-Score ' + s); };
+const SEALNAME = { eubio: 'EU-Bio-Siegel', bio: 'Deutsches Bio-Siegel', bioland: 'Bioland', demeter: 'Demeter', naturland: 'Naturland', ohnegen: '„Ohne Gentechnik“', fairtrade: 'Fairtrade', vvegan: 'V-Label vegan', vvegetarisch: 'V-Label vegetarisch', gknopf: 'Grüner Knopf', gots: 'GOTS', fairwear: 'Fair Wear Foundation', mehrweg: 'Mehrweg-Zeichen', einweg: 'Einweg-Pfandzeichen', gruenerpunkt: 'Grüner Punkt' };
+/* Was man sich bei einem Siegel merken soll: r = stimmt, w = stimmt für dieses Siegel nicht */
+const SEALFACT = {
+  eubio: { r: ['Mindestens 95 % der Zutaten stammen aus ökologischer Landwirtschaft', 'Gentechnik ist grundsätzlich ausgeschlossen', 'Chemisch-synthetische Pflanzenschutzmittel sind verboten'], w: ['Der ganze Betrieb muss auf Bio umgestellt sein', 'Die Rinder müssen ihre Hörner behalten', 'Die Bauern bekommen einen festen Mindestpreis'] },
+  bioland: { r: ['Chemisch-synthetische Dünger und Pestizide sind verboten', 'Die Tiere bekommen 100 % Biofutter', 'Mindestens die Hälfte des Futters kommt vom eigenen Hof', 'Die Artenvielfalt wird geschützt'], w: ['Die Kakaobauern bekommen Fairtrade-Prämien', 'Das Produkt ist immer vegan', 'Es ist nur EU-Mindeststandard gefordert'] },
+  demeter: { r: ['Der Betrieb wirtschaftet biodynamisch', 'Der gesamte Betrieb muss umgestellt sein', 'Rinder behalten ihre Hörner', 'Die Tiere haben Auslauf'], w: ['Teilumstellung des Betriebs ist möglich', 'Futter darf vollständig zugekauft werden', 'Die Standards sind schwächer als beim EU-Bio-Siegel'] },
+  naturland: { r: ['Es ist ein Bio-Anbauverband mit strengeren Regeln als die EU-Mindeststandards', 'Gentechnik ist ausgeschlossen', 'Auch soziale Richtlinien gehören dazu'], w: ['Es ist ein Siegel nur für Textilien', 'Chemisch-synthetische Dünger sind erlaubt', 'Es garantiert, dass ein Produkt vegan ist'] },
+  ohnegen: { r: ['Die Tiere bekommen kein gentechnisch verändertes Futter', 'Das Siegel schränkt Gentechnik weitgehend ein, garantiert aber nicht 100 %', 'Manche Vitamine oder Enzyme können trotzdem mit gentechnisch veränderten Mikroorganismen hergestellt sein'], w: ['Das Produkt ist automatisch Bio', 'Das Produkt ist vollständig gentechnikfrei, ohne jede Ausnahme', 'Es sagt etwas über faire Löhne aus'] },
+  fairtrade: { r: ['Faire, existenzsichernde Löhne und Preise', 'Ausbeuterische Kinderarbeit ist verboten', 'Geregelte und sichere Arbeitsbedingungen', 'Arbeiterinnen und Arbeiter dürfen sich in Gewerkschaften organisieren', 'Umweltschonender Anbau'], w: ['Das Produkt ist automatisch Bio', 'Das Produkt ist regional', 'Das Produkt ist gesund'] },
+  vvegan: { r: ['Das Produkt enthält keine Zutaten tierischen Ursprungs', 'Es ist ein europaweit einheitliches Kennzeichen'], w: ['Das Produkt ist automatisch gesund', 'Das Produkt stammt aus ökologischem Anbau', 'Das Produkt ist zuckerfrei'] },
+  gknopf: { r: ['Es ist ein staatliches Siegel für Textilien', 'Kinder- und Zwangsarbeit sind verboten', 'Es muss ein Mindestlohn gezahlt werden', 'Naturfasern sind auf Schadstoffe geprüft'], w: ['Es gilt für Lebensmittel', 'Es garantiert Bio-Baumwolle', 'Die gesamte Lieferkette ist lückenlos geprüft'] },
+  gots: { r: ['Mindestens 70 % der Fasern stammen aus biologischem Anbau', 'Beim Färben wird auf gefährliche Chemikalien verzichtet', 'Es gibt soziale Mindeststandards, z. B. keine Kinderarbeit'], w: ['Es ist ein Siegel für Lebensmittel', 'Es sagt nur etwas über den Preis aus', 'Die Fasern dürfen gentechnisch verändert sein'] },
+  fairwear: { r: ['Es geht um bessere Arbeitsbedingungen in Textilfabriken', 'Mindestlöhne und sichere Arbeitsplätze werden beachtet', 'Kinderarbeit ist verboten'], w: ['Es garantiert Bio-Baumwolle', 'Es ist ein Siegel für Lebensmittel', 'Umweltstandards stehen im Mittelpunkt'] }
+};
+
+/* ---------- Themen ---------- */
+const TOPIC = { gen: 'Gentechnik', sie: 'Siegel', wer: 'Werbung und Kauf', tre: 'Ernährungstrends', ern: 'Ernährung', ges: 'Gesundheit und Körper', nac: 'Lebensstil und Nachhaltigkeit', tex: 'Textilien und Weltmarkt', geld: 'Finanzen', ver: 'Versicherungen', leb: 'Zusammenleben', eng: 'Engagement und Arbeit' };
+const CARDS = [];
+const one = (t, l, q, r, w, e) => CARDS.push({ k: 'one', t, l, q, r, w, e });
+const mul = (t, l, q, r, w, e) => CARDS.push({ k: 'multi', t, l, q, r, w, e });
+const rec = (t, l, q, need, pts) => CARDS.push({ k: 'recall', t, l, q, need, pts });
+const asg = (t, l, q, cats, rows, e) => CARDS.push({ k: 'assign', t, l, q, cats, rows, e });
+const ord = (t, l, q, items, e) => CARDS.push({ k: 'order', t, l, q, items, e });
+
+/* Gentechnik */
+one('gen', 1, 'Was versteht man unter Gentechnik?', 'Verfahren, mit denen das Erbgut von Organismen gezielt verändert wird', ['Die klassische Zucht durch Kreuzung ähnlicher Pflanzen', 'Das Haltbarmachen von Lebensmitteln durch Hitze', 'Das Düngen von Pflanzen mit Mineralstoffen']);
+asg('gen', 1, 'Ordne die Beispiele dem Bereich der Gentechnik zu.', ['grün', 'rot', 'weiß'], [['Herbizidresistente Sojapflanze', 0], ['Impfstoff für Tiere', 1], ['Citronensäure aus Mikroorganismen', 2], ['Chymosin (Lab) für die Käseherstellung', 2], ['Goldener Reis mit Vitamin-A-Vorstufe', 0], ['Medikament, das in Bakterien hergestellt wird', 1]], 'Grün: Landwirtschaft. Rot: Medizin. Weiß: Industrie, z. B. Enzyme und Zusatzstoffe.');
+mul('gen', 2, 'Welche Ziele verfolgt die grüne Gentechnik?', ['Weniger Pflanzenschutzmittel durch schädlingsresistente Pflanzen', 'Höhere Erträge', 'Anbau auf trockenen oder salzigen Böden', 'Mehr Nährstoffe in der Pflanze, z. B. Goldener Reis'], ['Mehr Handarbeit auf dem Feld', 'Längere Transportwege', 'Weniger Artenvielfalt als Ziel']);
+asg('gen', 2, 'Chance oder Risiko der grünen Gentechnik?', ['Chance', 'Risiko'], [['Pflanzen wachsen auf trockenen Böden', 0], ['Veränderte Pflanzen breiten sich unkontrolliert aus', 1], ['Abhängigkeit der Bauern von Saatgutherstellern', 1], ['Schädlinge und Unkräuter werden resistent', 1], ['Höhere Erträge', 0], ['Unbekannte Langzeitwirkungen', 1]]);
+one('gen', 2, 'Warum heißt es, Gentechnik sei „nicht rückholbar“?', 'Veränderte Pflanzen können sich mit anderen kreuzen und unkontrolliert ausbreiten', ['Gentechnisch veränderte Lebensmittel dürfen nicht zurückgegeben werden', 'Veränderte Pflanzen sterben nach einem Jahr ab', 'Das veränderte Saatgut darf nicht exportiert werden']);
+mul('gen', 2, 'Wie kann man Gentechnik beim Einkauf weitgehend vermeiden?', ['Auf Bio-Siegel achten', 'Auf das „Ohne Gentechnik“-Siegel achten', 'Fertigprodukte mit vielen Zusatzstoffen meiden', 'Selbst kochen und anbauen'], ['Auf den Nutri-Score achten', 'Nur Produkte mit Fairtrade-Siegel kaufen', 'Auf das Mindesthaltbarkeitsdatum achten']);
+one('gen', 3, 'Ein Produkt enthält Milch ohne besonderes Siegel. Wo kann Gentechnik im Spiel sein?', 'Im Futter der Kühe, ohne dass es auf der Packung stehen muss', ['Nirgends, denn Gentechnik muss bei Milch immer gekennzeichnet werden', 'Nur in der Verpackung', 'Nur beim Transport']);
+one('gen', 3, 'Wann müssen zufällige gentechnische Spuren nicht gekennzeichnet werden?', 'Wenn sie technisch unvermeidbar sind und unter 0,9 % liegen', ['Wenn sie unter 5 % liegen', 'Wenn das Produkt aus dem Ausland kommt', 'Wenn das Produkt einen Nutri-Score trägt']);
+rec('gen', 3, 'Beschreibe zwei Chancen und zwei Risiken der grünen Gentechnik.', 4, ['Chance: höhere Erträge', 'Chance: weniger Pflanzenschutzmittel', 'Chance: bessere Nährstoffe', 'Chance: Anbau auf schwierigen Böden', 'Risiko: unkontrollierte Ausbreitung', 'Risiko: Resistenzen bei Schädlingen', 'Risiko: Abhängigkeit von Saatgutherstellern', 'Risiko: weniger Artenvielfalt']);
+rec('gen', 3, 'Erläutere für eine Milchpackung, wo die drei Bereiche der Gentechnik vorkommen können.', 3, ['Grün: gentechnisch verändertes Tierfutter', 'Rot: Medikamente oder Impfstoffe für die Tiere', 'Weiß: Enzyme oder Zusatzstoffe aus Mikroorganismen, z. B. Lab beim Käse']);
+
+/* Werbung und Kauf */
+asg('wer', 1, 'Welche Art von Kaufentscheidung liegt vor?', ['spontan', 'habituell', 'limitiert', 'extensiv'], [['An der Kasse greift Mia ohne Nachdenken zum Schokoriegel.', 0], ['Tom kauft jede Woche dieselbe Milch.', 1], ['Lea vergleicht kurz zwei bekannte Shampoos.', 2], ['Ben informiert sich wochenlang vor dem Kauf eines Laptops.', 3]], 'Spontan: ungeplant. Habituell: aus Gewohnheit. Limitiert: wenig Aufwand, begrenzter Vergleich. Extensiv: langes Informieren und Vergleichen.');
+mul('wer', 1, 'Welche Tricks nutzen Supermärkte, damit man mehr kauft?', ['Süßigkeiten in der Kassenzone', 'Große Einkaufswagen', 'Warmes Licht bei Obst und Gemüse', 'Teure Waren auf Augenhöhe'], ['Kurze Wege zu den Grundnahrungsmitteln', 'Einkaufslisten an die Kunden verteilen', 'Preise besonders klein anbieten, damit man weniger zahlt']);
+one('wer', 1, 'Was ist ein Werbeversprechen?', 'Eine Aussage, die ein Produkt besonders attraktiv erscheinen lässt, z. B. „Mit extra Protein“', ['Eine gesetzliche Pflichtangabe auf der Packung', 'Eine Garantie, dass ein Produkt gesund ist', 'Eine Prüfung durch die Stiftung Warentest']);
+mul('wer', 2, 'Wie weckt eine Verpackung das Kaufinteresse?', ['Appetitliche Bilder', 'Beliebte Figuren für Kinder', 'Aussagen wie „Wenig Fett“', 'Siegel, die ein gutes Gefühl geben', 'Auffällige Farben'], ['Die Nährwerttabelle', 'Die Anschrift des Herstellers', 'Das Mindesthaltbarkeitsdatum']);
+one('wer', 2, 'Ein Produkt wirbt mit „High Protein“. Wie gehst du kritisch damit um?', 'Ich vergleiche Eiweißgehalt, Preis und Zutaten mit einem normalen Produkt', ['Ich kaufe es, weil mehr Protein immer gesünder ist', 'Ich achte nur auf die Farbe der Verpackung', 'Ich vertraue dem Slogan, weil Werbung geprüft sein muss'], 'Oft ist der Mehrwert klein, der Preis aber deutlich höher. Viele Menschen nehmen ohnehin genug Eiweiß auf.');
+mul('wer', 2, 'Woran erkennst du einen seriösen Onlineshop?', ['Vollständiges Impressum', '„https“ und Schloss in der Adresszeile', 'Klare Preise und Kontaktmöglichkeiten', 'Mehrere Zahlungsarten ohne Zusatzkosten'], ['Nur Vorkasse möglich', 'Viele Rechtschreibfehler in den AGB', 'Ein Countdown drängt zum Kauf']);
+one('wer', 2, 'Welche Aufgabe hat die Verbraucherzentrale?', 'Sie berät unabhängig, z. B. zu Verträgen, Versicherungen und Schulden', ['Sie stellt Lebensmittel her', 'Sie verkauft Versicherungen', 'Sie vergibt das Fairtrade-Siegel']);
+one('wer', 2, 'Was macht die Stiftung Warentest?', 'Sie prüft Produkte und Dienstleistungen unabhängig und veröffentlicht die Ergebnisse', ['Sie finanziert sich über Anzeigen der getesteten Firmen', 'Sie legt Lebensmittelpreise fest', 'Sie berät nur Hersteller']);
+one('wer', 1, 'Was bedeutet „Consumer Citizenship“?', 'Verbraucherinnen und Verbraucher setzen sich aktiv ein, um Politik oder das Verhalten von Unternehmen zu verändern', ['Man darf nur in der eigenen Stadt einkaufen', 'Kundenkarten sammeln Punkte für Rabatte', 'Unternehmen bestimmen, was man kaufen soll']);
+mul('wer', 2, 'Was sind Beispiele für Consumer Citizenship?', ['Bestimmte Produkte bewusst nicht kaufen', 'Politikerinnen und Politikern schreiben', 'In sozialen Medien auf Probleme hinweisen', 'Eine Petition unterschreiben'], ['Immer das billigste Produkt nehmen', 'Werbung ungeprüft weitergeben', 'Treuepunkte sammeln']);
+rec('wer', 3, 'Beschreibe drei Merkmale, wie eine Verpackung zum Kauf anregt.', 3, ['Bilder, die Appetit machen', 'Aussagen wie „Wenig Fett“ oder „High Protein“', 'Siegel, die Vertrauen schaffen', 'Figuren oder Farben für eine Zielgruppe', 'Ein gutes Gefühl, z. B. durch „fair“ oder „natürlich“']);
+
+/* Trends */
+one('tre', 1, 'Was sind Nahrungsergänzungsmittel?', 'Lebensmittel, die die Ernährung ergänzen sollen, meist Nährstoffkonzentrate in Tabletten oder Kapseln', ['Arzneimittel, die Krankheiten heilen', 'Lebensmittel, die eine Mahlzeit ersetzen', 'Ein anderes Wort für Süßstoffe']);
+mul('tre', 1, 'Welche Angaben kennzeichnen ein Nahrungsergänzungsmittel?', ['Die Bezeichnung „Nahrungsergänzungsmittel“', 'Die empfohlene tägliche Verzehrmenge', 'Der Hinweis, dass diese Menge nicht überschritten werden darf', 'Der Hinweis, dass es keine ausgewogene Ernährung ersetzt'], ['Die Bezeichnung „Arzneimittel“', 'Ein Nutri-Score', 'Das Fairtrade-Siegel']);
+mul('tre', 2, 'Was spricht gegen unnötige Nahrungsergänzungsmittel?', ['Sie gleichen eine einseitige Ernährung nicht aus', 'Zu hohe Dosen können schaden', 'Sie sind oft teuer', 'Wechselwirkungen mit Medikamenten sind möglich'], ['Sie enthalten immer Gentechnik', 'Sie sind grundsätzlich verboten', 'Sie dürfen nur Sportler kaufen']);
+one('tre', 2, 'Für wen kann ein Vitamin-B12-Präparat sinnvoll sein?', 'Für Menschen, die sich vegan ernähren', ['Für Menschen, die viel Fleisch essen', 'Für alle, die wenig Wasser trinken', 'Für Kinder, die gerne Obst essen'], 'Vitamin B12 steckt fast nur in tierischen Lebensmitteln.');
+asg('tre', 1, 'Welche Ernährungsform passt?', ['vegetarisch', 'vegan', 'beides nicht'], [['Käse und Eier ja, Fleisch nein', 0], ['Nur pflanzliche Lebensmittel', 1], ['Fisch und Gemüse, kein anderes Fleisch', 2], ['Milch ja, Fisch nein', 0]], 'Wer Fisch isst, lebt nicht vegetarisch.');
+asg('tre', 2, 'Chance oder Risiko einer vegetarischen Ernährung?', ['Chance', 'Risiko'], [['Mehr Obst und Gemüse', 0], ['Mangel an Eisen oder anderen Mineralstoffen', 1], ['Weniger fettreiche Fleischprodukte', 0], ['Zu wenig Eiweiß bei einseitiger Auswahl', 1], ['Geringeres Risiko für Herz-Kreislauf-Erkrankungen', 0]]);
+mul('tre', 2, 'Warum verzichten Menschen auf tierische Lebensmittel?', ['Tierwohl', 'Klima und Umwelt', 'Gesundheit', 'Weniger Wasser- und Flächenverbrauch'], ['Weil Fleisch gesetzlich begrenzt ist', 'Weil pflanzliche Produkte immer billiger sind', 'Weil tierische Produkte keine Nährstoffe enthalten']);
+mul('tre', 3, 'Welche Lebensmittel helfen bei veganer Ernährung, den Nährstoffbedarf zu decken?', ['Hülsenfrüchte für Eiweiß', 'Vollkorn und Nüsse für B-Vitamine', 'Pflanzenöle und Ölsaaten für Omega-3-Fettsäuren', 'Grünes Blattgemüse für Mikronährstoffe'], ['Honig für Vitamin B12', 'Weißbrot für Eiweiß', 'Limonade für Mineralstoffe']);
+rec('tre', 3, 'Beschreibe drei negative Aspekte von Nahrungsergänzungsmitteln.', 3, ['Sie gleichen eine schlechte Ernährung nicht aus', 'Überdosierung kann schaden', 'Sie sind oft teuer und unnötig', 'Wechselwirkungen mit Medikamenten sind möglich']);
+
+/* Ernährung */
+ord('ern', 1, 'Bringe die Ebenen der BZfE-Pyramide in die richtige Reihenfolge, von unten (am meisten) nach oben (am wenigsten).', ['Getränke', 'Gemüse und Obst', 'Getreide und Kartoffeln', 'Milch, Fleisch, Fisch, Hülsenfrüchte', 'Öle, Fette, Nüsse', 'Extras']);
+asg('ern', 1, 'Wie viele Portionen pro Tag zeigt die neue BZfE-Pyramide?', ['6', '5', '4', '1'], [['Getränke', 0], ['Gemüse und Obst', 1], ['Getreide und Kartoffeln', 2], ['Extras', 3]]);
+one('ern', 1, 'Wie viele Portionen Milch und Milchprodukte empfiehlt die DGE täglich?', '2', ['1', '4', '6'], 'Die Pyramide zeigt zwei Bausteine Milch und einen für Fleisch, Fisch, Ei oder Hülsenfrüchte.');
+mul('ern', 2, 'Welche Sätze gehören zu den DGE-Empfehlungen von 2024?', ['Am besten Wasser trinken', 'Obst und Gemüse – viel und bunt', 'Hülsenfrüchte und Nüsse regelmäßig essen', 'Vollkorn ist die beste Wahl', 'Pflanzliche Öle bevorzugen', 'Fleisch und Wurst – weniger ist mehr'], ['Täglich Fleisch ist die beste Wahl', 'Weißmehl ist die beste Wahl', 'Süßes vor jeder Mahlzeit']);
+one('ern', 1, 'Wie viel sollte man laut DGE täglich trinken?', 'Rund 1,5 Liter', ['Rund 0,5 Liter', 'Mindestens 5 Liter', 'Genau 3 Liter Saft']);
+one('ern', 2, 'Wie viel Fleisch und Wurst empfiehlt die DGE höchstens pro Woche?', 'Rund 300 g', ['Rund 3 kg', 'Rund 1000 g', 'Gar keins']);
+one('ern', 2, 'Wie setzt sich eine Ernährung nach den DGE-Empfehlungen zusammen?', 'Zu mehr als drei Vierteln aus pflanzlichen Lebensmitteln', ['Je zur Hälfte aus Fleisch und Milch', 'Zu drei Vierteln aus tierischen Lebensmitteln', 'Nur aus pflanzlichen Lebensmitteln']);
+one('ern', 2, 'Warum ist die neue Pyramide „gut für dich und die Umwelt“?', 'Pflanzliche Lebensmittel stehen im Mittelpunkt und Hülsenfrüchte sind eine Alternative zu Fleisch', ['Sie empfiehlt vor allem Produkte aus Übersee', 'Sie empfiehlt nur Bio-Fleisch', 'Sie verbietet Getreide']);
+asg('ern', 1, 'Ordne den Nährstoffen ihre Hauptaufgabe zu.', ['Energie', 'Aufbau und Reparatur', 'Verdauung'], [['Kohlenhydrate', 0], ['Eiweiß', 1], ['Ballaststoffe', 2], ['Fett', 0]], 'Fett hilft außerdem bei der Aufnahme fettlöslicher Vitamine A, D, E und K. Eiweiß kann auch Energie liefern.');
+mul('ern', 2, 'Welche Vitamine sind fettlöslich?', ['A', 'D', 'E', 'K'], ['C', 'B12']);
+asg('ern', 2, 'Welchem Wert des Qualitätsfächers gehört der Aspekt an?', ['Gesundheit', 'Eignung', 'Genuss', 'Ökonomie'], [['Nährstoffgehalt', 0], ['Haltbarkeit und Lagerung', 1], ['Geruch und Geschmack', 2], ['Preis', 3], ['Einfache Zubereitung', 1]]);
+asg('ern', 3, 'Und diese Aspekte des Qualitätsfächers?', ['Ökologie', 'Sozial', 'Soziokulturell', 'Emotional'], [['Verpackung und Transportweg', 0], ['Faire Arbeitsbedingungen', 1], ['Image, Lifestyle und Essatmosphäre', 2], ['Erinnerungen und Gefühle beim Essen', 3]]);
+one('ern', 1, 'Welche Aussage zum Nutri-Score stimmt?', 'Er vergleicht Produkte innerhalb derselben Kategorie von A bis E', ['Er sagt, ob ein Lebensmittel gesund ist', 'Er bewertet die Nachhaltigkeit', 'Er ist dasselbe wie das Bio-Siegel']);
+asg('ern', 2, 'Vorteil oder Nachteil des Nutri-Scores?', ['Vorteil', 'Nachteil'], [['Schnell und leicht verständlich', 0], ['Nachhaltigkeit wird nicht bewertet', 1], ['Vergleich innerhalb einer Produktgruppe', 0], ['Grün wird schnell als „gesund“ missverstanden', 1], ['Anreiz für Hersteller, Rezepte zu verbessern', 0]]);
+asg('ern', 1, 'Welches Datum steht auf der Packung, und was tust du nach Ablauf?', ['Prüfen und oft noch essen', 'Nicht mehr essen'], [['Nudeln, Mindesthaltbarkeitsdatum vor zwei Tagen', 0], ['Rinderhack, Verbrauchsdatum vor zwei Tagen', 1], ['Joghurt, Mindesthaltbarkeitsdatum vor vier Tagen', 0]], 'Das Mindesthaltbarkeitsdatum ist kein Wegwerfdatum: ansehen, riechen, probieren. Das Verbrauchsdatum gilt für leicht verderbliche Lebensmittel.');
+mul('ern', 1, 'Welche sechs Angaben sind Pflichtangaben auf Lebensmitteln?', ['Bezeichnung', 'Zutatenliste mit Allergenen', 'Nährwerttabelle', 'Mindesthaltbarkeitsdatum', 'Nettofüllmenge', 'Hersteller mit Anschrift'], ['Nutri-Score', 'Bio-Siegel', 'Werbeslogan']);
+mul('ern', 2, 'Was stimmt zur Low-Carb-Diät im Vergleich mit den DGE-Empfehlungen?', ['Sie enthält wenig Getreide, obwohl Vollkorn empfohlen wird', 'Hülsenfrüchte werden gemieden, obwohl sie regelmäßig gegessen werden sollen', 'Sie enthält viele tierische Proteine, obwohl gilt: Fleisch und Wurst – weniger ist mehr'], ['Sie empfiehlt viel Brot und Nudeln', 'Sie entspricht den DGE-Empfehlungen genau', 'Sie ist besonders ressourcenschonend']);
+rec('ern', 2, 'Nenne sechs Pflichtangaben auf Lebensmittelverpackungen.', 6, ['Bezeichnung', 'Zutatenliste', 'Allergene oder Nährwerttabelle', 'Mindesthaltbarkeitsdatum', 'Nettofüllmenge', 'Hersteller mit Anschrift']);
+rec('ern', 3, 'Nenne die acht Werte des Qualitätsfächers.', 8, ['Gesundheitswert', 'Genusswert', 'Eignungswert', 'Ökonomischer Wert', 'Ökologischer Wert', 'Sozialer Wert', 'Soziokultureller Wert', 'Emotionaler Wert']);
+rec('ern', 3, 'Nenne vier DGE-Empfehlungen und wie du sie bei einer Pizza mit Salat umsetzt.', 4, ['Obst und Gemüse: viel Gemüse auf Pizza und im Salat', 'Vollkorn: Teig aus Vollkornmehl', 'Pflanzliche Öle: Rapsöl oder Olivenöl im Dressing', 'Fleisch und Wurst: wenig Schinken oder Hülsenfrüchte als Alternative', 'Wasser dazu trinken']);
+
+/* Gesundheit */
+one('ges', 1, 'Wie definiert die WHO Gesundheit?', 'Zustand des vollständigen körperlichen, seelischen und sozialen Wohlbefindens und nicht nur das Freisein von Krankheit und Gebrechen', ['Zustand, in dem man keine Krankheit hat und viel Sport treibt', 'Zustand vollständiger körperlicher Fitness und guter Ernährung', 'Zustand, in dem man nur selten zum Arzt gehen muss']);
+asg('ges', 1, 'Zu welchem Bereich der WHO-Definition gehört das?', ['körperlich', 'seelisch', 'sozial'], [['Das Handgelenk schmerzt.', 0], ['Lena fühlt sich unzufrieden und antriebslos.', 1], ['Ben streitet ständig mit seinem besten Freund.', 2], ['Mira ist oft müde.', 0]]);
+rec('ges', 2, 'Nenne die Definition von Gesundheit der WHO.', 3, ['Zustand vollständigen Wohlbefindens', 'körperlich, seelisch und sozial', 'nicht nur das Freisein von Krankheit und Gebrechen']);
+asg('ges', 1, 'Temporär oder permanent?', ['temporäre Körpergestaltung', 'permanente Körpergestaltung'], [['Tätowierung', 1], ['Haare färben', 0], ['Schminken', 0], ['Schönheitsoperation', 1], ['Nagellack', 0]]);
+asg('ges', 2, 'Vorteil oder Nachteil einer Tätowierung?', ['Vorteil', 'Nachteil'], [['Ausdruck der eigenen Persönlichkeit', 0], ['Schwer wieder zu entfernen', 1], ['Infektionen sind möglich', 1], ['Erinnerungen festhalten', 0], ['Farbstoffe können gesundheitsschädlich sein', 1]]);
+mul('ges', 2, 'Wie steigert man persönliche Gesundheitsressourcen?', ['Regelmäßige Bewegung', 'Ausreichend Schlaf', 'Ausgewogene Ernährung', 'Gute Freundschaften pflegen', 'Bildschirmzeit begrenzen'], ['Mahlzeiten regelmäßig auslassen', 'Stress durch noch mehr Termine lösen']);
+one('ges', 1, 'Wie viel Bewegung empfiehlt die WHO für Kinder und Jugendliche?', '60 Minuten pro Tag', ['60 Minuten pro Woche', '10 Minuten pro Tag', '5 Stunden pro Tag']);
+mul('ges', 1, 'Welche Funktionen hat Bekleidung?', ['Schutz vor Kälte und Nässe', 'Ausdruck der Persönlichkeit', 'Zugehörigkeit zu einer Gruppe', 'Schutz bei der Arbeit'], ['Ersatz für Sonnenlicht', 'Sie macht Sport überflüssig']);
+one('ges', 2, 'Was sind Stressoren?', 'Auslöser von Stress, z. B. Prüfungen, Streit oder Zeitdruck', ['Entspannungsübungen gegen Stress', 'Hormone, die man mit der Nahrung aufnimmt', 'Vorsorgeuntersuchungen']);
+one('ges', 2, 'Wozu dienen die Jugenduntersuchungen J1 und J2?', 'Sie prüfen Gesundheit und Entwicklung und helfen, Probleme früh zu erkennen', ['Sie ersetzen den Sportunterricht', 'Sie sind nur für Berufssportler', 'Sie prüfen die Eignung für den Führerschein']);
+
+/* Nachhaltigkeit */
+asg('nac', 1, 'Zu welcher Dimension der Nachhaltigkeit gehört das?', ['ökologisch', 'ökonomisch', 'sozial'], [['Wasser und Böden schützen', 0], ['Faire Löhne und Bildungschancen', 2], ['Betriebe wirtschaften langfristig stabil', 1], ['Weniger Treibhausgase', 0]]);
+one('nac', 1, 'Was bedeutet Nachhaltigkeit?', 'Ressourcen so nutzen, dass auch künftige Generationen gut leben können', ['Möglichst viel in kurzer Zeit produzieren', 'Nur Bio-Lebensmittel kaufen', 'Waren immer im Internet bestellen'], 'Der Begriff stammt aus der Forstwirtschaft: Es soll nicht mehr Holz geschlagen werden, als nachwächst. „Enkeltauglich“ meint dasselbe.');
+one('nac', 1, 'Was beschreibt der Begriff Lebensstil?', 'Die Art und Weise, wie man sein Leben gestaltet, z. B. Ernährung, Konsum, Freizeit und Wohnen', ['Nur die Mode, die man trägt', 'Das Einkommen eines Haushalts', 'Die Größe der Wohnung']);
+one('nac', 1, 'Was ist der ökologische Fußabdruck?', 'Die Fläche, die nötig ist, um den Lebensstil eines Menschen dauerhaft zu ermöglichen', ['Die Schuhgröße aller Einwohner', 'Die Menge an Plastik in den Meeren', 'Die Zahl der Bäume in einem Land']);
+asg('nac', 2, 'Zu welchem Bereich des Fußabdrucks passt die Maßnahme?', ['Wohnen', 'Mobilität', 'Ernährung', 'Konsum'], [['Heizung herunterdrehen', 0], ['Bus statt Auto', 1], ['Weniger Fleisch essen', 2], ['Kaputtes Handy reparieren', 3], ['Second-Hand kaufen', 3], ['Saisonal und regional einkaufen', 2]]);
+one('nac', 2, 'Was ist Flächennutzungskonkurrenz?', 'Verschiedene Nutzungen konkurrieren um dieselbe Fläche, z. B. Nahrungsmittel, Tierfutter und Energiepflanzen', ['Nachbarn streiten um einen Parkplatz', 'Supermärkte konkurrieren um Kundschaft', 'Bauern tauschen untereinander Felder'], 'Der Konflikt zwischen Nahrung und Bioenergie heißt auch „Food or Fuel“.');
+mul('nac', 2, 'Warum sind Tauschbörsen nachhaltig?', ['Dinge werden länger genutzt', 'Es muss weniger neu produziert werden', 'Müll wird vermieden', 'Sie sparen Geld und verbinden Menschen'], ['Es werden mehr neue Produkte verkauft', 'Sie erhöhen den Transport aus Übersee']);
+mul('nac', 2, 'Was vermeidet Lebensmittelverschwendung im Haushalt?', ['Essensplan und Einkaufsliste', 'Reste einfrieren oder einmachen', 'Nur so viel kochen, wie gegessen wird', 'Krummes Gemüse kaufen'], ['Immer Großpackungen kaufen', 'Alles am Mindesthaltbarkeitsdatum wegwerfen']);
+mul('nac', 2, 'Warum gelten Hülsenfrüchte als „Nahrungsmittel der Zukunft“?', ['Sie liefern viel pflanzliches Eiweiß', 'Sie sind reich an Ballaststoffen und sättigen gut', 'Sie verbessern den Boden', 'Sie brauchen weniger Ressourcen als tierisches Eiweiß'], ['Sie müssen aus Übersee kommen', 'Sie enthalten besonders viel Zucker']);
+asg('nac', 2, 'Wie umweltfreundlich ist die Getränkeverpackung?', ['eher gut', 'eher schlecht'], [['Mehrweg-Glasflasche aus der Region', 0], ['Einweg-PET-Flasche', 1], ['Mehrweg-Kiste beim Getränkehändler', 0], ['Getränkedose', 1]], 'Getränkekartons sind Verbundmaterial und lassen sich schwer recyceln. Mehrweg schneidet meist am besten ab, vor allem bei kurzen Wegen.');
+mul('nac', 3, 'Warum schont ein Tiny House Ressourcen?', ['Weniger Baumaterial', 'Weniger Heizenergie', 'Weniger Möbel und Konsum'], ['Mehr Wohnfläche pro Person', 'Größere Grundstücke', 'Höherer Stromverbrauch']);
+rec('nac', 3, 'Erläutere drei Gründe, warum pflanzliche Proteinquellen besser für die Umwelt sind als tierische.', 3, ['Weniger Wasser und Energie', 'Weniger Treibhausgase', 'Weniger Fläche, weil kein Tierfutter angebaut werden muss', 'Hülsenfrüchte verbessern den Boden']);
+rec('nac', 3, 'Erkläre Nachhaltigkeit mit Ursprung und den drei Dimensionen.', 4, ['Ursprung: Forstwirtschaft, nicht mehr nutzen als nachwächst', 'ökologisch', 'ökonomisch', 'sozial']);
+
+/* Textil und Welt */
+ord('tex', 1, 'Bringe die Stationen der Textilen Kette in die richtige Reihenfolge.', ['Rohstoffgewinnung', 'Garnherstellung', 'Stoffherstellung', 'Veredelung (Färben)', 'Konfektion (Nähen)', 'Vertrieb und Handel', 'Gebrauch und Pflege', 'Entsorgung oder Recycling']);
+one('tex', 1, 'Was ist virtuelles Wasser?', 'Die gesamte Wassermenge, die bei der Herstellung eines Produkts verbraucht wird', ['Das Wasser, das im Produkt enthalten ist', 'Wasser aus dem Internet-Shop', 'Regenwasser in Stauseen']);
+mul('tex', 1, 'Welche sozialen Folgen hat Fast Fashion in den Produktionsländern?', ['Sehr niedrige Löhne', 'Sehr lange Arbeitszeiten', 'Kinderarbeit', 'Fehlender Arbeitsschutz'], ['Bessere Schulen durch hohe Löhne', 'Kürzere Arbeitswochen']);
+asg('tex', 2, 'An welcher Station entsteht das Umweltproblem?', ['Rohstoffgewinnung', 'Veredelung', 'Gebrauch'], [['Baumwolle wird stark bewässert', 0], ['Färbereien leiten giftiges Abwasser in Flüsse', 1], ['Beim Waschen gelangt Mikroplastik ins Abwasser', 2], ['Pestizide belasten die Böden', 0]]);
+mul('tex', 2, 'Wie handelst du bei „Gebrauch und Pflege“ nachhaltig?', ['Kleidung mehrfach tragen, bevor sie in die Wäsche kommt', 'Niedrige Waschtemperatur wählen', 'Kaputte Kleidung reparieren', 'Sachgerecht pflegen, damit sie lange hält'], ['Immer den Trockner benutzen', 'Nach jedem Tragen heiß waschen']);
+one('tex', 1, 'Was ist eine Wertschöpfungskette?', 'Alle Stationen eines Produkts vom Rohstoff bis zum Verkauf, an denen sein Wert steigt', ['Eine Kette von Supermärkten', 'Die Rangliste der teuersten Marken', 'Die Reihenfolge der Kassen im Laden']);
+one('tex', 2, 'Warum sind Billigprodukte oft nur scheinbar günstig?', 'Andere tragen die Kosten, z. B. Beschäftigte durch niedrige Löhne und die Umwelt durch Schäden', ['Weil sie immer nach kurzer Zeit teurer werden', 'Weil der Staat sie besteuert', 'Weil sie nur im Internet verkauft werden']);
+mul('tex', 3, 'Welche Folgen hat ungleicher Welthandel vor Ort?', ['Niedrige Löhne in Produktionsländern', 'Kinderarbeit', 'Umweltschäden an den Produktionsorten', 'Abhängigkeit von wenigen großen Abnehmern'], ['Gleich hohe Löhne überall', 'Sinkende Transportwege']);
+rec('tex', 3, 'Beschreibe drei Möglichkeiten, bei Textilien nachhaltig zu handeln.', 3, ['Weniger kaufen, vorher überlegen', 'Auf Siegel achten', 'Second-Hand oder Tauschen', 'Reparieren und richtig pflegen', 'Getragene Kleidung weitergeben oder spenden']);
+
+/* Finanzen */
+one('geld', 1, 'Was sind Fixkosten?', 'Regelmäßige, gleichbleibende Ausgaben wie Miete', ['Einmalige Ausgaben für den Urlaub', 'Einnahmen aus dem Nebenjob', 'Ausgaben, die jeden Monat stark schwanken']);
+one('geld', 1, 'Wozu dient ein Haushaltsbuch?', 'Einnahmen und Ausgaben festzuhalten und Sparmöglichkeiten zu erkennen', ['Rezepte für den Haushalt zu sammeln', 'Die Miete automatisch zu bezahlen', 'Schulden zu löschen']);
+one('geld', 1, 'Was ist der Unterschied zwischen brutto und netto?', 'Netto ist das, was nach Abzug von Steuern und Sozialabgaben übrig bleibt', ['Brutto ist immer weniger als netto', 'Netto bezeichnet das Einkommen vor Abzügen', 'Beide sind gleich hoch']);
+one('geld', 2, 'Was bedeutet Überschuldung?', 'Die Einnahmen reichen auf Dauer nicht, um Schulden und Lebenshaltung zu bezahlen', ['Man hat einen Kredit und zahlt ihn pünktlich zurück', 'Man hat mehr Geld als nötig gespart', 'Man hat einen Handyvertrag']);
+asg('geld', 2, 'Chance oder Risiko eines Immobilienkredits?', ['Chance', 'Risiko'], [['Eigene Wohnung ohne alles Geld sofort zu haben', 0], ['Belastung über viele Jahre', 1], ['Überschuldung, wenn Einkommen wegfällt', 1], ['Nach der Tilgung wohnt man mietfrei', 0]]);
+rec('geld', 3, 'Erläutere, wie jemand die Finanzen im Blick behalten kann.', 2, ['Haushaltsbuch oder App führen', 'Alle Einnahmen und Ausgaben eintragen', 'Unnötige Ausgaben erkennen und sparen']);
+
+/* Versicherungen */
+asg('ver', 1, 'Gesetzliche Sozialversicherung oder freiwillige Individualversicherung?', ['gesetzlich', 'freiwillig'], [['Krankenversicherung', 0], ['Hausratversicherung', 1], ['Rentenversicherung', 0], ['Privathaftpflicht', 1], ['Arbeitslosenversicherung', 0], ['Berufsunfähigkeitsversicherung', 1], ['Pflegeversicherung', 0]], 'Die fünf Säulen: Kranken-, Pflege-, Renten-, Arbeitslosen- und Unfallversicherung.');
+one('ver', 1, 'Was zahlt die Privathaftpflicht?', 'Schäden, die man anderen unbeabsichtigt zufügt', ['Schäden an den eigenen Sachen', 'Den eigenen Arztbesuch', 'Die Rente im Alter']);
+one('ver', 2, 'Warum lohnt sich eine Berufsunfähigkeitsversicherung früh?', 'Junge, gesunde Menschen zahlen meist geringere Beiträge', ['Sie ist für junge Menschen gesetzlich vorgeschrieben', 'Sie ersetzt die Krankenversicherung', 'Sie zahlt Schäden am Auto']);
+one('ver', 2, 'Wer zahlt die Beiträge zur gesetzlichen Unfallversicherung von Beschäftigten?', 'Der Arbeitgeber', ['Die Beschäftigten selbst', 'Die Krankenkasse', 'Die Kommune']);
+asg('ver', 2, 'Gesetzliche oder private Unfallversicherung?', ['gesetzlich', 'privat'], [['Gilt bei der Arbeit und auf dem Arbeitsweg', 0], ['Gilt auch in der Freizeit', 1], ['Man schließt sie freiwillig ab', 1], ['Für Beschäftigte verpflichtend', 0]]);
+one('ver', 2, 'Warum solltest du Empfehlungen von Versicherungsvertretern prüfen?', 'Sie verdienen an Abschlüssen mit und beraten daher nicht immer neutral', ['Sie dürfen keine Haftpflicht verkaufen', 'Sie arbeiten für die Verbraucherzentrale', 'Sie kennen keine Tarife']);
+rec('ver', 3, 'Begründe, warum die Privathaftpflicht auch für Haushalte mit wenig Geld wichtig ist.', 2, ['Schäden können sehr hoch sein und die Existenz bedrohen', 'Der Beitrag ist im Vergleich dazu gering']);
+
+/* Zusammenleben */
+asg('leb', 1, 'Welche Form des Zusammenlebens ist das?', ['Patchworkfamilie', 'Alleinerziehend', 'Wohngemeinschaft', 'Single-Haushalt'], [['Zwei Partner leben mit Kindern aus früheren Beziehungen.', 0], ['Eine Mutter lebt allein mit ihrer Tochter.', 1], ['Drei Studierende teilen sich eine Wohnung.', 2], ['Herr K. wohnt allein.', 3]]);
+mul('leb', 2, 'Warum gibt es heute mehr kleine Haushalte als früher?', ['Weniger Kinder pro Familie', 'Höhere Lebenserwartung', 'Mehr Scheidungen', 'Mehr Wohlstand'], ['Weniger Wohnungen für Singles', 'Niedrigere Lebenserwartung']);
+asg('leb', 2, 'Vorteil oder Nachteil eines Single-Haushalts?', ['Vorteil', 'Nachteil'], [['Man entscheidet alles selbst', 0], ['Kosten werden nicht geteilt', 1], ['Bad und Küche für sich allein', 0], ['Einsamkeit ist möglich', 1]]);
+
+/* Engagement */
+asg('eng', 1, 'Welche Form der Arbeit ist das?', ['Erwerbsarbeit', 'Haus- und Familienarbeit', 'Ehrenamt'], [['Frau A. arbeitet als Pflegefachkraft.', 0], ['Tim passt auf seinen Bruder auf.', 1], ['Nadja hilft bei der Tafel.', 2], ['Herr B. kauft für die Familie ein.', 1], ['Sara leitet unbezahlt das Kinderturnen.', 2]], 'Erwerbsarbeit bringt den Lebensunterhalt. Hausarbeit ist meist unbezahlt. Das Ehrenamt ist freiwillig und meist unbezahlt.');
+rec('eng', 2, 'Erkläre ehrenamtliche Arbeit und nenne zwei Beispiele.', 3, ['Freiwillig, in der Freizeit, für die Gesellschaft', 'In der Regel ohne oder mit wenig Bezahlung', 'Beispiel: Sportverein', 'Beispiel: Tafel oder soziale Organisation']);
+mul('eng', 1, 'Warum ist bürgerschaftliches Engagement wichtig?', ['Man gestaltet die Gesellschaft mit', 'Es stärkt den Zusammenhalt', 'Man lernt Verantwortung', 'Es stärkt die Demokratie'], ['Man verdient damit den Lebensunterhalt', 'Es ist gesetzlich vorgeschrieben']);
+one('eng', 2, 'Welcher Zusammenhang besteht zwischen Engagement und Demokratie?', 'Wer sich engagiert, nimmt aktiv teil und kann die Gesellschaft mitgestalten', ['Nur Politiker dürfen sich engagieren', 'Engagement ersetzt Wahlen', 'Engagement ist nur in Vereinen erlaubt']);
+one('eng', 1, 'Was bedeutet Work-Life-Balance?', 'Ein gesundes Gleichgewicht zwischen Arbeit und Privatleben', ['Möglichst viel Arbeit am Wochenende', 'Die Arbeitszeit einer Vollzeitstelle', 'Sport während der Arbeit']);
+asg('eng', 2, 'Welche Funktion von Freizeit steht im Vordergrund?', ['Erholung', 'Geselligkeit', 'Weiterentwicklung'], [['Abends in Ruhe ein Buch lesen', 0], ['Mit Freunden zum Grillen treffen', 1], ['Gitarre spielen lernen', 2]]);
+mul('eng', 3, 'Was hilft bei einer guten Work-Life-Balance?', ['Feste Pausen', 'Bewegung und Hobbys', 'Zeit mit Familie und Freunden', 'Erreichbarkeit begrenzen'], ['Immer erreichbar sein', 'Auf Schlaf verzichten']);
+
+/* Siegel: Erkennen und Wissen, automatisch aus den Daten */
+const RECOG = ['eubio', 'bio', 'bioland', 'demeter', 'naturland', 'ohnegen', 'fairtrade', 'vvegan', 'gknopf', 'gots', 'mehrweg', 'einweg', 'gruenerpunkt'];
+RECOG.forEach(id => CARDS.push({ k: 'one', t: 'sie', l: 1, q: 'Welches Zeichen ist das? (Der Schriftzug ist verdeckt.)', stim: SEAL[id](true), r: SEALNAME[id], w: sample(RECOG.filter(x => x !== id), 3).map(x => SEALNAME[x]), key: 'seal-' + id }));
+Object.keys(SEALFACT).forEach(id => { const f = SEALFACT[id]; CARDS.push({ k: 'multi', t: 'sie', l: 2, q: `Worauf kannst du dich bei „${SEALNAME[id].replace(/[„“]/g, '')}“ verlassen?`, stim: SEAL[id](false), r: f.r, w: f.w, key: 'fact-' + id }); });
+one('sie', 2, 'Welches Siegel hat bei Lebensmitteln die strengeren Regeln?', 'Demeter', ['EU-Bio-Siegel'], 'Verbandssiegel wie Demeter, Bioland und Naturland gehen über die EU-Mindeststandards hinaus.');
+asg('sie', 2, 'Wofür steht das Siegel vor allem?', ['ökologisch', 'sozial', 'ökologisch und sozial'], [['EU-Bio-Siegel', 0], ['Fair Wear Foundation', 1], ['GOTS', 2], ['Fairtrade', 2]], 'Fairtrade legt den Schwerpunkt auf Soziales, verlangt aber auch umweltschonenden Anbau.');
+asg('sie', 1, 'Lebensmittel oder Textil?', ['Lebensmittel', 'Textil'], [['Naturland', 0], ['GOTS', 1], ['Grüner Knopf', 1], ['Demeter', 0], ['Fair Wear Foundation', 1]]);
+rec('sie', 3, 'Beschreibe vier Aspekte, worauf man sich beim Fairtrade-Siegel verlassen kann.', 4, ['Faire Löhne und Preise', 'Keine ausbeuterische Kinderarbeit', 'Geregelte, sichere Arbeitsbedingungen', 'Recht, sich zu organisieren', 'Umweltschonender Anbau']);
+rec('sie', 3, 'Vergleiche EU-Bio und Demeter in drei Punkten.', 3, ['Demeter: ganzer Betrieb, EU-Bio: Teilumstellung möglich', 'Demeter: biodynamisch mit strengeren Regeln', 'Demeter: mindestens die Hälfte des Futters vom eigenen Betrieb', 'Demeter: weniger Zusatzstoffe erlaubt']);
+CARDS.forEach(c => { c.id = c.key || hash(c.q); });
+
+/* ---------- Etiketten: Zutaten und erfundene Produkte ---------- */
+const ING = {
+  hafer: { d: 'HAFERFLOCKEN', al: 'Gluten', clean: 1 }, weizen: { d: 'WEIZENMEHL', al: 'Gluten', clean: 1 }, vweizen: { d: 'WEIZENVOLLKORNMEHL', al: 'Gluten', clean: 1 }, roggen: { d: 'ROGGENVOLLKORNMEHL', al: 'Gluten', clean: 1 },
+  zucker: { d: 'Zucker' }, glukose: { d: 'Glukosesirup' }, palm: { d: 'Palmfett' }, raps: { d: 'Rapsöl' }, sonne: { d: 'Sonnenblumenöl' },
+  mm: { d: 'MAGERMILCH', al: 'Milch', tier: 1 }, mmp: { d: 'MAGERMILCHPULVER', al: 'Milch', tier: 1 }, vmp: { d: 'VOLLMILCHPULVER', al: 'Milch', tier: 1 }, jog: { d: 'JOGHURT', al: 'Milch', tier: 1 }, mei: { d: 'MILCHEIWEISS', al: 'Milch', tier: 1 }, butter: { d: 'BUTTER', al: 'Milch', tier: 1 },
+  ei: { d: 'HÜHNEREI', al: 'Ei', tier: 1 }, lec: { d: 'Emulgator Lecithine (SOJA)', al: 'Soja' }, gel: { d: 'Gelatine', nonv: 1 },
+  aroma: { d: 'Aroma', mik: 1 }, citro: { d: 'Säuerungsmittel Citronensäure', mik: 1 }, vitc: { d: 'Vitamin C', mik: 1 }, vitb: { d: 'Vitamin B12', mik: 1 }, vitd: { d: 'Vitamin D', mik: 1 },
+  suess: { d: 'Süßungsmittel Sucralose' },
+  salz: { d: 'Speisesalz', clean: 1 }, wasser: { d: 'Wasser', clean: 1 }, apfel: { d: 'Apfelpüree', clean: 1 }, erdb: { d: 'Erdbeerpüree', clean: 1 }, banane: { d: 'Bananenpüree', clean: 1 }, himb: { d: 'Himbeeren', clean: 1 },
+  linse: { d: 'Linsenmehl', clean: 1 }, erbse: { d: 'Erbsenprotein', clean: 1 }, kakao: { d: 'Kakaomasse', clean: 1 }, kbutter: { d: 'Kakaobutter', clean: 1 }, tee: { d: 'Schwarztee-Extrakt', clean: 1 }, tomate: { d: 'Tomaten', clean: 1 }, zwiebel: { d: 'Zwiebeln', clean: 1 }, krauter: { d: 'Kräuter', clean: 1 }, paprika: { d: 'Paprikapulver', clean: 1 }, hefe: { d: 'Hefe', clean: 1 },
+  hasel: { d: 'HASELNÜSSE', al: 'Schalenfrüchte', clean: 1 }, mandel: { d: 'MANDELN', al: 'Schalenfrüchte', clean: 1 }, cashew: { d: 'CASHEWKERNE', al: 'Schalenfrüchte', clean: 1 }, rosine: { d: 'Rosinen', clean: 1 }
+};
+const PRODUCTS = [
+  { n: 'Knusper-Riegel', bez: 'Müsliriegel mit Schokoladenüberzug', pic: '🍫', col: '#7a4a24', u: 'g', size: [125, 150], ppk: [8, 12], ing: ['hafer', 'glukose', 'zucker', 'palm', 'kakao', 'vmp', 'lec', 'salz', 'aroma'], nv: { kh: 63, zu: 28, fe: 17, sf: 8.5, ei: 7, ba: 4.5, sa: .35 }, score: 'D', eb: 'extra', claims: ['korn', 'nat'], seals: [], packg: 'Folie um jeden einzelnen Riegel', eign: 'Praktisch für unterwegs', soz: 'Gilt als Snack für sportliche Menschen' },
+  { n: 'Fruchtjoghurt Himbeere', bez: 'Joghurt mit Himbeerzubereitung', pic: '🍓', col: '#c2355f', u: 'g', size: [150, 500], ppk: [2.2, 4], ing: ['jog', 'zucker', 'himb', 'aroma', 'citro'], nv: { kh: 14, zu: 13, fe: 2.9, sf: 1.9, ei: 3.5, ba: .4, sa: .12 }, score: 'C', eb: 'milch', claims: ['fett', 'kids'], seals: [], packg: 'Plastikbecher mit Aludeckel', eign: 'Direkt aus dem Becher löffelbar', soz: 'Tiere im Comic sprechen Kinder an' },
+  { n: 'Durstkick Eistee', bez: 'Erfrischungsgetränk mit Zitronengeschmack', pic: '🧊', col: '#2e7fb8', u: 'ml', size: [330, 500, 1000], ppk: [1.4, 2.4], ing: ['wasser', 'zucker', 'glukose', 'citro', 'tee', 'aroma', 'vitc'], nv: { kh: 10.5, zu: 10.5, fe: 0, sf: 0, ei: 0, ba: 0, sa: .05 }, score: 'E', eb: 'extra', claims: ['nat'], seals: ['vvegan'], packg: 'Getränkekarton aus Verbundmaterial', eign: 'Mit Strohhalm direkt trinkbar', soz: 'Auf der Packung ist eine Sommerparty zu sehen' },
+  { n: 'Power Shake Vanille', bez: 'Milchmischgetränk mit Süßungsmitteln', pic: '💪', col: '#22313f', u: 'ml', size: [330, 400], ppk: [4.5, 10], ing: ['mm', 'mei', 'mmp', 'aroma', 'suess', 'salz'], nv: { kh: 5.2, zu: 3.9, fe: .6, sf: .3, ei: 7.6, ba: .2, sa: .18 }, score: 'B', eb: 'milch', claims: ['prot', 'fett'], seals: [], packg: 'Einwegflasche aus Plastik', eign: 'Trinkfertig für nach dem Training', soz: 'Passt zum Fitness-Lifestyle' },
+  { n: 'Linsen-Crisps Paprika', bez: 'Linsensnack mit Paprikageschmack', pic: '🌶️', col: '#a8441c', u: 'g', size: [75, 100], ppk: [24, 34], ing: ['linse', 'sonne', 'hefe', 'salz', 'paprika', 'zucker', 'aroma'], nv: { kh: 58, zu: 4.8, fe: 19, sf: 1.9, ei: 15, ba: 4.3, sa: 2.6 }, score: 'C', eb: 'extra', claims: ['minus', 'nat'], seals: ['bioland'], packg: 'Tüte aus Verbundfolie', eign: 'Trocken gelagert lange haltbar', soz: 'Wirkt wie ein moderner, bewusster Snack' },
+  { n: 'Vollmilch Karamell', bez: 'Vollmilchschokolade mit Karamellstückchen', pic: '🍫', col: '#5a3218', u: 'g', size: [100, 150], ppk: [14, 20], ing: ['zucker', 'kbutter', 'vmp', 'kakao', 'butter', 'lec', 'salz', 'aroma'], nv: { kh: 59, zu: 57, fe: 30, sf: 19, ei: 6.5, ba: 1.2, sa: .6 }, score: 'D', eb: 'extra', claims: ['fair'], seals: ['fairtrade'], packg: 'Papierschuber um Folie', eign: 'Lange haltbar bei kühler Lagerung', soz: 'Schokolade gehört zu vielen Festen' },
+  { n: 'Dinkelfreunde Kekse', bez: 'Vollkornkekse mit Schokostückchen', pic: '🍪', col: '#9c6b2f', u: 'g', size: [150, 200], ppk: [9, 13], ing: ['vweizen', 'zucker', 'palm', 'kakao', 'ei', 'salz', 'aroma'], nv: { kh: 66, zu: 24, fe: 20, sf: 10, ei: 8, ba: 6.2, sa: .5 }, score: 'D', eb: 'extra', claims: ['korn'], seals: [], packg: 'Plastikschale in Folie', eign: 'Wiederverschließbare Packung', soz: 'Wirkt wie die gesunde Pausenwahl' },
+  { n: 'Quetsch-Smoothie', bez: 'Fruchtpüree aus Apfel, Erdbeere und Banane mit Vitaminen', pic: '🍌', col: '#d9662a', u: 'g', size: [90, 120], ppk: [11, 15], ing: ['apfel', 'erdb', 'banane', 'vitc', 'vitd'], nv: { kh: 13, zu: 10, fe: .3, sf: .1, ei: .7, ba: 1.9, sa: .01 }, score: 'B', eb: null, claims: ['oz', 'vit', 'kids'], seals: [], packg: 'Quetschbeutel mit Plastikdeckel', eign: 'Ohne Löffel für unterwegs', soz: 'Lachende Früchte sprechen Kinder an' },
+  { n: 'Erbsen-Bällchen', bez: 'Vegane Bällchen aus Erbsenprotein', pic: '🌱', col: '#3f7d3a', u: 'g', size: [200, 240], ppk: [11, 15], ing: ['erbse', 'wasser', 'raps', 'zwiebel', 'krauter', 'salz', 'aroma'], nv: { kh: 4, zu: .9, fe: 15, sf: 1.3, ei: 16, ba: 4.7, sa: 1.4 }, score: 'B', eb: 'protein', claims: ['prot'], seals: ['vvegan'], packg: 'Plastikschale im Karton', eign: 'In fünf Minuten in der Pfanne fertig', soz: 'Passt zum Trend, weniger Fleisch zu essen' },
+  { n: 'Nuss-Mischung', bez: 'Mischung aus Nüssen und Rosinen', pic: '🥜', col: '#6a5a2f', u: 'g', size: [150, 200], ppk: [14, 19], ing: ['cashew', 'mandel', 'hasel', 'rosine', 'sonne'], nv: { kh: 36, zu: 33, fe: 31, sf: 3.3, ei: 13, ba: 6.1, sa: .03 }, score: 'B', eb: 'fett', claims: ['nat'], seals: [], packg: 'Plastikbeutel', eign: 'Lange lagerbar', soz: 'Gilt als Nervennahrung beim Lernen' },
+  { n: 'Roggen-Vollkornbrot', bez: 'Roggenvollkornbrot, geschnitten', pic: '🍞', col: '#7c5a36', u: 'g', size: [500, 750], ppk: [3.5, 5.5], ing: ['roggen', 'wasser', 'hefe', 'salz'], nv: { kh: 39, zu: 2.2, fe: 1.3, sf: .2, ei: 6.4, ba: 8.2, sa: 1.1 }, score: 'A', eb: 'getreide', claims: [], seals: ['naturland'], packg: 'Papierbeutel mit Sichtfenster', eign: 'Vorgeschnitten und sofort essbar', soz: 'Brot gehört zur deutschen Esskultur' },
+  { n: 'Naturjoghurt mild', bez: 'Joghurt mild, 3,8 % Fett', pic: '🥛', col: '#3b6ea5', u: 'g', size: [500], ppk: [2.2, 3.6], ing: ['jog'], nv: { kh: 4.6, zu: 4.6, fe: 3.8, sf: 2.5, ei: 4.1, ba: 0, sa: .12 }, score: 'A', eb: 'milch', claims: [], seals: ['demeter', 'eubio'], packg: 'Mehrwegglas', eign: 'Zum Kochen und Backen geeignet', soz: 'Zeigt einen bewussten Lebensstil' },
+  { n: 'Tomatensoße Basilikum', bez: 'Tomatensoße mit Kräutern', pic: '🍅', col: '#b5301f', u: 'g', size: [350, 400], ppk: [5, 8], ing: ['tomate', 'zwiebel', 'raps', 'zucker', 'salz', 'krauter'], nv: { kh: 8, zu: 6.5, fe: 2.2, sf: .3, ei: 1.5, ba: 1.5, sa: .9 }, score: 'B', eb: 'gemuese', claims: ['nat'], seals: ['eubio'], packg: 'Glas mit Schraubdeckel', eign: 'Nur noch erwärmen', soz: 'Weckt Urlaubsgefühle in Italien' },
+  { n: 'Goldwaffeln', bez: 'Eierwaffeln', pic: '🧇', col: '#c98a10', u: 'g', size: [250], ppk: [5, 7], ing: ['ei', 'zucker', 'weizen', 'palm', 'mmp', 'salz', 'lec', 'aroma'], nv: { kh: 50, zu: 33, fe: 27, sf: 13, ei: 8, ba: 1.1, sa: .75 }, score: 'E', eb: 'extra', claims: ['nat'], seals: ['ohnegen'], packg: 'Folienbeutel', eign: 'Sofort essbar', soz: 'Erinnert an Jahrmarkt und Familienfeste' },
+  { n: 'Zitronen-Rührkuchen', bez: 'Rührkuchen mit Zitronengeschmack', pic: '🍋', col: '#b89a1a', u: 'g', size: [400], ppk: [3.8, 5], ing: ['zucker', 'weizen', 'ei', 'raps', 'glukose', 'vmp', 'lec', 'salz', 'aroma'], nv: { kh: 53, zu: 27, fe: 24, sf: 3, ei: 5.8, ba: .8, sa: .65 }, score: 'D', eb: 'extra', claims: [], seals: [], packg: 'Folienverpackung', eign: 'Vier Wochen haltbar', soz: 'Gehört für viele zum Kaffeetrinken' },
+  { n: 'Fruchtbären', bez: 'Fruchtgummi mit Fruchtsaft', pic: '🐻', col: '#c7337a', u: 'g', size: [200], ppk: [5, 8], ing: ['glukose', 'zucker', 'gel', 'apfel', 'citro', 'aroma'], nv: { kh: 77, zu: 46, fe: .1, sf: 0, ei: 6.9, ba: .4, sa: .07 }, score: 'E', eb: 'extra', claims: ['fett', 'kids'], seals: [], packg: 'Plastiktüte', eign: 'Lange haltbar', soz: 'Bekannt aus der Fernsehwerbung' },
+  { n: 'Immun Sprudel', bez: 'Nahrungsergänzungsmittel mit Vitamin C, D und Zink', pic: '💊', col: '#2f6f9e', u: 'g', size: [90], ppk: [28, 36], ing: ['citro', 'vitc', 'vitd', 'aroma'], nem: { form: 'Brausetablette', rows: [['Vitamin C', '160 mg', '200 %'], ['Vitamin D', '10 µg', '200 %'], ['Zink', '10 mg', '100 %']] }, claims: ['immun'], seals: [], packg: 'Plastikröhrchen', eign: 'Löst sich schnell in Wasser auf', soz: 'Wird als moderner Gesundheitstrend beworben' },
+  { n: 'Vegan Plus Tabletten', bez: 'Nahrungsergänzungsmittel mit Vitamin B12 und Eisen', pic: '💊', col: '#3d7f5a', u: 'g', size: [46], ppk: [80, 100], ing: ['vitb', 'vitd'], nem: { form: 'Tablette', rows: [['Vitamin B12', '10 µg', '400 %'], ['Vitamin D', '5 µg', '100 %'], ['Eisen', '10 mg', '71 %']] }, claims: ['immun'], seals: ['vvegan'], packg: 'Pappschachtel mit Blister', eign: 'Lässt sich leicht schlucken', soz: 'Spricht Menschen an, die vegan leben' }
+];
+const BRAND = ['Lumi', 'Bergkorn', 'Frischwerk', 'Nordhof', 'Sonnenhain', 'Kraftwiese', 'Tagwerk', 'Hofgut Nebel'];
+const EBENE = { getraenk: 'Getränke', gemuese: 'Gemüse und Obst', getreide: 'Getreide und Kartoffeln', milch: 'Milch und Milchprodukte', protein: 'Fleisch, Fisch, Ei, Hülsenfrüchte', fett: 'Öle, Fette und Nüsse', extra: 'Extras: Süßes, Knabbereien, fette Snacks' };
+const CLAIM = {
+  fett: { t: 'Wenig Fett', r: p => `Fettarm heißt nicht gesund: Pro 100 ${p.u} stecken ${fmt(p.nv.zu, 1)} g Zucker darin.`, w: ['Fettarm bedeutet auch zuckerarm, deshalb ist nichts weiter zu beachten.', 'Die Aussage ist gesetzlich verboten, weil Fett lebensnotwendig ist.'] },
+  prot: { t: 'High Protein', r: p => `Der Preis ist hoch (${euro(p.gp)} pro ${p.gu}), und viele Menschen essen ohnehin genug Eiweiß.`, w: ['Mehr Eiweiß ist immer besser, deshalb lohnt sich jeder Preis.', 'Das Produkt ersetzt mit dem Eiweiß eine vollständige Mahlzeit.'] },
+  vit: { t: 'Mit Vitaminen', r: p => `Zugesetzte Vitamine machen es nicht zum Ersatz für Obst: Es enthält ${fmt(p.nv.zu, 1)} g Zucker pro 100 ${p.u}.`, w: ['Mit zugesetzten Vitaminen darf man davon beliebig viel essen.', 'Zugesetzte Vitamine ersetzen eine abwechslungsreiche Ernährung.'] },
+  oz: { t: 'Ohne Zuckerzusatz', r: p => `Der Fruchtzucker bleibt: Es enthält trotzdem ${fmt(p.nv.zu, 1)} g Zucker pro 100 ${p.u}.`, w: ['„Ohne Zuckerzusatz“ heißt, dass kein Zucker enthalten ist.', 'Das Produkt ist deshalb für Zähne völlig unbedenklich.'] },
+  korn: { t: 'Mit Vollkorn', r: p => `Vollkorn ist gut, doch ${fmt(p.nv.zu, 1)} g Zucker pro 100 ${p.u} bleiben ein Nachteil.`, w: ['Vollkorn hebt die Wirkung von Zucker und Fett vollständig auf.', 'Mit Vollkorn gehört es automatisch zur Basis der Pyramide.'] },
+  nat: { t: 'Natürlich gut', r: () => '„Natürlich“ ist kein geschützter Begriff und sagt wenig über die Qualität aus.', w: ['„Natürlich“ ist dasselbe wie das EU-Bio-Siegel.', '„Natürlich“ garantiert, dass keine Zusatzstoffe enthalten sind.'] },
+  minus: { t: '40 % weniger Fett', r: p => `Der Vergleich ist unklar, und mit ${fmt(p.nv.fe, 1)} g Fett pro 100 g bleibt es ein fetter Snack.`, w: ['Ein Produkt mit 40 % weniger Fett ist automatisch fettarm.', 'Durch weniger Fett gehört es zur Ebene „Gemüse und Obst“.'] },
+  fair: { t: 'Hilf den Kakaobauern', r: () => 'Das Siegel steht für faire Bedingungen, macht die Schokolade aber nicht gesünder.', w: ['Mit dem Fair-Versprechen wird aus Schokolade ein gesundes Lebensmittel.', 'Die Aussage zeigt, dass das Produkt Bio-Qualität hat.'] },
+  immun: { t: 'Für dein Immunsystem', r: () => 'Wer sich ausgewogen ernährt, braucht das Produkt meist nicht, und es ersetzt keine gesunde Ernährung.', w: ['Das Produkt schützt zuverlässig vor Krankheiten.', 'Je mehr Tabletten man nimmt, desto stärker wird das Immunsystem.'] },
+  kids: { t: 'Für Kinder', r: p => `Es spricht Kinder an, doch mit ${fmt(p.nv.zu, 1)} g Zucker pro 100 ${p.u} ist es keine ideale Kinderkost.`, w: ['Für Kinder beworbene Lebensmittel müssen besonders gesund sein.', 'Der Hinweis bedeutet, dass Kinder mehr davon essen sollen.'] }
+};
+const PFLICHT = { bez: 'Bezeichnung', zut: 'Zutatenliste', nw: 'Nährwerttabelle', mhd: 'Mindesthaltbarkeitsdatum', menge: 'Nettofüllmenge', herst: 'Hersteller mit Anschrift' };
+const FAECHER = ['Gesundheitswert', 'Genusswert', 'Eignungswert', 'Ökonomischer Wert', 'Ökologischer Wert', 'Sozialer Wert', 'Soziokultureller Wert', 'Emotionaler Wert'];
+
+function makeProduct(base) {
+  const p = JSON.parse(JSON.stringify(base));
+  p.brand = pick(BRAND); p.sz = pick(p.size); p.gu = p.u === 'g' ? 'kg' : 'l';
+  if (p.nv) { const j = v => v * (0.92 + Math.random() * .16); const r = (v, d) => +j(v).toFixed(d); const n = p.nv; n.kh = r(n.kh, 1); n.zu = Math.min(n.kh, r(n.zu, 1)); n.fe = r(n.fe, 1); n.sf = Math.min(n.fe, r(n.sf, 1)); n.ei = r(n.ei, 1); n.ba = r(n.ba, 1); n.sa = r(n.sa, 2); n.kj = Math.round(17 * n.kh + 37 * n.fe + 17 * n.ei + 8 * n.ba); n.kcal = Math.round(n.kj / 4.184); }
+  const raw = (p.ppk[0] + Math.random() * (p.ppk[1] - p.ppk[0])) * p.sz / 1000;
+  p.price = Math.max(.49, Math.floor(raw * 10) / 10 + .09); p.price = +p.price.toFixed(2);
+  p.gp = +(p.price / p.sz * 1000).toFixed(2);
+  p.items = p.ing.map(i => ING[i]);
+  p.bio = p.seals.some(s => ['eubio', 'bioland', 'demeter', 'naturland'].includes(s));
+  p.mhd = `${String(rnd(1, 28)).padStart(2, '0')}.${String(rnd(1, 12)).padStart(2, '0')}.2027`;
+  return p;
+}
+function packHTML(p, hide = '') {
+  const m = `${p.sz} ${p.u}`, per = `100 ${p.u}`, n = p.nv;
+  const seals = p.seals.map(s => SEAL[s](false)).join('') + (p.score ? NUTRI(p.score) : '');
+  const front = `<div class="front" style="--pc:${p.col}"><div class="br">${p.brand}</div><div class="nm">${p.n}</div><div class="pic" aria-hidden="true">${p.pic}</div>${p.claims.slice(0, 2).map(c => `<div class="cl">${CLAIM[c].t}</div>`).join('')}<div class="sl">${seals}</div><div class="sz">${hide === 'menge' ? '' : m}</div></div>`;
+  let b = '';
+  if (hide !== 'bez') b += `<p><b>${p.bez}</b>${hide === 'menge' ? '' : ', ' + m}</p>`;
+  else if (hide !== 'menge') b += `<p>${m}</p>`;
+  if (hide !== 'zut') b += `<p><b>Zutaten:</b> ${p.items.map(i => i.d).join(', ')}${p.bio ? ' (aus ökologischer Landwirtschaft)' : ''}.</p>`;
+  if (p.nem) b += `<p><b>Verzehrempfehlung:</b> Täglich 1 ${p.nem.form}. Die angegebene empfohlene tägliche Verzehrmenge darf nicht überschritten werden. Kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung.</p><table>${p.nem.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]} (${r[2]} NRV*)</td></tr>`).join('')}</table><p class="small">*Nährstoffbezugswert pro Tagesportion</p>`;
+  else if (hide !== 'nw') b += `<table><tr><td><b>Nährwerte pro ${per}</b></td><td></td></tr><tr><td>Energie</td><td>${n.kj} kJ / ${n.kcal} kcal</td></tr><tr><td>Fett</td><td>${fmt(n.fe, 1)} g</td></tr><tr><td>davon gesättigte Fettsäuren</td><td>${fmt(n.sf, 1)} g</td></tr><tr><td>Kohlenhydrate</td><td>${fmt(n.kh, 1)} g</td></tr><tr><td>davon Zucker</td><td>${fmt(n.zu, 1)} g</td></tr><tr><td>Ballaststoffe</td><td>${fmt(n.ba, 1)} g</td></tr><tr><td>Eiweiß</td><td>${fmt(n.ei, 1)} g</td></tr><tr><td>Salz</td><td>${fmt(n.sa, 2)} g</td></tr></table>`;
+  if (hide !== 'mhd') b += `<p>Mindestens haltbar bis: ${p.mhd}</p>`;
+  if (hide !== 'herst') b += `<p>${p.brand} Lebensmittel GmbH, Musterweg 7, 12345 Musterstadt</p>`;
+  b += `<p><b>Preis:</b> ${euro(p.price)}${hide === 'gp' ? '' : ` · <b>Grundpreis:</b> ${fmt(p.gp)} € / ${p.gu}`}</p>`;
+  return `<div class="pack">${front}<div class="back">${b}</div></div>`;
+}
+const O = (r, w) => shuffle([{ t: r, ok: 1 }, ...w.map(t => ({ t }))]);
+const OM = (r, w) => shuffle([...r.map(t => ({ t, ok: 1 })), ...w.map(t => ({ t }))]);
+const EQ = {
+  grundpreis: p => ({ hide: 'gp', q: { k: 'num', text: `Berechne den Grundpreis in Euro pro ${p.gu === 'kg' ? 'Kilogramm' : 'Liter'}.`, ans: p.gp, tol: .02, unit: `€ / ${p.gu}` }, tip: `Preis geteilt durch die Menge in ${p.gu}. ${p.sz} ${p.u} sind ${fmt(p.sz / 1000, 3)} ${p.gu}.`, e: `${euro(p.price)} : ${fmt(p.sz / 1000, 3)} ${p.gu} = ${fmt(p.gp)} € / ${p.gu}. Mit dem Grundpreis kannst du verschiedene Packungsgrößen vergleichen.` }),
+  zuckerPack: p => { if (!p.nv || p.nv.zu < 3) return null; const a = +(p.nv.zu * p.sz / 100).toFixed(1); return { q: { k: 'num', text: 'Wie viel Zucker steckt in der ganzen Packung?', ans: a, tol: Math.max(.5, a * .01), unit: 'g' }, tip: `Die Tabelle gilt für 100 ${p.u}. Die Packung enthält ${p.sz} ${p.u}.`, e: `${fmt(p.nv.zu, 1)} g × ${fmt(p.sz / 100, 2)} = ${fmt(a, 1)} g. Die DGE nennt 50 g Zucker pro Tag als Obergrenze.` }; },
+  allergen: p => { const a = [...new Set(p.items.filter(i => i.al).map(i => i.al))]; if (!a.length) return null; return { q: { k: 'multi', text: 'Welche Allergene sind laut Zutatenliste enthalten?', opts: OM(a, ['Gluten', 'Milch', 'Ei', 'Soja', 'Schalenfrüchte', 'Sellerie', 'Erdnüsse'].filter(x => !a.includes(x)).slice(0, Math.max(2, 5 - a.length))) }, tip: 'Allergene sind in der Zutatenliste hervorgehoben. Weizen, Roggen und Hafer enthalten Gluten.', e: 'Allergene müssen in der Zutatenliste hervorgehoben sein, z. B. in Großbuchstaben.' }; },
+  erste: p => { if (p.items.length < 3 || p.nem) return null; return { q: { k: 'one', text: 'Welche Zutat hat den größten Gewichtsanteil?', opts: O(p.items[0].d, sample(p.items.slice(1), 3).map(i => i.d)) }, tip: 'Überlege, nach welcher Regel die Zutaten sortiert sind.', e: 'Die Zutaten stehen nach Gewichtsanteil sortiert: Was am meisten enthalten ist, steht vorn.' }; },
+  pflicht: p => { if (p.nem) return null; const h = pick(Object.keys(PFLICHT)); return { hide: h, q: { k: 'one', text: 'Auf dieser Packung fehlt eine Pflichtangabe. Welche?', opts: shuffle(Object.keys(PFLICHT).map(k => ({ t: PFLICHT[k], ok: k === h ? 1 : 0 }))) }, tip: 'Gehe die sechs Pflichtangaben der Reihe nach durch. Der Fantasiename vorne reicht nicht als Bezeichnung.', e: `Es fehlt: ${PFLICHT[h]}.` }; },
+  pyramide: p => { if (!p.eb) return null; return { q: { k: 'one', text: 'Zu welcher Ebene der Ernährungspyramide gehört das Produkt am ehesten?', opts: O(EBENE[p.eb], sample(Object.keys(EBENE).filter(k => k !== p.eb), 3).map(k => EBENE[k])) }, tip: 'Sieh dir die erste Zutat an, aber auch Zucker und Fett.', e: p.eb === 'extra' ? 'Wegen Zucker, Fett oder Salz zählt es zu den Extras, auch wenn gesunde Zutaten darin sind.' : `Das Produkt gehört zur Ebene „${EBENE[p.eb]}“.` }; },
+  werbung: p => { if (!p.claims.length) return null; const c = CLAIM[p.claims[0]]; return { q: { k: 'one', text: `Die Packung wirbt mit „${c.t}“. Welche Einschätzung ist am besten begründet?`, opts: O(c.r(p), c.w) }, tip: 'Vergleiche das Werbeversprechen mit Zutaten, Nährwerten und Preis.', e: 'Werbung zeigt die Stärken eines Produkts. Für eine Bewertung brauchst du die Angaben auf der Rückseite.' }; },
+  siegel: p => { const s = p.seals.find(x => SEALFACT[x]); if (!s) return null; const f = SEALFACT[s]; const r = sample(f.r, Math.min(2, f.r.length)); return { q: { k: 'multi', text: `Worauf kannst du dich bei „${SEALNAME[s].replace(/[„“]/g, '')}“ auf dieser Packung verlassen?`, opts: OM(r, sample(f.w, 2)) }, tip: 'Ein Siegel gilt nur für das, was es wirklich prüft. Nicht jedes Siegel sagt etwas über Gesundheit aus.' }; },
+  vegan: p => { if (p.nem) return null; const v = !p.items.some(i => i.tier || i.nonv); const tierisch = p.items.filter(i => i.tier || i.nonv).map(i => i.d); return { q: { k: 'one', text: 'Ist das Produkt laut Zutatenliste vegan?', opts: O(v ? 'Ja, alle Zutaten sind pflanzlich oder mineralisch.' : `Nein, es enthält ${tierisch[0]}.`, [v ? `Nein, es enthält ${p.items[0].d}.` : 'Ja, das Produkt ist rein pflanzlich.', 'Das lässt sich nur am Nutri-Score erkennen.']) }, tip: 'Tierische Zutaten sind z. B. Milch, Ei, Gelatine und Butter.' }; },
+  faecher3: p => faecherQ(p, 3, [0, 3, 4, 2]),
+  faecher5: p => faecherQ(p, 5, [0, 1, 2, 3, 4, 5, 6, 7]),
+  gentechnik: p => { if (p.bio || p.seals.includes('ohnegen')) return EQ.genBio(p); const r = p.items.filter(i => i.tier || i.mik).map(i => i.d), w = p.items.filter(i => i.clean).map(i => i.d); if (!r.length || w.length < 2) return null; const rr = sample(r, 2); return { q: { k: 'multi', text: 'Bei welchen Zutaten ist der Einsatz von Gentechnik möglich?', opts: OM(rr, sample(w, 3)) }, tip: 'Denke an das Futter der Tiere und an Stoffe, die Mikroorganismen herstellen, z. B. Aroma oder Citronensäure.', e: 'Tierische Zutaten: gentechnisch verändertes Futter ist möglich. Aromen, Vitamine und Citronensäure können mit veränderten Mikroorganismen entstehen.' }; },
+  genBio: p => { const b = p.bio; return { q: { k: 'one', text: `Kannst du bei diesem Produkt sicher sein, dass keine Gentechnik zum Einsatz kam?`, opts: O(b ? 'Weitgehend ja: Im Bio-Landbau ist Gentechnik ausgeschlossen, unvermeidbare Spuren sind aber möglich.' : 'Nicht ganz: Das Siegel schränkt Gentechnik stark ein, einzelne Zusatzstoffe können trotzdem so entstanden sein.', ['Ja, jedes Siegel auf einer Packung schließt Gentechnik vollständig aus.', 'Nein, das Siegel sagt gar nichts über Gentechnik aus.']) }, tip: 'Überlege, was das Siegel regelt und welche Ausnahmen es gibt.', e: 'Zufällige, technisch unvermeidbare Spuren bis 0,9 % müssen nicht gekennzeichnet werden.' }; },
+  nutri: p => { if (!p.score || !p.nv) return null; const n = p.nv, bad = 'CDE'.includes(p.score); const down = [], up = []; if (n.zu >= 15) down.push(`Viel Zucker (${fmt(n.zu, 1)} g)`); if (n.sf >= 5) down.push(`Viele gesättigte Fettsäuren (${fmt(n.sf, 1)} g)`); if (n.kj >= 1500) down.push(`Hoher Brennwert (${n.kj} kJ)`); if (n.sa >= 1.5) down.push(`Viel Salz (${fmt(n.sa, 2)} g)`); if (n.zu < 5) up.push(`Wenig Zucker (${fmt(n.zu, 1)} g)`); if (n.sf < 2) up.push(`Wenig gesättigte Fettsäuren (${fmt(n.sf, 1)} g)`); if (n.ba >= 4) up.push(`Viele Ballaststoffe (${fmt(n.ba, 1)} g)`); if (n.ei >= 7) up.push(`Viel Eiweiß (${fmt(n.ei, 1)} g)`); const r = bad ? down : up, w = bad ? up : down; if (!r.length) return null; const fill = ['Der Preis der Packung', 'Die Größe der Packung', 'Das Mindesthaltbarkeitsdatum']; return { q: { k: 'multi', text: `Das Produkt hat den Nutri-Score ${p.score}. Welche Angaben erklären das?`, opts: OM(r, [...w, ...sample(fill, Math.max(1, 3 - w.length))]) }, tip: 'Zucker, gesättigte Fette, Salz und Energie verschlechtern den Nutri-Score. Ballaststoffe und Eiweiß verbessern ihn.', e: 'Der Nutri-Score bewertet Nährwerte, nicht Preis oder Nachhaltigkeit. Er eignet sich zum Vergleich innerhalb einer Produktgruppe.' }; },
+  nemK: p => { if (!p.nem) return null; return { q: { k: 'multi', text: 'Welche Angaben kennzeichnen das Produkt als Nahrungsergänzungsmittel?', opts: OM(sample(['Die Bezeichnung „Nahrungsergänzungsmittel“', 'Die empfohlene tägliche Verzehrmenge', 'Der Warnhinweis zur Verzehrmenge', 'Der Hinweis „Kein Ersatz für eine ausgewogene Ernährung“'], 3), ['Der Grundpreis', 'Der Name des Herstellers', 'Das Mindesthaltbarkeitsdatum']) }, tip: 'Diese Angaben kommen auf normalen Lebensmitteln nicht vor.' }; }
+};
+function faecherQ(p, n, cats) {
+  const all = [[`Grundpreis ${fmt(p.gp)} € / ${p.gu}`, 3], [p.packg, 4], [p.eign, 2], [p.soz, 6], ['Schmeckt so gut, dass man weiteressen möchte', 1], ['Macht gute Laune und erinnert an schöne Momente', 7]];
+  if (p.nv) all.push([`${fmt(p.nv.zu, 1)} g Zucker pro 100 ${p.u}`, 0]);
+  if (p.seals.includes('fairtrade')) all.push(['Fairtrade-Siegel', 5]);
+  const rows = sample(all.filter(a => cats.includes(a[1])), n);
+  return { q: { k: 'assign', text: 'Ordne die Angaben den Werten des Qualitätsfächers zu.', cats: cats.map(c => FAECHER[c]), rows: rows.map(r => ({ t: r[0], c: cats.indexOf(r[1]) })) }, tip: 'Geld: ökonomisch. Umwelt: ökologisch. Praktisch: Eignung. Image und Lifestyle: soziokulturell.' };
+}
+const ELEVEL = { leicht: ['grundpreis', 'zuckerPack', 'allergen', 'erste'], mittel: ['pflicht', 'pyramide', 'werbung', 'siegel', 'vegan', 'faecher3'], schwer: ['gentechnik', 'nutri', 'nemK', 'faecher5', 'werbung'] };
+function genEtikett(level) {
+  for (let i = 0; i < 40; i++) {
+    const key = pick(ELEVEL[level]); if (key === APP.lastKey && i < 20) continue;
+    const base = key === 'nemK' ? pick(PRODUCTS.filter(p => p.nem)) : pick(PRODUCTS);
+    const p = makeProduct(base), r = EQ[key](p); if (!r) continue;
+    APP.lastKey = key;
+    return { topic: 'etikett', stim: packHTML(p, r.hide), q: r.q, tip: r.tip, e: r.e, key };
+  }
+}
+
+/* ---------- Fälle ---------- */
+const NAMES = ['Lena', 'Yusuf', 'Mira', 'Tom', 'Aylin', 'Jonas', 'Sofia', 'Emre', 'Klara', 'David', 'Nele', 'Amir', 'Paula', 'Finn', 'Zoe', 'Luca'];
+const VER = { kv: 'Gesetzliche Krankenversicherung', pv: 'Gesetzliche Pflegeversicherung', rv: 'Gesetzliche Rentenversicherung', av: 'Arbeitslosenversicherung', guv: 'Gesetzliche Unfallversicherung', hp: 'Privathaftpflichtversicherung', hr: 'Hausratversicherung', bu: 'Berufsunfähigkeitsversicherung', puv: 'Private Unfallversicherung', no: 'Keine dieser Versicherungen' };
+const VSHORT = { kv: 'Kranken', pv: 'Pflege', rv: 'Renten', av: 'Arbeitslosen', guv: 'Gesetzl. Unfall', hp: 'Privathaftpflicht', hr: 'Hausrat', bu: 'Berufsunfähigkeit', puv: 'Private Unfall', no: 'Keine davon' };
+const VFALL = [
+  [n => `${n} hat Fieber und geht zur Ärztin.`, 'kv'], [n => `${n} hat immer wieder Bauchschmerzen und lässt sich untersuchen.`, 'kv'], [n => `${n} braucht wegen einer Bronchitis Medikamente vom Arzt.`, 'kv'],
+  [n => `${n} verschüttet versehentlich Wasser über die Spielekonsole eines Freundes.`, 'hp'], [n => `${n} setzt sich bei Freunden aus Versehen auf deren Brille.`, 'hp'], [n => `${n} stößt beim Radfahren gegen ein parkendes Auto und zerkratzt es.`, 'hp'], [n => `${n} lässt beim Besuch das Tablet der Gastgeber fallen.`, 'hp'],
+  [n => `Bei ${n} wird eingebrochen. Fernseher und Schmuck sind weg.`, 'hr'], [n => `Sturm deckt das Dach ab. Regen zerstört Möbel in der Wohnung von ${n}.`, 'hr'], [n => `Ein Brand beschädigt das Sofa und den Schrank von ${n}.`, 'hr'], [n => `Ein Wasserrohr platzt und zerstört Teppiche und Möbel von ${n}.`, 'hr'],
+  [n => `${n} kann wegen einer Augenerkrankung den Beruf als Busfahrer nicht mehr ausüben.`, 'bu'], [n => `${n} ist Dachdecker und kann wegen Rückenproblemen dauerhaft nicht mehr im Beruf arbeiten.`, 'bu'], [n => `${n} kann wegen einer chronischen Erkrankung nicht mehr als Köchin arbeiten.`, 'bu'],
+  [n => `${n} rutscht auf dem Weg zur Arbeit aus und bricht sich den Arm.`, 'guv'], [n => `${n} verletzt sich während der Arbeitszeit an einer Maschine.`, 'guv'], [n => `${n} stürzt auf dem direkten Schulweg vom Fahrrad.`, 'guv'],
+  [n => `${n} verunglückt beim Skifahren im Urlaub. Eine dauerhafte Einschränkung bleibt, deshalb soll eine vereinbarte Geldsumme ausgezahlt werden.`, 'puv'], [n => `${n} stürzt in der Freizeit von der Leiter und behält einen bleibenden Schaden. Der abgeschlossene Vertrag sieht dafür eine Summe vor.`, 'puv'],
+  [n => `${n} ist im Ruhestand und bekommt kein Gehalt mehr.`, 'rv'], [n => `${n} wird 67 und hört auf zu arbeiten.`, 'rv'],
+  [n => `${n} verliert die Stelle, weil der Betrieb schließt.`, 'av'], [n => `${n} wird gekündigt und sucht eine neue Stelle.`, 'av'],
+  [n => `${n} braucht im Alter täglich Hilfe beim Anziehen und Waschen.`, 'pv'], [n => `Die Großmutter von ${n} zieht wegen eines Pflegegrads ins Pflegeheim.`, 'pv']
+];
+const VTRAP = [[n => `${n} lässt das eigene Handy fallen. Das Display ist kaputt.`, 'no'], [n => `${n} beschädigt mit Absicht das Fahrrad eines Mitschülers.`, 'no']];
+const ROWS = (arr, n) => sample(arr, n);
+const FIX = ['Miete', 'Handyvertrag', 'Strom-Abschlag', 'Rundfunkbeitrag', 'Haftpflicht-Beitrag', 'Monatsticket', 'Beitrag im Fitnessstudio'], VAR = ['Lebensmittel', 'Kleidung', 'Kinobesuch', 'Friseur', 'Geschenke', 'Essen gehen', 'Bücher'];
+const WG = ['Die Kosten für Geräte werden geteilt', 'Es ist meist günstiger', 'Man ist seltener allein', 'Man hilft sich im Alltag gegenseitig'], WO = ['Mehr Privatsphäre', 'Man muss keine Absprachen zum Putzen treffen', 'Bad und Küche muss man nicht teilen', 'Man hat mehr Ruhe'];
+const CASEH = (n, t) => `<p class="case"><b>Fall: ${n}</b>${t}</p>`;
+const SCH = { u: ['Keine Ersparnisse und kein Einkommen', 'Häufige Spontankäufe nach Influencer-Empfehlungen', 'Arbeitslosigkeit', 'Zu viele Ratenkäufe'], f: ['Kein Geld mehr für Aktivitäten mit Freunden', 'Psychischer Stress', 'Streit mit Menschen, die Geld geliehen haben', 'Gefahr, immer neue Schulden zu machen'], m: ['Ausgaben im Haushaltsbuch prüfen', 'Nebenjob suchen', 'Schuldnerberatung aufsuchen', 'Apps löschen, die zum Kauf anregen'] };
+const FALL = {
+  ver(level) {
+    if (level === 'leicht') { const c = pick(VFALL), n = pick(NAMES), keys = sample(Object.keys(VER).filter(k => k !== c[1] && k !== 'no'), 3); return { stim: CASEH(n, c[0](n)), q: { k: 'one', text: 'Welche Versicherung ist hier zuständig?', opts: O(VER[c[1]], keys.map(k => VER[k])) }, tip: 'Frage dich: Wem ist etwas passiert, und was wurde beschädigt?', e: VERKL[c[1]] }; }
+    const rows = [], used = new Set(), pool = shuffle(level === 'schwer' ? VFALL.concat(VTRAP) : VFALL);
+    const need = level === 'schwer' ? 4 : 3, names = sample(NAMES, need);
+    for (const c of pool) { if (rows.length >= need) break; if (used.has(c[1])) continue; used.add(c[1]); rows.push({ t: c[0](names[rows.length]), key: c[1] }); }
+    let keys = level === 'schwer' ? Object.keys(VER) : shuffle([...used, ...sample(Object.keys(VER).filter(k => !used.has(k) && k !== 'no'), 5 - used.size)]);
+    return { q: { k: 'assign', text: 'Ordne jedem Fall die passende Versicherung zu.', cats: keys.map(k => VSHORT[k]), rows: rows.map(r => ({ t: r.t, c: keys.indexOf(r.key) })) }, tip: 'Haftpflicht: Schaden bei anderen. Hausrat: eigene Sachen in der Wohnung. Arbeit und Schulweg: gesetzliche Unfallversicherung.', e: level === 'schwer' ? 'Die Haftpflicht zahlt nicht für eigene Sachen und nicht bei Absicht.' : undefined };
+  },
+  bud(level) {
+    const n = pick(NAMES), mode = pick(level === 'leicht' ? ['fix', 'rest'] : level === 'mittel' ? ['fix', 'rest', 'warm'] : ['spar', 'anteil', 'fix']);
+    if (mode === 'fix') { const k = level === 'leicht' ? 2 : level === 'mittel' ? 3 : 4; return { q: { k: 'assign', text: 'Fixkosten oder variable Kosten?', cats: ['fix', 'variabel'], rows: shuffle([...sample(FIX, k).map(t => ({ t, c: 0 })), ...sample(VAR, k).map(t => ({ t, c: 1 }))]) }, tip: 'Fixkosten fallen regelmäßig in gleicher Höhe an.', e: 'Fixkosten sind regelmäßig und gleichbleibend. Variable Kosten kannst du leichter beeinflussen.' }; }
+    const net = rnd(14, 24) * 100, miete = rnd(9, 15) * 50, strom = rnd(4, 9) * 10, handy = rnd(2, 5) * 5, leb = rnd(20, 34) * 10, frei = rnd(5, 15) * 10;
+    if (mode === 'warm') { const kalt = rnd(9, 15) * 50, nk = rnd(8, 20) * 10; return { stim: CASEH(n, `Die Kaltmiete beträgt ${kalt} €. Dazu kommen ${nk} € Nebenkosten für Heizung, Wasser und Müll.`), q: { k: 'num', text: 'Wie hoch ist die Warmmiete?', ans: kalt + nk, tol: 0, unit: '€' }, tip: 'Warmmiete = Kaltmiete + Nebenkosten', e: `${kalt} € + ${nk} € = ${kalt + nk} €. Beim Vergleich von Wohnungen zählt die Warmmiete.` }; }
+    const list = level === 'leicht' ? [['Miete', miete], ['Lebensmittel', leb], ['Handy', handy]] : [['Miete', miete], ['Strom', strom], ['Handy', handy], ['Lebensmittel', leb], ['Freizeit', frei]];
+    const sum = list.reduce((a, b) => a + b[1], 0), rest = net - sum, txt = `${n} verdient ${net} € netto im Monat. Ausgaben: ${list.map(l => `${l[0]} ${l[1]} €`).join(', ')}.`;
+    if (mode === 'rest') return { stim: CASEH(n, txt), q: { k: 'num', text: 'Wie viel Geld bleibt im Monat übrig?', ans: rest, tol: 0, unit: '€' }, tip: 'Zähle alle Ausgaben zusammen und ziehe sie vom Nettoeinkommen ab.', e: `${net} € − ${sum} € = ${rest} €. So funktioniert ein Haushaltsbuch: Einnahmen minus Ausgaben.` };
+    if (mode === 'anteil') { const a = Math.round(miete / net * 100); return { stim: CASEH(n, txt), q: { k: 'num', text: 'Wie viel Prozent des Nettoeinkommens gehen für die Miete weg? Runde auf ganze Prozent.', ans: a, tol: 1, unit: '%' }, tip: 'Miete geteilt durch Nettoeinkommen, mal 100', e: `${miete} : ${net} × 100 ≈ ${a} %.` }; }
+    const save = rnd(3, 10) * 10, ziel = save * rnd(4, 15) + rnd(0, 1) * 20, m = Math.ceil(ziel / save);
+    return { stim: CASEH(n, `${n} legt jeden Monat ${save} € zur Seite und möchte ${ziel} € für einen Führerschein-Baustein sparen.`), q: { k: 'num', text: 'Nach wie vielen vollen Monaten ist das Ziel erreicht?', ans: m, tol: 0, unit: 'Monate' }, tip: 'Teile das Sparziel durch die Monatsrate und runde auf.', e: `${ziel} : ${save} = ${fmt(ziel / save, 1)}, also nach ${m} vollen Monaten.` };
+  },
+  rat(level) {
+    const n = pick(NAMES), ware = pick(['Möbel', 'ein Laptop', 'ein E-Bike', 'eine Küche', 'ein Smartphone']), price = rnd(6, 40) * 100, mon = pick([12, 18, 24, 36]), rate = Math.ceil(price * (1 + rnd(8, 40) / 100) / mon / 5) * 5, total = rate * mon, more = total - price;
+    const txt = `${n} möchte ${ware} für ${price} € kaufen. Das Geschäft bietet einen Ratenkauf an: ${mon} Monate lang je ${rate} €.`;
+    if (level === 'leicht') return { stim: CASEH(n, txt), q: { k: 'num', text: 'Wie viel zahlt man insgesamt?', ans: total, tol: 0, unit: '€' }, tip: 'Monatsrate mal Anzahl der Monate', e: `${mon} × ${rate} € = ${total} €.` };
+    if (level === 'mittel') return pick([0, 1]) ? { stim: CASEH(n, txt), q: { k: 'num', text: 'Wie viel teurer ist der Ratenkauf als die Barzahlung?', ans: more, tol: 0, unit: '€' }, tip: 'Berechne zuerst den Gesamtbetrag.', e: `${total} € − ${price} € = ${more} € Mehrkosten.` } : { stim: CASEH(n, txt), q: { k: 'multi', text: 'Welche Nachteile hat der Ratenkauf?', opts: OM(['Am Ende zahlt man mehr als den Kaufpreis', 'Man bindet sich lange an eine feste Monatsrate', 'Die Rate kann bei Geldproblemen zur Belastung werden'], ['Man muss den ganzen Betrag sofort bezahlen', 'Das Produkt ist dadurch nachhaltiger']) }, tip: 'Überlege, was sich für die nächsten Monate ändert.' };
+    const a = Math.round(more / price * 100);
+    return { stim: CASEH(n, txt), q: { k: 'num', text: 'Um wie viel Prozent ist der Ratenkauf teurer? Runde auf ganze Prozent.', ans: a, tol: 1, unit: '%' }, tip: 'Mehrkosten geteilt durch den Kaufpreis, mal 100', e: `${more} : ${price} × 100 ≈ ${a} %.` };
+  },
+  woh(level) {
+    const n = pick(NAMES), kalt = rnd(9, 14) * 50, nk = rnd(8, 18) * 10, wg = rnd(7, 11) * 50, diff = Math.abs(kalt + nk - wg);
+    const txt = `${n} vergleicht zwei Angebote: eine Wohnung für ${kalt} € kalt plus ${nk} € Nebenkosten oder ein WG-Zimmer für ${wg} € warm.`;
+    if (level === 'leicht') return { q: { k: 'assign', text: 'Vorteil welcher Wohnform?', cats: ['WG', 'Eigene Wohnung'], rows: shuffle([...sample(WG, 2).map(t => ({ t, c: 0 })), ...sample(WO, 2).map(t => ({ t, c: 1 }))]) }, tip: 'Was teilt man in der WG, was hat man in der Wohnung für sich?' };
+    if (level === 'mittel') return { stim: CASEH(n, txt), q: { k: 'num', text: 'Wie groß ist der Unterschied pro Monat?', ans: diff, tol: 0, unit: '€' }, tip: 'Vergleiche die Warmmieten.', e: `Wohnung warm: ${kalt + nk} €, WG: ${wg} €. Unterschied: ${diff} €.` };
+    return { stim: CASEH(n, txt), q: { k: 'num', text: 'Wie groß ist der Unterschied in einem Jahr?', ans: diff * 12, tol: 0, unit: '€' }, tip: 'Erst die Warmmieten vergleichen, dann mal 12.', e: `${diff} € × 12 = ${diff * 12} €.` };
+  },
+  sch(level) {
+    const n = pick(NAMES);
+    if (level === 'leicht') return { q: { k: 'multi', text: 'Welche Stellen sind vertrauenswürdig für eine Schuldnerberatung?', opts: OM(sample(['Verbraucherzentrale', 'Caritas', 'Diakonie', 'Kommunale Schuldnerberatung'], 3), ['Sofort-Kredit-Hotline aus der Werbung', 'Influencer mit Finanztipps', 'Pfandleihe im Internet']) }, tip: 'Seriöse Beratung ist unabhängig und will nichts verkaufen.' };
+    if (level === 'mittel') return { q: { k: 'assign', text: 'Ursache, Folge oder Maßnahme bei Schulden?', cats: ['Ursache', 'Folge', 'Maßnahme'], rows: shuffle([...sample(SCH.u, 2).map(t => ({ t, c: 0 })), ...sample(SCH.f, 2).map(t => ({ t, c: 1 })), ...sample(SCH.m, 2).map(t => ({ t, c: 2 }))]) }, tip: 'Was passiert vorher, was danach, und was hilft?' };
+    const ein = rnd(9, 15) * 100, aus = ein - rnd(2, 8) * 25, sch = (ein - aus) * rnd(5, 20), m = sch / (ein - aus);
+    return { stim: CASEH(n, `${n} hat monatlich ${ein} € Einnahmen und ${aus} € feste Ausgaben. Die Schulden betragen ${sch} €.`), q: { k: 'num', text: 'Wie viele Monate dauert die Rückzahlung, wenn alles Übrige dafür genutzt wird?', ans: m, tol: 0, unit: 'Monate' }, tip: 'Berechne zuerst, was pro Monat übrig bleibt.', e: `${ein} € − ${aus} € = ${ein - aus} € pro Monat. ${sch} : ${ein - aus} = ${m} Monate.` };
+  }
+};
+const VERKL = { kv: 'Die Krankenversicherung übernimmt Arztbesuche und Behandlung.', pv: 'Die Pflegeversicherung hilft, wenn jemand dauerhaft Pflege braucht.', rv: 'Die Rentenversicherung zahlt im Ruhestand.', av: 'Die Arbeitslosenversicherung zahlt Arbeitslosengeld.', guv: 'Die gesetzliche Unfallversicherung gilt bei der Arbeit, auf dem Arbeitsweg und in der Schule.', hp: 'Die Privathaftpflicht zahlt Schäden, die man anderen versehentlich zufügt.', hr: 'Die Hausratversicherung ersetzt eigene Sachen in der Wohnung, z. B. nach Einbruch, Sturm oder Feuer.', bu: 'Die Berufsunfähigkeitsversicherung sichert das Einkommen, wenn man den Beruf nicht mehr ausüben kann.', puv: 'Die private Unfallversicherung gilt auch in der Freizeit.' };
+const AREA = { alle: 'Gemischt', ver: 'Versicherungen', bud: 'Budget', rat: 'Ratenkauf', woh: 'Wohnen', sch: 'Schulden' };
+function genFall(level) {
+  let a = APP.area.fall; if (a === 'alle') a = pick(Object.keys(FALL).filter(k => k !== APP.lastKey));
+  APP.lastKey = a; const t = FALL[a](level); t.topic = 'fall'; return t;
+}
+
+/* ---------- Grafiken: zufällige Beispieldaten ---------- */
+const PIES = [
+  { t: 'Was passiert mit aussortierter Kleidung?', cats: [['Altkleidersammlung', 40], ['Restmüll', 25], ['An Freunde gegeben', 15], ['Second-Hand verkauft', 10], ['Bleibt im Schrank', 10]], why: ['Viele Menschen kaufen mehr Kleidung, als sie brauchen.', 'Altkleider dürfen gesetzlich nicht verkauft werden.', 'Kleidung lässt sich grundsätzlich nicht wiederverwenden.'], ext: 'Baumwolle wird stark bewässert.' },
+  { t: 'Wer wirft Lebensmittel weg?', cats: [['Private Haushalte', 50], ['Verarbeitung', 20], ['Außer-Haus-Verpflegung', 15], ['Landwirtschaft', 10], ['Handel', 5]], why: ['In Haushalten wird oft zu viel eingekauft oder falsch gelagert.', 'Haushalte werfen Lebensmittel vor allem wegen des Nutri-Scores weg.', 'Der Handel darf keine Lebensmittel lagern.'], ext: 'Die Menge an Abfällen sinkt jedes Jahr.' },
+  { t: 'Wo landen alte Handys?', cats: [['In der Schublade', 45], ['Weitergegeben', 20], ['Verkauft', 15], ['Recycling-Sammelstelle', 15], ['Restmüll', 5]], why: ['Viele Menschen behalten alte Handys für den Notfall.', 'Alte Handys sind grundsätzlich nicht reparierbar.', 'Sammelstellen nehmen keine Handys an.'], ext: 'Jedes zweite kaputte Handy wird repariert.' },
+  { t: 'Wofür geben Jugendliche ihr Geld aus?', cats: [['Essen und Trinken', 30], ['Kleidung', 25], ['Freizeit', 25], ['Handy und Apps', 10], ['Sparen', 10]], why: ['Essen mit Freunden gehört für viele zum Alltag.', 'Jugendliche dürfen kein Geld sparen.', 'Kleidung ist für Jugendliche kostenlos.'], ext: 'Jugendliche haben heute mehr Taschengeld als früher.' },
+  { t: 'Wie verteilen sich die Ausgaben eines Haushalts?', cats: [['Wohnen', 35], ['Lebensmittel', 15], ['Mobilität', 15], ['Freizeit', 10], ['Sonstiges', 25]], why: ['Miete und Energie sind für die meisten Haushalte die größten Posten.', 'Lebensmittel sind in Deutschland kostenlos.', 'Haushalte geben für Wohnen meist nichts aus.'], ext: 'Die Mieten sind in den letzten Jahren gestiegen.' }
+];
+const BARS = [
+  { t: 'Haushalte mit Privathaftpflicht nach Einkommen', u: '%', x: ['unter 1000 €', '1000–2000 €', '2000–3000 €', '3000–5000 €', 'über 5000 €'], from: 50, to: 95, je: 'Je höher das Haushaltseinkommen, desto häufiger gibt es eine Privathaftpflicht.', anti: 'Je höher das Haushaltseinkommen, desto seltener gibt es eine Privathaftpflicht.', why: ['Bei wenig Geld wird der Beitrag eher eingespart.', 'Reiche Haushalte verursachen gesetzlich mehr Schäden.', 'Die Versicherung ist nur ab 3000 € erlaubt.'], ext: 'Eine Haftpflicht lohnt sich für alle Haushalte.' },
+  { t: 'Menschen, die regelmäßig Bio kaufen, nach Einkommen', u: '%', x: ['unter 1500 €', '1500–2500 €', '2500–3500 €', 'über 3500 €'], from: 20, to: 60, je: 'Je höher das Einkommen, desto häufiger wird Bio gekauft.', anti: 'Je höher das Einkommen, desto seltener wird Bio gekauft.', why: ['Bio-Produkte sind oft teurer.', 'Bio-Produkte sind nur in teuren Städten erlaubt.', 'Bio-Produkte enthalten mehr Kalorien.'], ext: 'Bio-Produkte schmecken besser.' },
+  { t: 'Jugendliche, die täglich 60 Minuten aktiv sind, nach Alter', u: '%', x: ['11 Jahre', '12 Jahre', '13 Jahre', '14 Jahre', '15 Jahre', '16 Jahre'], from: 40, to: 15, je: 'Je älter die Jugendlichen, desto seltener sind sie täglich 60 Minuten aktiv.', anti: 'Je älter die Jugendlichen, desto häufiger sind sie täglich 60 Minuten aktiv.', why: ['Mit dem Alter steigen oft Schul- und Bildschirmzeit.', 'Ältere Jugendliche dürfen keinen Sport mehr machen.', 'Sport wird ab 14 Jahren verboten.'], ext: 'Mädchen bewegen sich weniger als Jungen.' }
+];
+const LINES = [
+  { t: 'Anteil der Ein-Personen-Haushalte', x: [1950, 1970, 1990, 2010, 2020], from: 20, to: 45, s: 'Ein-Personen-Haushalte', why: ['Es gibt mehr ältere Menschen, die allein leben.', 'Single-Wohnungen wurden gesetzlich vorgeschrieben.', 'Heute wohnen alle Familien zusammen.'], ext: 'Die Wohnungen wurden im Lauf der Zeit teurer.' },
+  { t: 'Anteil von Bio an den Lebensmittelausgaben', x: [2005, 2010, 2015, 2020, 2025], from: 5, to: 25, s: 'Bio-Anteil', why: ['Immer mehr Menschen achten auf Umwelt und Tierwohl.', 'Konventionelle Lebensmittel wurden verboten.', 'Bio-Lebensmittel wurden kostenlos.'], ext: 'Bio-Produkte sind gesünder.' },
+  { t: 'Menschen, die täglich Fleisch essen', x: [2015, 2017, 2019, 2021, 2023], from: 35, to: 15, s: 'Täglicher Fleischverzehr', why: ['Viele Menschen achten stärker auf Klima, Tierwohl und Gesundheit.', 'Fleisch wurde gesetzlich verboten.', 'In Deutschland gibt es keine Tierhaltung mehr.'], ext: 'Fleischersatz schmeckt besser als Fleisch.' }
+];
+const COL = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+function jitterPie(cats) {
+  for (let t = 0; t < 50; t++) {
+    const v = cats.map(c => c[1]); for (let i = 0; i < 3; i++) { const a = rnd(0, v.length - 1), b = rnd(0, v.length - 1); if (a !== b && v[b] > 5) { v[a] += 5; v[b] -= 5; } }
+    const s = [...v].sort((a, b) => b - a); if (s[0] > s[1]) return cats.map((c, i) => ({ n: c[0], v: v[i] }));
+  }
+  return cats.map(c => ({ n: c[0], v: c[1] }));
+}
+function pieSVG(d, title) {
+  let a = -Math.PI / 2, s = ''; const cx = 110, cy = 105, r = 95;
+  d.forEach((x, i) => { const b = a + x.v / 100 * 2 * Math.PI, l = x.v > 50 ? 1 : 0; s += `<path d="M${cx} ${cy}L${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}A${r} ${r} 0 ${l} 1 ${(cx + r * Math.cos(b)).toFixed(1)} ${(cy + r * Math.sin(b)).toFixed(1)}Z" fill="${COL[i]}" stroke="var(--surface)" stroke-width="2"/>`; a = b; });
+  return `<div class="chart"><h2>${title}</h2><svg viewBox="0 0 220 210" style="max-width:230px;margin:0 auto" role="img" aria-label="Kreisdiagramm: ${title}">${s}</svg><ul class="legend">${d.map((x, i) => `<li><i style="background:${COL[i]}"></i>${x.n}<b>${x.v} %</b></li>`).join('')}</ul><p class="small">Beispieldaten, nur zum Üben.</p></div>`;
+}
+function barSVG(th, v) {
+  const W = 360, H = 230, L = 8, B = 44, n = v.length, g = (W - 2 * L) / n, bw = Math.min(40, g * .62), mx = 100, sc = (H - B - 22) / mx; let s = `<line x1="${L}" x2="${W - L}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/>`;
+  v.forEach((y, i) => { const x = L + g * i + (g - bw) / 2, h = y * sc, t = H - B - h; s += `<path d="M${x} ${H - B}V${t + 4}Q${x} ${t} ${x + 4} ${t}H${x + bw - 4}Q${x + bw} ${t} ${x + bw} ${t + 4}V${H - B}Z" fill="var(--c1)"/><text x="${x + bw / 2}" y="${t - 5}" text-anchor="middle">${y} %</text>`; const parts = th.x[i].replace('–', '–|').replace(/ (€|Jahre)/, '|$1').split('|'); s += `<text class="ax" text-anchor="middle" y="${H - B + 15}">` + parts.map((p, k) => `<tspan x="${x + bw / 2}" dy="${k ? 13 : 0}">${p}</tspan>`).join('') + `</text>`; });
+  return `<div class="chart"><h2>${th.t}</h2><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Balkendiagramm: ${th.t}">${s}</svg><p class="small">Beispieldaten, nur zum Üben.</p></div>`;
+}
+function lineSVG(th, v) {
+  const W = 360, H = 220, L = 34, R = 16, T = 16, B = 28, n = v.length, X = i => L + (W - L - R) * i / (n - 1), Y = y => T + (H - T - B) * (1 - y / 60); let s = '';
+  for (let y = 0; y <= 60; y += 10) s += `<line x1="${L}" x2="${W - R}" y1="${Y(y)}" y2="${Y(y)}" stroke="var(--line)"/><text class="ax" x="${L - 5}" y="${Y(y) + 4}" text-anchor="end">${y}</text>`;
+  s += `<polyline points="${v.map((y, i) => `${X(i)},${Y(y)}`).join(' ')}" fill="none" stroke="var(--c1)" stroke-width="2"/>`;
+  v.forEach((y, i) => { s += `<circle cx="${X(i)}" cy="${Y(y)}" r="4.5" fill="var(--c1)" stroke="var(--surface)" stroke-width="2"/><text class="ax" x="${X(i)}" y="${H - 9}" text-anchor="middle">${th.x[i]}</text>`; });
+  return `<div class="chart"><h2>${th.t}</h2><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Liniendiagramm: ${th.t}">${s}</svg><p class="small">Angaben in Prozent. Beispieldaten, nur zum Üben.</p></div>`;
+}
+function series(from, to, n) { const st = (to - from) / (n - 1); const v = []; for (let i = 0; i < n; i++) v.push(Math.round((from + st * i + (i && i < n - 1 ? rnd(-1, 1) : 0)) / 5) * 5); for (let i = 1; i < n; i++) if (to > from ? v[i] <= v[i - 1] : v[i] >= v[i - 1]) v[i] = v[i - 1] + (to > from ? 5 : -5); return v.map(x => Math.max(5, x)); }
+function genGrafik(level) {
+  const kind = pick(['pie', 'bar', 'line'].filter(k => k !== APP.lastKey)); APP.lastKey = kind;
+  if (kind === 'pie') {
+    const th = pick(PIES), d = jitterPie(th.cats), mx = d.reduce((a, b) => b.v > a.v ? b : a), rest = d.filter(x => x !== mx), stim = pieSVG(d, th.t);
+    if (level === 'leicht') { if (pick([0, 1])) return { topic: 'grafik', stim, q: { k: 'one', text: 'Welche Kategorie hat den größten Anteil?', opts: O(mx.n, sample(rest, 3).map(x => x.n)) }, tip: 'Vergleiche die Prozentwerte.' }; const a = sample(d, 2), s = a[0].v + a[1].v; return { topic: 'grafik', stim, q: { k: 'num', text: `Wie viel Prozent ergeben „${a[0].n}“ und „${a[1].n}“ zusammen?`, ans: s, tol: 0, unit: '%' }, tip: 'Addiere die beiden Werte.' }; }
+    if (level === 'mittel') { const r = sample(rest, 2); return { topic: 'grafik', stim, q: { k: 'one', text: 'Welche Kernaussage passt zur Grafik?', opts: O(`Der größte Anteil entfällt mit ${mx.v} % auf „${mx.n}“.`, [`Der größte Anteil entfällt auf „${r[0].n}“.`, 'Alle Kategorien sind ungefähr gleich groß.']) }, tip: 'Eine Kernaussage nennt das Wichtigste mit einem Wert.' }; }
+    return schwerGrafik(th, stim, [`„${mx.n}“ hat mit ${mx.v} % den größten Anteil.`, `Auf „${rest[0].n}“ entfallen ${rest[0].v} %.`]);
+  }
+  if (kind === 'bar') {
+    const th = pick(BARS), v = series(th.from, th.to, th.x.length), stim = barSVG(th, v), i = rnd(0, v.length - 1);
+    if (level === 'leicht') return { topic: 'grafik', stim, q: { k: 'num', text: `Lies den Wert für „${th.x[i]}“ ab.`, ans: v[i], tol: 0, unit: '%' }, tip: 'Der Wert steht über dem Balken.' };
+    if (level === 'mittel') return pick([0, 1]) ? { topic: 'grafik', stim, q: { k: 'one', text: 'Beschreibe den Zusammenhang. Welcher Satz passt?', opts: O(th.je, [th.anti, 'Zwischen den beiden Größen besteht kein Zusammenhang.']) }, tip: 'Sätze mit „je … desto“ beschreiben Zusammenhänge.' } : { topic: 'grafik', stim, q: { k: 'num', text: 'Wie groß ist der Unterschied zwischen dem ersten und dem letzten Balken?', ans: Math.abs(v[v.length - 1] - v[0]), tol: 0, unit: 'Prozentpunkte' }, tip: 'Größerer Wert minus kleinerer Wert.' };
+    return schwerGrafik(th, stim, [th.je, `Bei „${th.x[i]}“ liegt der Wert bei ${v[i]} %.`]);
+  }
+  const th = pick(LINES), v = series(th.from, th.to, th.x.length), stim = lineSVG(th, v), i = rnd(0, v.length - 1), up = th.to > th.from;
+  if (level === 'leicht') return { topic: 'grafik', stim, q: { k: 'num', text: `Lies den Wert für das Jahr ${th.x[i]} ab.`, ans: v[i], tol: 2, unit: '%' }, tip: 'Gehe vom Jahr nach oben zum Punkt und dann nach links zur Skala.' };
+  if (level === 'mittel') return { topic: 'grafik', stim, q: { k: 'one', text: 'Welche Beschreibung passt zur Entwicklung?', opts: O(`Der Wert ist von rund ${v[0]} % (${th.x[0]}) auf rund ${v[v.length - 1]} % (${th.x[v.length - 1]}) ${up ? 'gestiegen' : 'gesunken'}.`, [`Der Wert ist von rund ${v[0]} % auf rund ${v[v.length - 1]} % ${up ? 'gesunken' : 'gestiegen'}.`, 'Der Wert ist im ganzen Zeitraum gleich geblieben.']) }, tip: 'Vergleiche den ersten und den letzten Punkt.' };
+  return schwerGrafik(th, stim, [`Der Wert ist insgesamt ${up ? 'gestiegen' : 'gesunken'}.`, `${th.x[i]} lag der Wert bei rund ${v[i]} %.`]);
+}
+function schwerGrafik(th, stim, trueS) {
+  if (pick([0, 1])) return { topic: 'grafik', stim, q: { k: 'one', text: 'Welche Aussage lässt sich aus der Grafik NICHT ablesen?', opts: O(th.ext, trueS) }, tip: 'Grafiken zeigen Zahlen. Bewertungen und Dinge außerhalb der Daten stehen nicht darin.', e: 'Trenne, was die Daten zeigen, von dem, was du zusätzlich weißt oder vermutest.' };
+  return { topic: 'grafik', stim, q: { k: 'one', text: 'Welche Begründung für das Ergebnis ist am ehesten sinnvoll?', opts: O(th.why[0], th.why.slice(1)) }, tip: 'Eine gute Begründung passt zum Alltag und zu den Daten.', e: 'Begründungen stehen nicht in der Grafik. Du leitest sie aus deinem Wissen ab und formulierst sie als „möglicher Grund“.' };
+}
+
+/* ---------- Sprint ---------- */
+const ROUND = 8;
+function cardToQ(c) {
+  if (c.k === 'one') return { k: 'one', text: c.q, opts: O(c.r, sample(c.w, Math.min(3, c.w.length))) };
+  if (c.k === 'multi') { const r = sample(c.r, Math.min(4, c.r.length)); return { k: 'multi', text: c.q, opts: OM(r, sample(c.w, Math.min(3, c.w.length))) }; }
+  if (c.k === 'assign') return { k: 'assign', text: c.q, cats: c.cats, rows: shuffle(c.rows.map(r => ({ t: r[0], c: r[1] }))) };
+  if (c.k === 'order') return { k: 'order', text: c.q, items: c.items };
+  return { k: 'recall', text: c.q, need: c.need, pts: c.pts };
+}
+function pickCard() {
+  const lv = { leicht: [1], mittel: [1, 2], schwer: [2, 3] }[APP.level], tp = APP.area.sprint;
+  let pool = CARDS.filter(c => lv.includes(c.l) && (tp === 'alle' || c.t === tp) && !APP.sprint.seen.includes(c.id));
+  if (!pool.length) pool = CARDS.filter(c => (tp === 'alle' || c.t === tp) && !APP.sprint.seen.includes(c.id));
+  if (!pool.length) { APP.sprint.seen = []; pool = CARDS.filter(c => tp === 'alle' || c.t === tp); }
+  const w = pool.map(c => [4, 4, 2, 1, .4][Math.min(4, DATA.box[c.id] || 0)]); let x = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < pool.length; i++) { x -= w[i]; if (x <= 0) return pool[i]; }
+  return pool[pool.length - 1];
+}
+function genSprint() {
+  if (!APP.sprint || APP.sprint.i >= ROUND) APP.sprint = { i: 0, ok: 0, seen: [] };
+  const c = pickCard(); APP.sprint.seen.push(c.id); APP.sprint.i++;
+  return { topic: c.t, card: c, stimIn: c.stim, q: cardToQ(c), tip: { gen: 'Grün: Landwirtschaft, rot: Medizin, weiß: Industrie.', sie: 'Was prüft das Siegel wirklich? Nicht jedes Siegel sagt etwas über Gesundheit aus.' }[c.t] || 'Lies die Frage noch einmal genau und denke an passende Beispiele.', e: c.e };
+}
+
+/* ---------- Speicher ---------- */
+const KEY = 'aes-trainer-v1';
+let DATA = { stat: {}, box: {}, level: 'leicht' };
+function load() { try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (d) DATA = Object.assign(DATA, d); } catch (e) { } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(DATA)); } catch (e) { } }
+
+/* ---------- App ---------- */
+const TABS = [['etikett', '🔎', 'Etiketten'], ['fall', '💶', 'Fälle'], ['grafik', '📊', 'Grafiken'], ['sprint', '⚡', 'Sprint'], ['stand', '🎯', 'Stand']];
+const LEVELS = [['leicht', 'Lesen und rechnen'], ['mittel', 'Einordnen'], ['schwer', 'Bewerten']];
+const LEVELHINT = { fall: ['Ein Fall', 'Mehrere Fälle', 'Mit Fallen'], grafik: ['Ablesen', 'Kernaussage', 'Begründen'], sprint: ['Erkennen', 'Anwenden', 'Selbst formulieren'], etikett: LEVELS.map(l => l[1]) };
+const APP = { mode: 'etikett', level: 'leicht', area: { fall: 'alle', sprint: 'alle' }, task: null, sprint: null, lastKey: '' };
+const GEN = { etikett: genEtikett, fall: genFall, grafik: genGrafik, sprint: genSprint };
+
+const LOCK_SECONDS = 10;
+let lockTimer = null;
+const checkLabel = () => { const t = APP.task; return t && t.q.k === 'recall' ? (t.q.shown ? 'Auswerten' : 'Antwort ansehen') : 'Prüfen'; };
+function unlockCheck() { clearInterval(lockTimer); lockTimer = null; const b = $('#check'); b.disabled = !!(APP.task && APP.task.done); b.textContent = checkLabel(); }
+function lockCheck() {
+  unlockCheck();
+  const b = $('#check'); let left = LOCK_SECONDS;
+  const show = () => { b.textContent = `Prüfen (${left} s)`; };
+  b.disabled = true; show();
+  lockTimer = setInterval(() => { if (--left > 0) show(); else unlockCheck(); }, 1000);
+}
+function count(ok) {
+  const t = APP.task;
+  if (!t.counted) {
+    t.counted = true;
+    const s = DATA.stat[t.topic] || (DATA.stat[t.topic] = { n: 0, r: 0 }); s.n++; if (ok) s.r++;
+    if (t.card) { const id = t.card.id; DATA.box[id] = ok ? Math.min(4, (DATA.box[id] || 0) + 1) : 1; if (ok) APP.sprint.ok++; }
+    save();
+  }
+  if (!ok) { t.tries = (t.tries || 0) + 1; if (t.q.k !== 'recall') lockCheck(); if (t.tries >= 2) $('#solve').hidden = false; }
+  showScore();
+}
+function fb(cls, html) { const f = $('#fb'); f.className = 'fb ' + cls; f.innerHTML = html; }
+function finish(html) {
+  const t = APP.task; t.done = true; clearInterval(lockTimer); lockTimer = null; const b = $('#check'); b.disabled = true; b.textContent = checkLabel();
+  $('#solve').hidden = true; $('#tip').disabled = true;
+  $('#qa').querySelectorAll('button,input,textarea').forEach(x => { x.disabled = true; });
+  fb('ok', html + (t.e ? ` ${t.e}` : ''));
+  const n = $('#next'); n.className = 'btn';
+  if (APP.mode === 'sprint' && APP.sprint.i >= ROUND) n.textContent = 'Ergebnis ansehen';
+}
+
+/* Fragen darstellen */
+function renderQ() {
+  const t = APP.task, q = t.q, qa = $('#qa');
+  let h = '';
+  if (t.stimIn) h += `<div class="sealbig">${t.stimIn}</div>`;
+  h += `<p class="q">${q.text}</p>`;
+  if (q.k === 'one' || q.k === 'multi') {
+    if (q.k === 'multi') h += `<p class="sub">Wähle alle passenden Antworten aus.</p>`;
+    h += `<div class="opts">${q.opts.map((o, i) => `<button class="opt" data-i="${i}">${o.t}</button>`).join('')}</div>`;
+  } else if (q.k === 'num') {
+    h += `<div class="numin"><input type="text" inputmode="decimal" autocomplete="off" id="num" aria-label="Ergebnis"><span>${q.unit}</span></div>`;
+  } else if (q.k === 'assign') {
+    q.sel = q.rows.map(() => null);
+    h += q.rows.map((r, i) => `<div class="row" data-r="${i}"><p>${r.t}</p><div class="seg">${q.cats.map((c, j) => `<button data-j="${j}">${c}</button>`).join('')}</div></div>`).join('');
+  } else if (q.k === 'order') {
+    q.seq = []; q.mix = shuffle(q.items);
+    h += `<p class="sub">Tippe die Einträge der Reihe nach an.</p><div class="seq" id="seq"></div><div class="seg" id="pool">${q.mix.map((c, i) => `<button data-i="${i}">${c}</button>`).join('')}</div><div class="btns"><button class="btn sec" id="undo">Letzten Schritt zurück</button></div>`;
+  } else {
+    h += `<p class="sub">${q.need} ${q.need === 1 ? 'Punkt' : 'Punkte'} sind gefragt. Formuliere zuerst selbst.</p><textarea id="free" placeholder="Deine Antwort in Stichworten"></textarea><div class="btns"><button class="btn sec" id="paper">Ich habe es auf Papier geschrieben</button></div><div id="pts"></div>`;
+  }
+  qa.innerHTML = h;
+  if (q.k === 'one') qa.querySelectorAll('.opt').forEach(b => b.onclick = () => { qa.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); q.pick = +b.dataset.i; });
+  if (q.k === 'multi') { q.set = new Set(); qa.querySelectorAll('.opt').forEach(b => b.onclick = () => { const i = +b.dataset.i; q.set.has(i) ? q.set.delete(i) : q.set.add(i); b.classList.toggle('sel'); }); }
+  if (q.k === 'num') $('#num').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+  if (q.k === 'assign') qa.querySelectorAll('.row').forEach(r => { const i = +r.dataset.r; r.querySelectorAll('button').forEach(b => b.onclick = () => { r.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); q.sel[i] = +b.dataset.j; }); });
+  if (q.k === 'order') {
+    const draw = () => { $('#seq').innerHTML = q.seq.map((i, n) => `<span>${n + 1}. ${q.mix[i]}</span>`).join(''); $('#pool').querySelectorAll('button').forEach(b => { b.hidden = q.seq.includes(+b.dataset.i); }); };
+    $('#pool').querySelectorAll('button').forEach(b => b.onclick = () => { q.seq.push(+b.dataset.i); draw(); });
+    $('#undo').onclick = () => { q.seq.pop(); draw(); }; q.draw = draw;
+  }
+  if (q.k === 'recall') $('#paper').onclick = () => reveal();
+}
+function reveal() {
+  const q = APP.task.q; q.shown = true;
+  $('#paper').hidden = true; $('#free').readOnly = true;
+  $('#pts').innerHTML = `<p class="sub" style="margin-top:10px">Hake ehrlich ab, was du sinngemäß hattest.</p><div class="opts">${q.pts.map((p, i) => `<button class="opt" data-i="${i}">${p}</button>`).join('')}</div>`;
+  q.set = new Set();
+  $('#pts').querySelectorAll('.opt').forEach(b => b.onclick = () => { const i = +b.dataset.i; q.set.has(i) ? q.set.delete(i) : q.set.add(i); b.classList.toggle('sel'); });
+  $('#check').textContent = checkLabel(); $('#fb').className = 'fb';
+}
+const parseNum = s => { s = s.trim().replace(/\s|€|%/g, ''); if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, ''); s = s.replace(',', '.'); return s === '' ? NaN : Number(s); };
+function check() {
+  const t = APP.task, q = t.q; if (t.done || $('#check').disabled) return;
+  if (q.k === 'one') {
+    if (q.pick == null) return fb('tip', 'Wähle zuerst eine Antwort aus.');
+    if (q.opts[q.pick].ok) { count(true); return finish('Richtig!'); }
+    count(false); return fb('bad', 'Das stimmt noch nicht. Lies die Angaben noch einmal genau.');
+  }
+  if (q.k === 'multi') {
+    if (!q.set.size) return fb('tip', 'Wähle mindestens eine Antwort aus.');
+    const ok = q.opts.every((o, i) => !!o.ok === q.set.has(i));
+    if (ok) { count(true); return finish('Richtig!'); }
+    count(false); return fb('bad', 'Noch nicht ganz: Mindestens eine Antwort fehlt oder ist zu viel.');
+  }
+  if (q.k === 'num') {
+    const v = parseNum($('#num').value);
+    if (isNaN(v)) return fb('tip', $('#num').value.trim() ? 'Gib eine Zahl ein, z. B. 12,50.' : 'Trage zuerst dein Ergebnis ein.');
+    if (Math.abs(v - q.ans) <= q.tol + 1e-9) { count(true); return finish('Richtig!'); }
+    count(false); return fb('bad', 'Das Ergebnis stimmt noch nicht. Prüfe deinen Rechenweg.');
+  }
+  if (q.k === 'assign') {
+    const open = q.sel.filter(x => x == null).length;
+    if (open) return fb('tip', `Es ${open === 1 ? 'ist noch 1 Zeile' : `sind noch ${open} Zeilen`} offen.`);
+    const r = q.rows.filter((row, i) => row.c === q.sel[i]).length;
+    if (r === q.rows.length) { count(true); return finish('Richtig!'); }
+    count(false); return fb('bad', `${r} von ${q.rows.length} Zuordnungen stimmen.`);
+  }
+  if (q.k === 'order') {
+    const open = q.items.length - q.seq.length;
+    if (open) return fb('tip', `Es ${open === 1 ? 'fehlt noch 1 Eintrag' : `fehlen noch ${open} Einträge`}.`);
+    let g = 0; while (g < q.items.length && q.mix[q.seq[g]] === q.items[g]) g++;
+    if (g === q.items.length) { count(true); return finish('Richtig!'); }
+    count(false); return fb('bad', g ? `Die ersten ${g} ${g === 1 ? 'Stelle stimmt' : 'Stellen stimmen'}, danach nicht mehr.` : 'Schon die erste Stelle stimmt nicht.');
+  }
+  if (!q.shown) { if ($('#free').value.trim().length < 12) return fb('tip', 'Schreibe zuerst deine Antwort auf, hier oder auf Papier.'); return reveal(); }
+  const n = q.set.size, ok = n >= q.need; count(ok);
+  t.e = ''; if (ok) return finish(`Sehr gut: ${n} von ${q.need} geforderten Punkten.`);
+  t.done = true; $('#check').disabled = true; $('#pts').querySelectorAll('.opt').forEach(b => { b.disabled = true; });
+  fb('tip', `Du hast ${n} von ${q.need} geforderten Punkten. Die Karte kommt bald wieder.`); $('#tip').disabled = true; $('#next').className = 'btn'; if (APP.mode === 'sprint' && APP.sprint.i >= ROUND) $('#next').textContent = 'Ergebnis ansehen';
+}
+function solve() {
+  const t = APP.task, q = t.q; let s = '';
+  if (q.k === 'one' || q.k === 'multi') { $('#qa').querySelectorAll('.opt').forEach((b, i) => { b.classList.remove('sel'); if (q.opts[i].ok) b.classList.add('right'); }); s = 'Die richtige Lösung ist markiert.'; }
+  if (q.k === 'num') s = `Lösung: ${fmt(q.ans, Number.isInteger(q.ans) ? 0 : 2)} ${q.unit}.`;
+  if (q.k === 'assign') { $('#qa').querySelectorAll('.row').forEach((r, i) => r.querySelectorAll('button').forEach((b, j) => { b.classList.remove('sel'); if (q.rows[i].c === j) b.classList.add('right'); })); s = 'Die richtige Zuordnung ist markiert.'; }
+  if (q.k === 'order') { s = 'Richtige Reihenfolge: ' + q.items.join(' → '); }
+  finish(s + ' Dafür gibt es keinen Punkt, aber du kannst daraus lernen.');
+}
+
+/* Aufbau */
+function newTask() {
+  if (APP.mode === 'sprint' && APP.sprint && APP.sprint.i >= ROUND && APP.task && APP.task.done && !APP.summary) { APP.summary = true; return sprintEnd(); }
+  APP.summary = false;
+  APP.task = null; unlockCheck();
+  APP.task = GEN[APP.mode](APP.level); const t = APP.task;
+  $('#fb').className = 'fb'; $('#solve').hidden = true; $('#tip').disabled = false; $('#check').hidden = false; $('#tip').hidden = false;
+  const n = $('#next'); n.className = 'btn sec'; n.textContent = APP.mode === 'sprint' ? 'Nächste Karte' : 'Neue Aufgabe';
+  const st = $('#stim'), has = !!t.stim; st.hidden = !has; st.innerHTML = has ? t.stim : ''; st.scrollTop = 0; $('#work').className = 'work' + (has ? ' two' : '');
+  renderQ(); unlockCheck(); showScore();
+}
+function sprintEnd() {
+  const s = APP.sprint; $('#qa').innerHTML = `<p class="q">Runde geschafft!</p><p>${s.ok} von ${ROUND} Karten hast du im ersten Versuch richtig. Unsichere Karten kommen in der nächsten Runde öfter dran.</p>`;
+  $('#check').hidden = true; $('#tip').hidden = true; $('#solve').hidden = true; $('#fb').className = 'fb'; $('#next').textContent = 'Nächste Runde'; $('#next').className = 'btn';
+  $('#stim').hidden = true; $('#work').className = 'work'; APP.task = null; APP.sprint = null; showScore();
+}
+function showScore() {
+  const el = $('#score');
+  if (APP.mode === 'sprint') { el.textContent = APP.sprint ? `Karte ${APP.sprint.i} von ${ROUND} · ${APP.sprint.ok} richtig im ersten Versuch` : ''; return; }
+  const s = DATA.stat[APP.mode] || { n: 0, r: 0 }; el.textContent = s.n ? `Im ersten Versuch richtig: ${s.r} von ${s.n}` : 'Punkte zählen nur beim ersten Versuch.';
+}
+function drawLevels() {
+  const hints = LEVELHINT[APP.mode] || [];
+  $('.levels').innerHTML = LEVELS.map((l, i) => `<button data-l="${l[0]}" class="${APP.level === l[0] ? 'on' : ''}">${l[0][0].toUpperCase() + l[0].slice(1)}<small>${hints[i] || ''}</small></button>`).join('');
+  $('.levels').querySelectorAll('button').forEach(b => b.onclick = () => { APP.level = DATA.level = b.dataset.l; save(); APP.sprint = null; drawLevels(); newTask(); });
+}
+function drawChips() {
+  const c = $('#chips'), src = APP.mode === 'fall' ? AREA : APP.mode === 'sprint' ? Object.assign({ alle: 'Alle Themen' }, TOPIC) : null;
+  c.hidden = !src; if (!src) return;
+  c.innerHTML = Object.keys(src).map(k => `<button data-k="${k}" class="${APP.area[APP.mode] === k ? 'on' : ''}">${src[k]}</button>`).join('');
+  c.querySelectorAll('button').forEach(b => b.onclick = () => { APP.area[APP.mode] = b.dataset.k; APP.sprint = null; drawChips(); newTask(); });
+}
+const TERMS = {
+  etikett: `<p><b>Pflichtangaben:</b> Bezeichnung, Zutatenliste mit Allergenen, Nährwerttabelle, Mindesthaltbarkeitsdatum, Nettofüllmenge, Hersteller mit Anschrift.</p><p><b>Grundpreis:</b> Preis pro Kilogramm oder Liter, damit man Packungen vergleichen kann.</p><p><b>Nutri-Score:</b> Bewertung von A bis E, gedacht für den Vergleich innerhalb einer Produktgruppe.</p>`,
+  fall: `<p><b>Gesetzlich:</b> Kranken-, Pflege-, Renten-, Arbeitslosen- und Unfallversicherung.</p><p><b>Freiwillig:</b> Privathaftpflicht, Hausrat, Berufsunfähigkeit, private Unfallversicherung.</p><p><b>Warmmiete:</b> Kaltmiete plus Nebenkosten.</p>`,
+  grafik: `<p><b>Kernaussage:</b> das Wichtigste der Grafik in einem Satz, möglichst mit einem Wert.</p><p><b>Zusammenhang:</b> Formuliere mit „je … desto“.</p><p><b>Begründung:</b> steht nicht in der Grafik, sondern kommt aus deinem Wissen.</p>`,
+  sprint: `<p>Eine Runde hat ${ROUND} Karten. Was du noch nicht sicher kannst, kommt häufiger wieder. Bei Karten zum Selbstformulieren hakst du deine Punkte selbst ab.</p>`
+};
+const FORMAT = `<h2 style="margin-top:12px">Prüfungsformat</h2><p>90 Minuten. Pflichtteil A: vier Aufgaben mit je 9 Punkten. Wahlteil B: eine von zwei Aufgaben mit 24 Punkten. Das sind rund 1,5 Minuten pro Punkt. Die Angaben gelten nach dem Stand der Ausführungsbestimmungen 2025/26.</p><h2>Operatoren</h2><table class="st"><tr><td><b>Nenne</b></td><td style="text-align:left;white-space:normal">Stichwort oder kurzer Satz, ohne Erklärung</td></tr><tr><td><b>Beschreibe</b></td><td style="text-align:left;white-space:normal">in ganzen Sätzen darstellen, wie etwas ist</td></tr><tr><td><b>Erkläre</b></td><td style="text-align:left;white-space:normal">Bedeutung oder Ursache verständlich machen</td></tr><tr><td><b>Erläutere</b></td><td style="text-align:left;white-space:normal">erklären und mit einem Beispiel oder Grund ergänzen</td></tr><tr><td><b>Begründe</b></td><td style="text-align:left;white-space:normal">Aussage mit Argumenten stützen</td></tr><tr><td><b>Bewerte</b></td><td style="text-align:left;white-space:normal">eigenes Urteil fällen und begründen</td></tr><tr><td><b>Arbeite heraus</b></td><td style="text-align:left;white-space:normal">Informationen aus Text, Tabelle oder Grafik entnehmen</td></tr></table><p class="small">Merke: Meist gibt es einen Punkt pro Aspekt. Zähle, wie viele Aspekte gefragt sind.</p>`;
+function setMode(m) {
+  APP.mode = m;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  const st = m === 'stand'; $('#train').hidden = st; $('#stand').hidden = !st;
+  if (st) return drawStand();
+  $('#terms').innerHTML = TERMS[m] + FORMAT; APP.lastKey = ''; APP.sprint = null; APP.summary = false;
+  drawLevels(); drawChips(); newTask();
+}
+const LABEL = Object.assign({ etikett: 'Etiketten-Detektiv', fall: 'Fall-Trainer', grafik: 'Grafik-Check' }, TOPIC);
+function drawStand() {
+  const row = k => { const s = DATA.stat[k]; if (!s || !s.n) return `<tr><td>${LABEL[k]}</td><td class="small">noch nichts geübt</td></tr>`; const p = Math.round(s.r / s.n * 100); return `<tr><td>${LABEL[k]}<div class="barmini"><i style="width:${p}%"></i></div></td><td>${s.r} von ${s.n}</td></tr>`; };
+  const done = CARDS.filter(c => (DATA.box[c.id] || 0) >= 3).length;
+  const weak = Object.keys(TOPIC).filter(k => DATA.stat[k] && DATA.stat[k].n >= 3).sort((a, b) => DATA.stat[a].r / DATA.stat[a].n - DATA.stat[b].r / DATA.stat[b].n)[0];
+  $('#stand').innerHTML = `<section class="card"><h2>Dein Stand</h2><p>${done} von ${CARDS.length} Karten sitzen schon gut.${weak ? ` Üben lohnt sich gerade bei <b>${TOPIC[weak]}</b>.` : ''}</p><table class="st"><tr><th>Bereich</th><th>Erster Versuch richtig</th></tr>${['etikett', 'fall', 'grafik'].map(row).join('')}</table><h2 style="margin-top:14px">Sprint nach Themen</h2><table class="st">${Object.keys(TOPIC).map(row).join('')}</table></section>
+  <section class="card"><h2>Auf ein anderes Gerät übertragen</h2><p class="small">Der Stand wird nur auf diesem Gerät gespeichert. Erzeuge hier einen Code und füge ihn auf dem anderen Gerät ein. Die beiden Stände werden zusammengeführt.</p><div class="btns"><button class="btn sec" id="exp">Code erzeugen und kopieren</button></div><textarea id="code" placeholder="Code hier einfügen" aria-label="Fortschrittscode" style="margin-top:8px"></textarea><div class="btns"><button class="btn sec" id="imp">Code übernehmen</button></div><div class="fb" id="sfb"></div></section>
+  <section class="card"><h2>Als App installieren</h2><p class="small"><b>iPhone und iPad:</b> In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“. <b>Windows:</b> In Edge oder Chrome im Menü „App installieren“ wählen. Danach funktioniert der Trainer auch ohne Internet.</p></section>
+  <section class="card"><details><summary>Stand zurücksetzen</summary><p class="small">Das löscht den gesamten Fortschritt auf diesem Gerät.</p><button class="btn warn" id="reset">Alles löschen</button></details></section>`;
+  const say = (c, h) => { const f = $('#sfb'); f.className = 'fb ' + c; f.innerHTML = h; };
+  $('#exp').onclick = async () => { const c = 'AES1.' + btoa(unescape(encodeURIComponent(JSON.stringify({ stat: DATA.stat, box: DATA.box })))); $('#code').value = c; try { await navigator.clipboard.writeText(c); say('ok', 'Der Code ist kopiert.'); } catch (e) { $('#code').select(); say('tip', 'Bitte kopiere den Code aus dem Feld.'); } };
+  $('#imp').onclick = () => {
+    const c = $('#code').value.trim(); if (!c) return say('tip', 'Füge zuerst einen Code ein.');
+    try { if (!c.startsWith('AES1.')) throw 0; const d = JSON.parse(decodeURIComponent(escape(atob(c.slice(5))))); for (const k in d.stat) { const a = DATA.stat[k]; if (!a || d.stat[k].n > a.n) DATA.stat[k] = d.stat[k]; } for (const k in d.box) DATA.box[k] = Math.max(DATA.box[k] || 0, d.box[k]); save(); drawStand(); say('ok', 'Der Stand wurde übernommen.'); } catch (e) { say('bad', 'Dieser Code ist nicht gültig.'); }
+  };
+  $('#reset').onclick = () => { if (confirm('Wirklich den gesamten Fortschritt auf diesem Gerät löschen?')) { DATA.stat = {}; DATA.box = {}; save(); drawStand(); } };
+}
+load(); APP.level = DATA.level || 'leicht';
+$('nav.tabs').innerHTML = TABS.map(t => `<button data-m="${t[0]}"><b aria-hidden="true">${t[1]}</b>${t[2]}</button>`).join('');
+$('nav.tabs').querySelectorAll('button').forEach(b => b.onclick = () => setMode(b.dataset.m));
+$('#check').onclick = check; $('#next').onclick = newTask; $('#solve').onclick = solve;
+$('#tip').onclick = () => { if (APP.task) fb('tip', APP.task.tip || 'Lies die Aufgabe noch einmal genau.'); };
+setMode('etikett');
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => { });
+</script>
+</body></html>
