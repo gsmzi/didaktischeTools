@@ -16,6 +16,9 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 header{padding:14px 16px 4px;max-width:1040px;margin:0 auto}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hd .btn{flex:none;min-height:38px;padding:5px 10px;font-size:.88rem}
+.hd .btn.on{background:var(--accent-soft)}
 header h1{margin:0;font-size:1.35rem}
 header p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
 main{max-width:1040px;margin:0 auto;padding:0 16px 32px}
@@ -111,7 +114,7 @@ table.st td:last-child,table.st th:last-child{text-align:right;white-space:nowra
 footer{max-width:1040px;margin:0 auto;padding:0 16px 24px;color:var(--muted);font-size:.8rem}
 </style></head>
 <body>
-<header><h1>AES-Prüfungstrainer</h1><p>Realschulabschluss Baden-Württemberg · Schwerpunkte 2027</p></header>
+<header><div class="hd"><div><h1>AES-Prüfungstrainer</h1><p>Realschulabschluss Baden-Württemberg · Schwerpunkte 2027</p></div><button class="btn sec" id="standbtn">🎯 Stand</button></div></header>
 <main>
 <nav class="tabs" aria-label="Bereich"></nav>
 <div id="train">
@@ -324,6 +327,110 @@ one('eng', 2, 'Welcher Zusammenhang besteht zwischen Engagement und Demokratie?'
 one('eng', 1, 'Was bedeutet Work-Life-Balance?', 'Ein gesundes Gleichgewicht zwischen Arbeit und Privatleben', ['Möglichst viel Arbeit am Wochenende', 'Die Arbeitszeit einer Vollzeitstelle', 'Sport während der Arbeit']);
 asg('eng', 2, 'Welche Funktion von Freizeit steht im Vordergrund?', ['Erholung', 'Geselligkeit', 'Weiterentwicklung'], [['Abends in Ruhe ein Buch lesen', 0], ['Mit Freunden zum Grillen treffen', 1], ['Gitarre spielen lernen', 2]]);
 mul('eng', 3, 'Was hilft bei einer guten Work-Life-Balance?', ['Feste Pausen', 'Bewegung und Hobbys', 'Zeit mit Familie und Freunden', 'Erreichbarkeit begrenzen'], ['Immer erreichbar sein', 'Auf Schlaf verzichten']);
+
+/* Bedarf, Energie und Nährstoffe */
+one('ern', 1, 'Woraus setzt sich der Energiebedarf zusammen?', 'Aus Grundumsatz und Leistungsumsatz', ['Aus Brennwert und Nutri-Score', 'Aus Zucker und Fett', 'Aus Frühstück und Abendessen'], 'Der Grundumsatz hält den Körper in Ruhe am Laufen. Der Leistungsumsatz kommt durch Bewegung und Arbeit dazu.');
+mul('ern', 1, 'Wovon hängt der Energiebedarf eines Menschen ab?', ['Alter', 'Geschlecht', 'Körpergröße und Gewicht', 'Körperliche Aktivität'], ['Haarfarbe', 'Wohnort', 'Lieblingsessen']);
+asg('ern', 2, 'Höherer oder niedrigerer Energiebedarf im Vergleich?', ['eher höher', 'eher niedriger'], [['Jugendlicher im Wachstum, der viel Sport treibt', 0], ['Ältere Person, die meist sitzt', 1], ['Bauarbeiterin', 0], ['Bürokaufmann ohne Sport', 1]]);
+one('ern', 2, 'Was bedeutet bedarfsgerechte Ernährung?', 'Man nimmt so viel Energie und Nährstoffe auf, wie der Körper in seiner Lebenssituation braucht', ['Man isst nur, was gerade im Angebot ist', 'Alle Menschen essen genau dieselbe Menge', 'Man verzichtet auf Kohlenhydrate']);
+asg('ern', 1, 'Welcher Nährstoff steckt vor allem darin?', ['Kohlenhydrate', 'Eiweiß', 'Fett'], [['Kartoffeln', 0], ['Linsen', 1], ['Rapsöl', 2], ['Vollkornbrot', 0], ['Magerquark', 1], ['Walnüsse', 2]]);
+asg('ern', 2, 'Wie viel Energie liefert ein Gramm ungefähr?', ['rund 17 kJ (4 kcal)', 'rund 37 kJ (9 kcal)'], [['Kohlenhydrate', 0], ['Eiweiß', 0], ['Fett', 1]], 'Fett liefert mehr als doppelt so viel Energie pro Gramm.');
+one('ern', 2, 'Was beschreibt die Energiedichte?', 'Wie viel Energie ein Lebensmittel pro 100 g enthält', ['Wie viele Vitamine ein Lebensmittel enthält', 'Wie schwer eine Verpackung ist', 'Wie lange ein Lebensmittel haltbar ist']);
+one('ern', 2, 'Was beschreibt die Nährstoffdichte?', 'Wie viele wertvolle Nährstoffe im Verhältnis zur Energie enthalten sind', ['Wie viel Zucker pro Packung enthalten ist', 'Wie viel ein Lebensmittel kostet', 'Wie viel Wasser ein Lebensmittel enthält']);
+asg('ern', 2, 'Hohe oder niedrige Nährstoffdichte?', ['hoch', 'niedrig'], [['Brokkoli', 0], ['Limonade', 1], ['Vollkornbrot', 0], ['Fruchtgummi', 1], ['Linsen', 0], ['Weißes Toastbrot mit Marmelade', 1]]);
+asg('ern', 2, 'Hohe oder niedrige Energiedichte?', ['hoch', 'niedrig'], [['Schokolade', 0], ['Gurke', 1], ['Chips', 0], ['Apfel', 1]]);
+one('ern', 3, 'Welche Fette haben die bessere Nährstoffqualität?', 'Pflanzenöle mit vielen ungesättigten Fettsäuren', ['Gehärtete Fette aus Fertigprodukten', 'Fett aus Wurst und Schmalz', 'Alle Fette sind gleich'], 'Es zählt nicht nur die Menge, sondern auch die Qualität der Nährstoffe.');
+asg('ern', 2, 'Welche Funktion des Essens steht im Vordergrund?', ['physiologisch', 'psychisch', 'sozial'], [['Der Körper braucht Energie und Nährstoffe.', 0], ['Schokolade tröstet nach einem schlechten Tag.', 1], ['Die Familie isst gemeinsam und erzählt vom Tag.', 2], ['Der Magen knurrt.', 0]]);
+mul('ern', 2, 'Welche Erkrankungen hängen auch mit der Ernährung zusammen?', ['Übergewicht', 'Typ-2-Diabetes', 'Bluthochdruck', 'Karies'], ['Sonnenbrand', 'Knochenbruch beim Sport']);
+rec('ern', 3, 'Erläutere die gesellschaftlichen Folgen ernährungsbedingter Erkrankungen.', 2, ['Hohe Kosten im Gesundheitssystem', 'Mehr Arbeitsausfälle', 'Höhere Beiträge für alle Versicherten']);
+rec('ern', 2, 'Nenne die Aufgaben von drei Nährstoffen.', 3, ['Kohlenhydrate: Energie', 'Fett: Energie, Aufnahme fettlöslicher Vitamine', 'Eiweiß: Aufbau und Reparatur von Körperzellen', 'Ballaststoffe: Verdauung und Sättigung']);
+rec('ern', 2, 'Erkläre den Unterschied zwischen Mindesthaltbarkeits- und Verbrauchsdatum.', 2, ['MHD: bis dahin behält das Produkt seine Eigenschaften, danach prüfen und oft noch essbar', 'Verbrauchsdatum: bei leicht verderblichen Lebensmitteln, danach nicht mehr essen']);
+rec('ern', 2, 'Erläutere die Bedeutung von zwei Pflichtangaben für Verbraucherinnen und Verbraucher.', 2, ['Zutatenliste: zeigt Inhalt und Allergene', 'Nährwerttabelle: zeigt Nährstoffe für den Vergleich', 'Mindesthaltbarkeitsdatum: zeigt, wie lange es mindestens hält', 'Hersteller: Ansprechpartner bei Beanstandungen']);
+rec('ern', 3, 'Erläutere „Gut für dich und die Umwelt“ an der neuen Ernährungspyramide mit vier Aspekten.', 4, ['Obst und Gemüse liefern Vitamine und Ballaststoffe', 'Nüsse liefern hochwertige Fette', 'Die meisten Bausteine sind pflanzlich, das schont die Umwelt', 'Hülsenfrüchte sind eine Alternative zu Fleisch']);
+rec('ern', 2, 'Beschreibe Aufbau und Ziel des Nutri-Scores.', 3, ['Buchstaben A bis E', 'Farben von Grün bis Rot', 'Ziel: Produkte einer Gruppe schnell vergleichen']);
+rec('ern', 3, 'Erläutere je einen Vorteil und zwei Nachteile des Nutri-Scores.', 3, ['Vorteil: schnell verständlich oder gut vergleichbar', 'Nachteil: nicht alle Nährstoffe berücksichtigt', 'Nachteil: Nachhaltigkeit fehlt', 'Nachteil: kann als „gesund“ missverstanden werden']);
+rec('ern', 3, 'Überprüfe die Low-Carb-Diät an drei DGE-Empfehlungen.', 3, ['Vollkorn: wird kaum gegessen', 'Hülsenfrüchte: werden gemieden', 'Fleisch und Wurst: eher viel statt wenig', 'Obst und Gemüse: nur kohlenhydratarme Sorten']);
+rec('ern', 3, 'Bewerte die Low-Carb-Diät hinsichtlich der Nachhaltigkeit (zwei Aspekte).', 2, ['Viele tierische Lebensmittel brauchen viel Wasser und Fläche', 'Regionalität und Saison spielen keine Rolle']);
+
+/* Werbung, Marketing, Einflüsse */
+one('wer', 1, 'Was sind Health Claims?', 'Gesundheitsbezogene Aussagen auf Lebensmitteln, z. B. „Vitamin C trägt zur normalen Funktion des Immunsystems bei“', ['Pflichtangaben zum Hersteller', 'Bewertungen der Stiftung Warentest', 'Rabattaktionen im Supermarkt']);
+one('wer', 2, 'Welche Aussage über Health Claims stimmt?', 'Sie sind in der EU nur erlaubt, wenn sie zugelassen sind, machen ein Produkt aber nicht automatisch gesund', ['Jeder Hersteller darf frei erfinden, was er möchte', 'Sie beweisen, dass ein Produkt Krankheiten heilt', 'Sie gelten nur für Bio-Produkte']);
+one('wer', 2, 'Ab wann darf ein festes Lebensmittel als „fettarm“ gelten?', 'Bei höchstens 3 g Fett pro 100 g', ['Bei höchstens 30 g Fett pro 100 g', 'Bei jedem Produkt ohne Butter', 'Wenn der Nutri-Score A ist']);
+asg('wer', 2, 'Welche Verkaufsstrategie liegt vor?', ['Quengelware', 'Künstliche Verknappung', 'Preistrick', 'Influencer-Marketing'], [['Süßigkeiten stehen auf Kinderhöhe an der Kasse.', 0], ['„Nur noch heute und nur solange der Vorrat reicht!“', 1], ['Das Produkt kostet 1,99 € statt 2,00 €.', 2], ['Eine Sportlerin zeigt einen Shake in ihrer Story.', 3]]);
+asg('wer', 2, 'Welcher Einfluss auf das Konsumverhalten ist das?', ['Politik', 'Lebensmittelindustrie', 'Gesellschaft'], [['Auf bestimmte Einwegflaschen gibt es eine Pfandpflicht.', 0], ['Ein Hersteller bewirbt einen Snack in Apps für Jugendliche.', 1], ['Im Freundeskreis ist es gerade Trend, vegan zu essen.', 2], ['Gesetze schreiben Angaben auf der Packung vor.', 0], ['Eine Firma ändert die Rezeptur und die Packungsgröße.', 1]]);
+one('wer', 2, 'Wie können Konsumierende politische Rahmenbedingungen beeinflussen?', 'Zum Beispiel durch Petitionen, Boykott, Briefe an Abgeordnete und Wahlen', ['Nur durch höhere Preise im eigenen Einkauf', 'Gar nicht, das entscheiden allein Unternehmen', 'Durch das Sammeln von Treuepunkten']);
+rec('wer', 2, 'Beschreibe zwei Strategien im Supermarkt, die zum Kauf anregen.', 2, ['Kassenzone mit kleinen Waren', 'Große Einkaufswagen', 'Waren auf Augenhöhe', 'Licht und Duft', 'Sonderangebote und Aktionsware']);
+rec('wer', 2, 'Erkläre die Begriffe spontane und habituelle Kaufentscheidung mit je einem Beispiel.', 2, ['Spontan: ungeplant, ohne langes Überlegen, z. B. Schokoriegel an der Kasse', 'Habituell: aus Gewohnheit, z. B. immer dieselbe Milch']);
+rec('wer', 3, 'Beschreibe an einem Beispiel, wie Politik dein Konsumverhalten beeinflusst.', 2, ['Eine Regel oder ein Gesetz benennen, z. B. Pfandpflicht oder Kennzeichnung', 'Die Folge für den Einkauf beschreiben']);
+rec('wer', 3, 'Erkläre „Consumer Citizenship“ und beschreibe eine Handlungsmöglichkeit.', 2, ['Verbraucherinnen und Verbraucher setzen sich aktiv für Veränderungen ein', 'Beispiel: Produkt meiden, Petition, Brief an die Politik oder Aufklärung in sozialen Medien']);
+rec('wer', 2, 'Nenne eine Verbraucherschutzorganisation und beschreibe zwei ihrer Aufgaben.', 3, ['Verbraucherzentrale oder Stiftung Warentest', 'Unabhängig beraten oder testen', 'Informieren und Rechte durchsetzen']);
+rec('wer', 3, 'Beschreibe drei Merkmale eines seriösen Onlineshops.', 3, ['Vollständiges Impressum', 'Verschlüsselte Verbindung (https, Schloss)', 'Klare Preise und Kontaktmöglichkeiten', 'Mehrere sichere Zahlungsarten']);
+
+/* Trends und Gentechnik */
+rec('tre', 2, 'Erkläre, was Nahrungsergänzungsmittel sind.', 2, ['Sie sollen die normale Ernährung ergänzen', 'Es sind Nährstoffkonzentrate, z. B. Tabletten oder Kapseln']);
+rec('tre', 2, 'Nenne vier Angaben, die ein Nahrungsergänzungsmittel kennzeichnen.', 4, ['Bezeichnung „Nahrungsergänzungsmittel“', 'Empfohlene tägliche Verzehrmenge', 'Warnhinweis zur Verzehrmenge', 'Hinweis: kein Ersatz für ausgewogene Ernährung']);
+rec('tre', 2, 'Beschreibe je zwei Chancen und Risiken einer vegetarischen Ernährung.', 4, ['Chance: mehr Obst und Gemüse', 'Chance: weniger fettreiche Fleischprodukte', 'Chance: geringeres Risiko für Zivilisationskrankheiten', 'Risiko: Mangel an Mineralstoffen', 'Risiko: zu wenig Eiweiß bei einseitiger Auswahl']);
+rec('tre', 3, 'Erläutere drei Beweggründe für den Verzicht auf tierische Lebensmittel.', 3, ['Tierwohl', 'Klima und Ressourcen', 'Gesundheit']);
+rec('tre', 3, 'Erläutere drei Lebensmittel, die bei veganer Ernährung die Nährstoffversorgung sichern.', 3, ['Hülsenfrüchte: Eiweiß', 'Vollkorn und Nüsse: B-Vitamine und Mineralstoffe', 'Pflanzenöle: wichtige Fettsäuren', 'Grünes Gemüse: Mikronährstoffe']);
+rec('gen', 2, 'Erkläre die Begriffe grüne und weiße Gentechnik.', 2, ['Grün: Landwirtschaft, Pflanzen und Tierzucht', 'Weiß: industrielle Herstellung, z. B. Stoffe aus Mikroorganismen']);
+rec('gen', 2, 'Erläutere zwei Möglichkeiten, Gentechnik in der Ernährung weitgehend zu vermeiden.', 2, ['Bio-Produkte kaufen, weil Gentechnik dort ausgeschlossen ist', '„Ohne Gentechnik“-Siegel beachten', 'Fertigprodukte meiden wegen möglicher Zusatzstoffe']);
+rec('gen', 3, 'Begründe, ob ein Bio-Produkt völlig frei von Gentechnik ist.', 2, ['Gentechnik ist im Bio-Landbau ausgeschlossen', 'Unbeabsichtigte, unvermeidbare Spuren bis 0,9 % sind möglich']);
+rec('gen', 2, 'Beschreibe zwei mögliche Gründe, warum Menschen Gentechnik vermeiden wollen.', 2, ['Sorge vor unbekannten Langzeitwirkungen', 'Sorge um Artenvielfalt und Ökosysteme', 'Abhängigkeit der Bauern von Konzernen']);
+
+/* Gesundheit und Körper */
+rec('ges', 2, 'Überprüfe den Gesundheitszustand einer Person, die sich verletzt hat, gestresst ist und mit Freunden streitet.', 3, ['Körperlich: Verletzung', 'Seelisch: Stress', 'Sozial: Streit', 'Ergebnis: Sie ist nach der WHO-Definition nicht vollständig gesund']);
+rec('ges', 2, 'Nenne drei Möglichkeiten, Stress zu verringern.', 3, ['Lernplan oder Zeitplan', 'Sport oder andere Bewegung', 'Ausreichend Schlaf und Entspannung', 'Mit anderen sprechen']);
+rec('ges', 2, 'Beschreibe je zwei Vorteile und Nachteile einer Tätowierung.', 4, ['Vorteil: Ausdruck der Persönlichkeit', 'Vorteil: Erinnerung festhalten', 'Nachteil: schwer zu entfernen', 'Nachteil: Infektionen oder schädliche Farbstoffe']);
+rec('ges', 2, 'Nenne je ein Beispiel für eine temporäre und eine permanente Körpergestaltung.', 2, ['Temporär: Schminken, Haare färben oder Nagellack', 'Permanent: Tätowierung, Piercing oder Schönheitsoperation']);
+rec('ges', 2, 'Nenne zwei Vorsorgeuntersuchungen und erkläre ihre Bedeutung.', 3, ['Jugenduntersuchung J1 oder J2', 'Zahnkontrolle', 'Bedeutung: Probleme früh erkennen']);
+
+/* Nachhaltigkeit und Teilen */
+one('nac', 1, 'Warum gilt Carsharing als nachhaltig?', 'Mehrere Menschen teilen sich ein Auto, deshalb werden weniger Autos und Rohstoffe gebraucht', ['Die Autos fahren ohne Energie', 'Man fährt dadurch automatisch weiter', 'Jede Person besitzt dadurch zwei Autos']);
+one('nac', 2, 'Was ist ein Spannungsverhältnis zwischen Lebensstil und Nachhaltigkeit?', 'Man möchte nachhaltig leben, fliegt aber gerne in den Urlaub und kauft oft Neues', ['Man trennt seinen Müll richtig', 'Man trinkt Leitungswasser', 'Man teilt sich eine Bohrmaschine mit dem Nachbarn']);
+rec('nac', 2, 'Beschreibe den Begriff Lebensstil.', 2, ['Art und Weise, das eigene Leben zu gestalten', 'Bereiche wie Ernährung, Konsum, Freizeit und Wohnen']);
+rec('nac', 2, 'Erkläre Flächennutzungskonkurrenz an einem Beispiel.', 2, ['Verschiedene Nutzungen konkurrieren um begrenzte Flächen', 'Beispiel: Nahrung gegen Tierfutter oder Energiepflanzen']);
+rec('nac', 2, 'Nenne je eine Verhaltensweise, die den ökologischen Fußabdruck bei Wohnen, Mobilität und Konsum senkt.', 3, ['Wohnen: weniger heizen oder Ökostrom', 'Mobilität: Bus, Bahn, Fahrrad', 'Konsum: Second-Hand oder reparieren']);
+rec('nac', 2, 'Beschreibe vier Möglichkeiten, im Haushalt Lebensmittelverschwendung zu vermeiden.', 4, ['Essensplan und Einkaufsliste', 'Richtig lagern', 'Reste verwerten oder einfrieren', 'Passende Mengen kochen', 'MHD nicht als Wegwerfdatum sehen']);
+rec('nac', 3, 'Begründe, warum der Kauf gebrauchter Möbel nachhaltig ist (drei Aspekte).', 3, ['Weniger Neuproduktion spart Rohstoffe und Energie', 'Weniger Müll', 'Längere Nutzung', 'Weniger Transport und Verpackung']);
+rec('nac', 3, 'Erläutere zwei Argumente, warum sich jemand bei einer Tauschbörse engagieren sollte.', 2, ['Ressourcen werden geschont, weil Dinge weitergenutzt werden', 'Man lernt Menschen kennen oder spart Geld']);
+
+/* Textil und Welthandel */
+one('tex', 1, 'Warum verdienen Kakaobauern oft sehr wenig?', 'Die Preise werden am Weltmarkt bestimmt und ein großer Teil des Gewinns bleibt bei Handel und Herstellern', ['Kakao wird in Deutschland angebaut', 'Schokolade ist weltweit kostenlos', 'Sie verkaufen die fertige Schokolade selbst im Supermarkt']);
+asg('tex', 2, 'Was ist die Folge ungleicher Handelsbeziehungen?', ['sozial', 'ökologisch', 'wirtschaftlich'], [['Kinder arbeiten, statt zur Schule zu gehen.', 0], ['Regenwald wird für Plantagen gerodet.', 1], ['Bauern sind von wenigen Großabnehmern abhängig.', 2], ['Pestizide belasten Wasser und Boden.', 1], ['Die Weiterverarbeitung findet nicht im Anbauland statt.', 2]]);
+rec('tex', 2, 'Nenne drei Stationen der Textilen Kette.', 3, ['Rohstoffgewinnung', 'Garn- und Stoffherstellung', 'Veredelung', 'Konfektion', 'Vertrieb, Gebrauch oder Entsorgung']);
+rec('tex', 2, 'Beschreibe drei soziale Auswirkungen von Fast Fashion.', 3, ['Niedrige Löhne', 'Lange Arbeitszeiten', 'Kinderarbeit', 'Fehlender Arbeitsschutz']);
+rec('tex', 3, 'Erläutere zwei Stationen der Textilen Kette mit hohem Wasserverbrauch und ihre Folgen.', 2, ['Baumwollanbau: Bewässerung, Wassermangel in der Region', 'Veredelung: viel Wasser, belastetes Abwasser']);
+rec('tex', 3, 'Erkläre an einem Beispiel, warum Billigprodukte Folgen für Menschen und Umwelt vor Ort haben.', 2, ['Niedrige Preise erzeugen Druck auf Löhne und Arbeitsbedingungen', 'Umweltstandards werden eingespart, z. B. beim Abwasser']);
+rec('tex', 2, 'Beschreibe drei Möglichkeiten für nachhaltiges Handeln bei „Gebrauch und Pflege“.', 3, ['Seltener und niedriger temperiert waschen', 'Sachgerecht pflegen', 'Reparieren', 'Mehrmals tragen']);
+
+/* Geld, Versicherung, Zusammenleben */
+asg('geld', 1, 'Wann kann ein Kredit sinnvoll sein und wann eher nicht?', ['eher sinnvoll', 'eher nicht'], [['Wohnungskauf mit Eigenkapital und sicherem Einkommen', 0], ['Neues Handy, obwohl das alte noch funktioniert', 1], ['Urlaub, obwohl schon Schulden da sind', 1], ['Nötiges Auto für den Arbeitsweg', 0]]);
+one('geld', 2, 'Was ist ein Dispokredit?', 'Man überzieht sein Girokonto bis zu einem Rahmen und zahlt dafür meist hohe Zinsen', ['Ein zinsloses Geschenk der Bank', 'Eine Versicherung für das Konto', 'Eine staatliche Sozialleistung']);
+one('geld', 2, 'Warum sollte man vor einem Kredit Zinsen und Laufzeit vergleichen?', 'Davon hängt ab, wie viel man am Ende insgesamt zurückzahlt', ['Weil Kredite immer gleich teuer sind', 'Weil Zinsen nur die Bank betreffen', 'Weil die Laufzeit keine Rolle spielt']);
+rec('geld', 2, 'Beschreibe je zwei Chancen und Risiken einer Kreditaufnahme.', 4, ['Chance: größere Anschaffung ist sofort möglich', 'Chance: Rückzahlung in kleinen Raten', 'Risiko: Zinsen machen es teurer', 'Risiko: lange Belastung', 'Risiko: Überschuldung']);
+rec('geld', 2, 'Beschreibe, was Fixkosten sind, und nenne zwei Beispiele.', 3, ['Regelmäßige, gleichbleibende Ausgaben', 'Miete', 'Handyvertrag, Abschläge oder Versicherungen']);
+rec('geld', 2, 'Nenne zwei Ursachen für Schulden.', 2, ['Zu viele Einkäufe', 'Kein Einkommen oder Arbeitslosigkeit', 'Ratenkäufe oder Kredite']);
+rec('geld', 3, 'Beschreibe drei Maßnahmen, um Schulden zu bewältigen.', 3, ['Ausgaben prüfen und Käufe stoppen', 'Zusätzlich Geld verdienen', 'Schuldnerberatung aufsuchen', 'Mit Gläubigern Raten vereinbaren']);
+rec('geld', 3, 'Erläutere zwei Nachteile des Ratenkaufs.', 2, ['Höhere Gesamtkosten', 'Lange Bindung, Gefahr von Überschuldung', 'Verleitet zu Käufen, die man sich nicht leisten kann']);
+rec('ver', 2, 'Erkläre zwei freiwillige Individualversicherungen.', 2, ['Privathaftpflicht: zahlt versehentliche Schäden bei anderen', 'Hausrat: ersetzt eigene Sachen nach Einbruch, Feuer oder Sturm', 'Berufsunfähigkeit: sichert Einkommen, wenn der Beruf nicht mehr geht', 'Private Unfall: zahlt nach Unfällen, auch in der Freizeit']);
+rec('ver', 2, 'Nenne die fünf Zweige der gesetzlichen Sozialversicherung.', 5, ['Krankenversicherung', 'Pflegeversicherung', 'Rentenversicherung', 'Arbeitslosenversicherung', 'Unfallversicherung']);
+rec('ver', 3, 'Erkläre drei Unterschiede zwischen gesetzlicher und privater Unfallversicherung.', 3, ['Gesetzlich gilt bei Arbeit und Arbeitsweg, privat auch in der Freizeit', 'Gesetzlich ist Pflicht, privat freiwillig', 'Gesetzlich zahlt der Arbeitgeber, privat man selbst']);
+rec('ver', 3, 'Begründe, warum sich eine Berufsunfähigkeitsversicherung für Berufseinsteiger lohnen kann.', 2, ['Sie sichert das Einkommen, wenn man den Beruf nicht mehr ausüben kann', 'Junge, gesunde Menschen zahlen geringere Beiträge']);
+asg('leb', 1, 'Welche Wohnform passt am besten zur Situation?', ['WG', 'Eigene Wohnung', 'Bei den Eltern bleiben'], [['Lara ist Azubi, hat wenig Geld und sucht Kontakt in der neuen Stadt.', 0], ['Timo arbeitet im Schichtdienst und braucht tagsüber Ruhe.', 1], ['Nele spart für das Studium und ihre Ausbildung ist am Wohnort.', 2]], 'Es gibt auch andere gut begründete Entscheidungen. In der Prüfung zählt die Begründung.');
+rec('leb', 2, 'Nenne je zwei Vorteile einer WG und einer eigenen Wohnung.', 4, ['WG: geringere Kosten', 'WG: Gemeinschaft und gegenseitige Hilfe', 'Eigene Wohnung: mehr Privatsphäre', 'Eigene Wohnung: keine Absprachen nötig']);
+rec('leb', 2, 'Nenne je einen Vor- und Nachteil von Familien mit Kindern.', 2, ['Vorteil: Rückhalt und Gemeinschaft', 'Nachteil: mehr Kosten oder weniger Zeit für sich']);
+rec('leb', 3, 'Beschreibe die Entwicklung der Haushaltsgrößen in Deutschland und nenne zwei Gründe.', 3, ['Die Haushalte werden kleiner, es gibt mehr Ein-Personen-Haushalte', 'Weniger Kinder', 'Mehr ältere Menschen oder mehr Scheidungen']);
+
+/* Engagement und Freizeit */
+asg('eng', 2, 'Wem nützt das Engagement vor allem?', ['dem Einzelnen', 'der Gesellschaft'], [['Man lernt Verantwortung und neue Menschen kennen.', 0], ['Vereine und Hilfsangebote können bestehen.', 1], ['Man bekommt Anerkennung.', 0], ['Der Zusammenhalt vor Ort wird stärker.', 1]]);
+mul('eng', 1, 'Wo können sich Jugendliche engagieren?', ['Sportverein', 'Freiwillige Feuerwehr', 'Schülermitverantwortung', 'Jugendgemeinderat'], ['Im Nebenjob an der Tankstelle', 'Beim Online-Shopping']);
+rec('eng', 2, 'Erkläre, warum bürgerschaftliches Engagement für die Demokratie wichtig ist.', 2, ['Bürgerinnen und Bürger gestalten aktiv mit', 'Interessen werden sichtbar und der Zusammenhalt wächst']);
+rec('eng', 2, 'Nenne die drei Formen der Arbeit und beschreibe sie.', 3, ['Erwerbsarbeit: Geld für den Lebensunterhalt', 'Haus- und Familienarbeit: Aufgaben im Haushalt und für die Familie', 'Ehrenamt: freiwillig, meist unbezahlt']);
+rec('eng', 3, 'Erläutere, warum eine gute Work-Life-Balance wichtig ist.', 2, ['Erholung erhält Gesundheit und Leistungsfähigkeit', 'Zeit für Familie, Freunde und Hobbys macht zufriedener']);
+rec('sie', 2, 'Nenne drei Kriterien, auf die man sich beim Bioland-Siegel verlassen kann.', 3, ['Keine chemisch-synthetischen Dünger und Pestizide', 'Mehr Platz für die Tiere', '100 % Biofutter, mindestens die Hälfte vom eigenen Hof', 'Schutz der Artenvielfalt']);
+rec('sie', 2, 'Beschreibe zwei Standards des Grünen Knopfs.', 2, ['Kinder- und Zwangsarbeit verboten', 'Mindestlohn', 'Naturfasern auf Schadstoffe geprüft']);
+rec('sie', 3, 'Stelle an zwei Stationen der Textilen Kette dar, worauf man sich beim GOTS-Siegel verlassen kann.', 2, ['Faserherstellung: mindestens 70 % Bio-Fasern', 'Veredelung: keine gefährlichen Chemikalien', 'Konfektion: soziale Standards und keine Kinderarbeit']);
+rec('sie', 2, 'Erkläre, worauf man sich beim „Ohne Gentechnik“-Siegel nicht vollständig verlassen kann.', 2, ['Einzelne Zusatzstoffe, Vitamine oder Enzyme können mit Mikroorganismen hergestellt sein', 'Unvermeidbare Spuren lassen sich nicht völlig ausschließen']);
 
 /* Siegel: Erkennen und Wissen, automatisch aus den Daten */
 const RECOG = ['eubio', 'bio', 'bioland', 'demeter', 'naturland', 'ohnegen', 'fairtrade', 'vvegan', 'gknopf', 'gots', 'mehrweg', 'einweg', 'gruenerpunkt'];
@@ -589,6 +696,122 @@ function schwerGrafik(th, stim, trueS) {
   return { topic: 'grafik', stim, q: { k: 'one', text: 'Welche Begründung für das Ergebnis ist am ehesten sinnvoll?', opts: O(th.why[0], th.why.slice(1)) }, tip: 'Eine gute Begründung passt zum Alltag und zu den Daten.', e: 'Begründungen stehen nicht in der Grafik. Du leitest sie aus deinem Wissen ab und formulierst sie als „möglicher Grund“.' };
 }
 
+/* ---------- Schreiben: Operator-Coach und Schreibaufgaben ---------- */
+/* Übungsmaßstab: ein Punkt pro Aspekt. Nur genannt statt erläutert zählt höchstens halb. */
+const PKT = [
+  { l: 1, q: 'Nenne zwei Pflichtangaben auf Lebensmitteln.', p: 2, a: 'Zutatenliste, Mindesthaltbarkeitsdatum', s: 2, w: 'Bei „Nenne“ reichen Stichworte. Beide Angaben stimmen.' },
+  { l: 1, q: 'Nenne zwei Pflichtangaben auf Lebensmitteln.', p: 2, a: 'Zutatenliste, Nutri-Score', s: 1, w: 'Der Nutri-Score ist freiwillig, also zählt nur die Zutatenliste.' },
+  { l: 1, q: 'Erkläre den Begriff Fixkosten.', p: 1, a: 'Miete', s: 0, w: 'Das ist nur ein Beispiel. Eine Erklärung muss sagen, was Fixkosten sind.' },
+  { l: 1, q: 'Erkläre den Begriff Fixkosten.', p: 1, a: 'Fixkosten sind Ausgaben, die regelmäßig in gleicher Höhe anfallen.', s: 1, w: 'Der Begriff ist vollständig erklärt.' },
+  { l: 1, q: 'Nenne die Definition von Gesundheit der WHO.', p: 2, a: 'Gesund ist man, wenn man nicht krank ist.', s: 0, w: 'Genau das sagt die WHO nicht: Gesundheit ist mehr als das Fehlen von Krankheit.' },
+  { l: 1, q: 'Nenne die Definition von Gesundheit der WHO.', p: 2, a: 'Körperliches, seelisches und soziales Wohlbefinden.', s: 1, w: 'Die drei Bereiche stimmen. Es fehlt, dass es um mehr als das Freisein von Krankheit geht.' },
+  { l: 1, q: 'Nenne die Definition von Gesundheit der WHO.', p: 2, a: 'Ein Zustand vollständigen körperlichen, seelischen und sozialen Wohlbefindens und nicht nur das Freisein von Krankheit und Gebrechen.', s: 2, w: 'Das ist die vollständige Definition.' },
+  { l: 2, q: 'Erläutere zwei Vorteile einer WG.', p: 2, a: 'Günstiger und man ist nicht allein.', s: 1, w: 'Beide Vorteile sind nur genannt. Bei „Erläutere“ fehlt jeweils das Warum.' },
+  { l: 2, q: 'Erläutere zwei Vorteile einer WG.', p: 2, a: 'Eine WG ist günstiger, weil man sich die Miete teilt. Außerdem ist man seltener allein, weil immer jemand zum Reden da ist.', s: 2, w: 'Beide Vorteile werden begründet.' },
+  { l: 2, q: 'Erläutere zwei Vorteile einer WG.', p: 2, a: 'Eine WG ist günstiger, weil man sich die Miete teilt. Außerdem ist es dort oft sehr laut.', s: 1, w: 'Der zweite Satz beschreibt keinen Vorteil.' },
+  { l: 2, q: 'Beschreibe zwei Chancen der grünen Gentechnik.', p: 2, a: 'Gentechnik ist gut für die Bauern.', s: 0, w: 'Das bleibt zu allgemein. Es wird keine konkrete Chance beschrieben.' },
+  { l: 2, q: 'Beschreibe zwei Chancen der grünen Gentechnik.', p: 2, a: 'Schädlingsresistente Pflanzen brauchen weniger Pflanzenschutzmittel. Außerdem können Pflanzen mehr Nährstoffe enthalten, zum Beispiel Goldener Reis.', s: 2, w: 'Zwei konkrete Chancen sind beschrieben.' },
+  { l: 2, q: 'Erkläre, was eine Privathaftpflicht absichert, und nenne ein Beispiel.', p: 2, a: 'Sie zahlt, wenn das eigene Handy herunterfällt.', s: 0, w: 'Eigene Sachen sind nicht versichert, die Antwort ist falsch.' },
+  { l: 2, q: 'Erkläre, was eine Privathaftpflicht absichert, und nenne ein Beispiel.', p: 2, a: 'Sie zahlt, wenn ich jemand anderem aus Versehen einen Schaden zufüge, zum Beispiel die Brille eines Freundes zerbreche.', s: 2, w: 'Erklärung und Beispiel sind vorhanden.' },
+  { l: 2, q: 'Begründe, warum der Kauf gebrauchter Möbel nachhaltig ist (zwei Aspekte).', p: 2, a: 'Gebrauchte Möbel sind billig und sehen oft schön aus.', s: 0, w: 'Das sind keine Gründe für Nachhaltigkeit. Lies die Frage genau.' },
+  { l: 2, q: 'Begründe, warum der Kauf gebrauchter Möbel nachhaltig ist (zwei Aspekte).', p: 2, a: 'Es müssen keine neuen Möbel hergestellt werden, das spart Rohstoffe und Energie. Außerdem landen die alten Möbel nicht im Müll.', s: 2, w: 'Zwei passende Aspekte sind begründet.' },
+  { l: 3, q: 'Beurteile den Gesundheitswert eines Eistees mit 11 g Zucker pro 100 ml (Beurteilung und zwei Aspekte).', p: 3, a: 'Der Eistee ist ungesund.', s: 1, w: 'Das Urteil steht da, die zwei begründenden Aspekte fehlen.' },
+  { l: 3, q: 'Beurteile den Gesundheitswert eines Eistees mit 11 g Zucker pro 100 ml (Beurteilung und zwei Aspekte).', p: 3, a: 'Er enthält 11 g Zucker pro 100 ml und kaum Nährstoffe.', s: 2, w: 'Zwei Aspekte sind da, das Urteil fehlt.' },
+  { l: 3, q: 'Beurteile den Gesundheitswert eines Eistees mit 11 g Zucker pro 100 ml (Beurteilung und zwei Aspekte).', p: 3, a: 'Der Gesundheitswert ist negativ, weil eine Packung mit 500 ml 55 g Zucker enthält. Außerdem liefert der Eistee kaum Nährstoffe.', s: 3, w: 'Urteil und zwei Aspekte mit Bezug zu den Daten sind vorhanden.' },
+  { l: 3, q: 'Bewerte den Kauf eines teuren High-Protein-Shakes (zwei Aspekte).', p: 2, a: 'Ich finde den Shake lecker.', s: 0, w: 'Das ist ein Geschmacksurteil ohne fachlichen Aspekt.' },
+  { l: 3, q: 'Bewerte den Kauf eines teuren High-Protein-Shakes (zwei Aspekte).', p: 2, a: 'Der Kauf lohnt sich kaum, weil das Produkt viel teurer als Milch oder Quark ist und die meisten Menschen schon genug Eiweiß aufnehmen.', s: 2, w: 'Das Urteil ist mit zwei Aspekten begründet.' },
+  { l: 3, q: 'Erläutere zwei Vorteile der Reparatur eines Handys.', p: 2, a: 'Das spart Ressourcen. Das spart Geld.', s: 1, w: 'Beide Vorteile sind nur genannt, das Warum fehlt.' }
+];
+const BAU = [
+  { l: 1, q: 'Erläutere einen Vorteil einer Privathaftpflicht.', f: ['Eine Privathaftpflicht ist wichtig,', 'weil Schäden bei anderen sehr teuer werden können.', 'Zum Beispiel kann ein Fahrradunfall hohe Kosten verursachen.'], x: ['Sie zahlt auch bei eigenen Handys.'] },
+  { l: 1, q: 'Erläutere einen Vorteil regionaler Lebensmittel.', f: ['Regionale Lebensmittel sind umweltfreundlicher,', 'weil die Transportwege kürzer sind.', 'Äpfel vom Bauern aus der Nähe verursachen zum Beispiel weniger Emissionen.'], x: ['Sie sind immer vegan.'] },
+  { l: 1, q: 'Erläutere, warum man Werbeversprechen prüfen sollte.', f: ['Werbeversprechen sollte man prüfen,', 'weil sie nur die Stärken eines Produkts zeigen.', 'Ein Produkt mit „Wenig Fett“ kann zum Beispiel viel Zucker enthalten.'], x: ['Werbung ist immer verboten.'] },
+  { l: 1, q: 'Erläutere einen Nachteil von Fast Fashion.', f: ['Fast Fashion schadet den Beschäftigten,', 'weil die Kleidung möglichst billig hergestellt werden soll.', 'In vielen Fabriken gibt es deshalb niedrige Löhne und lange Arbeitszeiten.'], x: ['Kleidung kann man im Internet bestellen.'] },
+  { l: 2, q: 'Bewerte ein Produkt hinsichtlich des ökologischen Wertes.', f: ['Der ökologische Wert ist eher negativ,', 'weil es in einer Einwegflasche aus Plastik verkauft wird', 'und kein Bio-Siegel trägt.'], x: ['Es schmeckt nach Vanille.', 'Es kostet 3,29 €.'] },
+  { l: 2, q: 'Begründe, warum das EU-Bio-Siegel keine vollständige Gentechnikfreiheit garantiert.', f: ['Gentechnik ist im Bio-Landbau grundsätzlich ausgeschlossen.', 'Trotzdem können unbeabsichtigte Spuren vorkommen.', 'Bis 0,9 % müssen sie nicht gekennzeichnet werden.'], x: ['Bio-Produkte sind immer teurer.'] },
+  { l: 2, q: 'Beurteile, ob ein Ratenkauf sinnvoll ist.', f: ['Ein Ratenkauf ist meist nicht sinnvoll,', 'weil man am Ende mehr bezahlt als den Kaufpreis.', 'Außerdem bindet man sich lange an feste Monatsraten.'], x: ['Man kann die Ware direkt mitnehmen, also zahlt man weniger.'] },
+  { l: 2, q: 'Erkläre den Begriff Nachhaltigkeit.', f: ['Nachhaltigkeit bedeutet,', 'Ressourcen so zu nutzen, dass auch künftige Generationen gut leben können.', 'Dabei werden ökologische, ökonomische und soziale Ziele beachtet.'], x: ['Es bedeutet, dass man nur Bio-Lebensmittel isst.'] },
+  { l: 3, q: 'Überprüfe, ob ein Fruchtjoghurt zur Ebene „Gemüse und Obst“ gehört.', f: ['Der Fruchtjoghurt gehört nicht zu dieser Ebene,', 'weil Joghurt die Hauptzutat ist', 'und die Früchte nur einen kleinen Anteil ausmachen.', 'Er gehört zu den Milchprodukten.'], x: ['Er schmeckt nach Himbeeren, also zählt er als Obst.'] },
+  { l: 3, q: 'Entscheide dich zwischen WG und eigener Wohnung und begründe.', f: ['Ich entscheide mich für die WG,', 'weil die Kosten bei einem Berufsanfang niedrig sein sollten.', 'Außerdem finde ich dort in einer neuen Stadt schneller Kontakt.'], x: ['Ich entscheide mich für beides.'] },
+  { l: 3, q: 'Stelle dar, wie Konsumierende Gentechnik in der Lebensmittelproduktion beeinflussen können.', f: ['Konsumierende können durch ihren Einkauf Druck ausüben,', 'indem sie gezielt Produkte mit Bio- oder „Ohne Gentechnik“-Siegel wählen.', 'Außerdem können sie Politikerinnen und Politiker anschreiben.'], x: ['Sie können im Supermarkt Treuepunkte sammeln.'] },
+  { l: 3, q: 'Erläutere den Zusammenhang zwischen Konsum und Flächennutzungskonkurrenz.', f: ['Unser Konsum beeinflusst, wie Flächen genutzt werden.', 'Wenn viel Fleisch gegessen wird, braucht man mehr Fläche für Tierfutter.', 'Diese Fläche fehlt dann für den Anbau von Nahrungsmitteln.'], x: ['Flächen sind immer unbegrenzt verfügbar.'] }
+];
+const OPS = [
+  { t: 'Ratenkauf', n: 'Höhere Gesamtkosten.', b: 'Beim Ratenkauf zahlt man den Preis in Monatsraten und am Ende meist mehr als beim Barkauf.', e: 'Der Ratenkauf ist teurer, weil Aufschläge dazukommen. Bei 24 Raten zu 180 € zahlt man zum Beispiel 4320 € statt 3000 €.', w: 'Ich halte den Ratenkauf für eher schlecht, weil die Mehrkosten hoch sind. Nur bei einer dringenden Anschaffung kann er sinnvoll sein.' },
+  { t: 'Einwegflasche', n: 'Viel Plastikmüll.', b: 'Eine Einwegflasche wird nur einmal befüllt und danach recycelt oder entsorgt.', e: 'Einwegflaschen belasten die Umwelt, weil sie nur einmal genutzt werden. Dadurch braucht man ständig neues Material und Energie.', w: 'Der ökologische Wert ist negativ, weil viel Material verbraucht wird. Eine Mehrwegflasche ist die bessere Wahl.' },
+  { t: 'Nahrungsergänzungsmittel', n: 'Überdosierung möglich.', b: 'Nahrungsergänzungsmittel enthalten Nährstoffe in konzentrierter Form, meist als Tablette oder Kapsel.', e: 'Eine Überdosierung ist möglich, weil die Stoffe konzentriert sind. Zu viel Vitamin D kann zum Beispiel schaden.', w: 'Für die meisten Menschen halte ich sie für unnötig, weil eine ausgewogene Ernährung reicht und die Mittel teuer sind.' },
+  { t: 'Gentechnik', n: 'Unkontrollierte Ausbreitung.', b: 'Bei der Gentechnik wird das Erbgut von Pflanzen gezielt verändert, damit sie neue Eigenschaften bekommen.', e: 'Veränderte Pflanzen können sich unkontrolliert ausbreiten, weil sie sich mit anderen kreuzen. Das lässt sich nicht mehr rückgängig machen.', w: 'Ich sehe grüne Gentechnik kritisch, weil die Folgen für die Umwelt schwer abzuschätzen sind, auch wenn höhere Erträge möglich sind.' },
+  { t: 'Fairtrade', n: 'Faire Löhne.', b: 'Das Fairtrade-Siegel kennzeichnet Produkte, bei denen soziale Standards für die Produzenten gelten.', e: 'Fairtrade hilft Bauern, weil sie faire Preise bekommen. So können sie zum Beispiel den Schulbesuch ihrer Kinder bezahlen.', w: 'Das Siegel ist für den sozialen Wert hilfreich, weil es Kinderarbeit verbietet. Über die Gesundheit sagt es aber nichts aus.' },
+  { t: 'Wohngemeinschaft', n: 'Geteilte Kosten.', b: 'In einer WG wohnen mehrere Menschen zusammen und teilen sich Küche und Bad.', e: 'Eine WG ist günstig, weil Miete und Geräte geteilt werden. Dadurch bleibt am Monatsende mehr Geld übrig.', w: 'Für Berufsanfänger ist eine WG eine gute Wahl, weil sie Kosten spart. Wer viel Ruhe braucht, ist anderswo besser aufgehoben.' },
+  { t: 'Nutri-Score', n: 'Leicht verständlich.', b: 'Der Nutri-Score zeigt mit Buchstaben von A bis E und Farben, wie ein Produkt bewertet wird.', e: 'Der Nutri-Score hilft beim Einkauf, weil man Produkte schnell vergleichen kann. Bei Müsli sieht man zum Beispiel sofort das bessere.', w: 'Ich finde ihn nützlich, weil er schnell informiert. Allein reicht er aber nicht, weil er keine Nachhaltigkeit bewertet.' },
+  { t: 'Vegane Ernährung', n: 'Mangel an Vitamin B12.', b: 'Bei veganer Ernährung verzichtet man auf alle tierischen Lebensmittel.', e: 'Bei veganer Ernährung kann Vitamin B12 fehlen, weil es fast nur in tierischen Lebensmitteln steckt. Deshalb braucht man ein Präparat.', w: 'Vegane Ernährung kann sinnvoll sein, weil sie Klima und Tiere schont. Sie erfordert aber gute Planung.' },
+  { t: 'Tauschbörse', n: 'Weniger Neukauf.', b: 'Bei einer Tauschbörse geben Menschen Dinge weiter, die sie nicht mehr brauchen.', e: 'Tauschbörsen schonen Ressourcen, weil Dinge länger genutzt werden. Ein getauschtes Shirt muss zum Beispiel nicht neu hergestellt werden.', w: 'Tauschbörsen sind eine gute Idee, weil sie Geld und Ressourcen sparen. Die Auswahl ist aber begrenzt.' }
+];
+const OPN = { n: 'Nenne', b: 'Beschreibe', e: 'Erläutere', w: 'Bewerte' };
+const OPT = { n: 'Nenne: nur Stichwort, ohne Erklärung.', b: 'Beschreibe: sachlich sagen, wie etwas ist.', e: 'Erläutere: Aussage mit „weil“ und Beispiel.', w: 'Bewerte: eigenes Urteil mit Begründung.' };
+const ALT = { 'Knusper-Riegel': 'Selbst gemachte Riegel aus Haferflocken, Nüssen und Trockenobst', 'Fruchtjoghurt Himbeere': 'Naturjoghurt mit frischen oder tiefgekühlten Himbeeren', 'Durstkick Eistee': 'Selbst gekochter kalter Tee mit Zitrone und wenig Zucker', 'Power Shake Vanille': 'Quark mit saisonalem Obst', 'Linsen-Crisps Paprika': 'Im Ofen geröstete Kichererbsen', 'Vollmilch Karamell': 'Obst mit etwas fair gehandelter Schokolade', 'Dinkelfreunde Kekse': 'Selbst gebackene Haferkekse mit wenig Zucker', 'Quetsch-Smoothie': 'Selbst gemixtes Obst aus der Region', 'Erbsen-Bällchen': 'Selbst gemachte Linsenbratlinge', 'Nuss-Mischung': 'Lose gekaufte Nüsse, selbst gemischt', 'Roggen-Vollkornbrot': 'Selbst gebackenes Vollkornbrot', 'Naturjoghurt mild': 'Selbst angesetzter Joghurt aus regionaler Milch', 'Tomatensoße Basilikum': 'Selbst gekochte Soße aus saisonalen Tomaten', 'Goldwaffeln': 'Selbst gebackene Waffeln mit Vollkornmehl und wenig Zucker', 'Zitronen-Rührkuchen': 'Selbst gebackener Kuchen mit Bio-Zutaten', 'Fruchtbären': 'Frisches Obst oder Trockenobst' };
+const RECIPES = [
+  { n: 'Nudelauflauf', i: [['Nudeln', 'c', 'Zucchinistreifen'], ['Sahne', 'm', 'Hafersahne'], ['Käse', 'm', 'Hefeflocken'], ['Mais', 'c', 'Paprika'], ['Semmelbrösel', 'c', 'gehackte Nüsse'], ['Butter', 'm', 'Rapsöl'], ['Tomaten'], ['Zwiebeln']] },
+  { n: 'Kartoffelpfanne', i: [['Kartoffeln', 'c', 'Blumenkohl'], ['Speck', 'm', 'Räuchertofu'], ['Eier', 'm', 'Kichererbsenmehl'], ['Reis', 'c', 'Brokkoli'], ['Mais', 'c', 'Zucchini'], ['Schmand', 'm', 'Hafercreme'], ['Paprika'], ['Rapsöl']] },
+  { n: 'Hähnchen-Wrap', i: [['Weizen-Wrap', 'c', 'Salatblätter'], ['Hähnchen', 'm', 'Kidneybohnen'], ['Joghurtsoße', 'm', 'Sojajoghurt'], ['Reis', 'c', 'Gurkenwürfel'], ['Käse', 'm', 'Avocado'], ['Kartoffelecken', 'c', 'Karottensticks'], ['Tomaten']] }
+];
+function zielgruppen(p) {
+  const z = [], c = p.claims;
+  if (c.includes('prot')) z.push('Sportliche Menschen: Die Aussage „High Protein“ verspricht Vorteile für den Muskelaufbau');
+  if (c.includes('kids')) z.push('Eltern und Kinder: Die Gestaltung spricht Kinder an und Eltern achten auf Aussagen zur Ernährung');
+  if (c.includes('immun')) z.push('Gesundheitsbewusste Menschen: Das Versprechen zum Immunsystem weckt Interesse');
+  if (c.includes('fett') || c.includes('minus')) z.push('Menschen, die auf ihr Gewicht achten: Die Packung wirbt mit weniger Fett');
+  if (c.includes('korn') || c.includes('nat')) z.push('Gesundheitsbewusste Menschen: Die Aussage auf der Packung wirkt gesund');
+  if (p.bio) z.push('Umweltbewusste Menschen: Sie achten auf das Bio-Siegel');
+  if (p.seals.includes('fairtrade')) z.push('Menschen, denen faire Arbeitsbedingungen wichtig sind: Das Siegel spricht sie an');
+  if (p.seals.includes('vvegan')) z.push('Menschen, die vegan leben: Sie erkennen es am V-Label');
+  z.push(`Menschen mit wenig Zeit: ${p.eign}`, `Menschen, die das Image anspricht: ${p.soz}`);
+  return [...new Set(z)];
+}
+const WP = {
+  zielgruppe: p => ({ text: 'Erläutere zwei mögliche Zielgruppen des Produkts.', hint: 'Nenne die Zielgruppe und begründe mit einer Angabe von der Packung.', need: 2, pts: zielgruppen(p) }),
+  verpackung: p => { const a = p.claims.map(c => `Die Aussage „${CLAIM[c].t}“ soll Interesse wecken`).concat(p.seals.map(s => `Das Siegel „${SEALNAME[s].replace(/[„“]/g, '')}“ schafft Vertrauen`)); a.push('Farbe und Bild machen auf das Produkt aufmerksam', `Der Name „${p.n}“ weckt Erwartungen`, `Das Image spricht an: ${p.soz}`); return { text: 'Beschreibe drei Aspekte, wie die Verpackung zum Kauf anregt.', hint: 'Sieh dir die Vorderseite an.', need: 3, pts: a }; },
+  bewerten: p => ({ text: 'Bewerte das Produkt hinsichtlich des ökonomischen und ökologischen Wertes.', hint: 'Gib zu jedem Wert ein Urteil mit einer Angabe aus dem Material.', need: 2, pts: [`Ökonomisch: Grundpreis ${fmt(p.gp)} € / ${p.gu} mit einem Urteil, z. B. im Vergleich zum Selbermachen`, `Ökologisch: ${p.packg}${p.bio ? ', dazu ein Bio-Siegel' : ', kein Bio-Siegel'}, mit einem Urteil`] }),
+  gesund: p => { if (!p.nv) return null; const n = p.nv, u = 'AB'.includes(p.score) ? 'eher positiv' : p.score === 'C' ? 'mittel' : 'eher negativ', a = [`Urteil: Der Gesundheitswert ist ${u}`, `Zucker: ${fmt(n.zu, 1)} g pro 100 ${p.u} (${n.zu >= 15 ? 'viel' : n.zu < 5 ? 'wenig' : 'mittel'})`, `Gesättigte Fettsäuren: ${fmt(n.sf, 1)} g (${n.sf >= 5 ? 'viel' : 'wenig'})`]; if (n.ba >= 4) a.push(`Ballaststoffe: ${fmt(n.ba, 1)} g (viel)`); if (n.ei >= 7) a.push(`Eiweiß: ${fmt(n.ei, 1)} g (viel)`); if (n.sa >= 1.5) a.push(`Salz: ${fmt(n.sa, 2)} g (viel)`); return { text: 'Beurteile den Gesundheitswert des Produkts (Urteil und zwei Aspekte).', hint: 'Erst das Urteil, dann zwei Belege aus der Nährwerttabelle.', need: 3, pts: a }; },
+  alternative: p => { const x = ALT[p.n]; if (!x) return null; return { text: 'Beschreibe eine selbst hergestellte, nachhaltige Alternative mit drei Aspekten.', hint: 'Sage, was du herstellst und warum das nachhaltiger ist.', need: 3, pts: [`Idee, z. B.: ${x}`, 'Weniger Verpackung oder unverpackte Zutaten', 'Regional, saisonal oder Bio', 'Weniger Zucker und Zusatzstoffe, weil man selbst bestimmt'] }; },
+  nem: p => { if (!p.nem) return null; return { text: 'Erläutere, für wen das Produkt sinnvoll sein könnte, und nenne zwei Nachteile.', hint: 'Eine Personengruppe mit Begründung und zwei Nachteile.', need: 3, pts: ['Für Menschen mit nachgewiesenem Mangel oder erhöhtem Bedarf, z. B. bei veganer Ernährung', 'Nachteil: teuer und oft unnötig', 'Nachteil: Überdosierung möglich', 'Nachteil: ersetzt keine ausgewogene Ernährung'] }; },
+  gen: p => { if (p.bio || p.seals.includes('ohnegen') || p.nem) return null; const r = p.items.filter(i => i.tier || i.mik); if (r.length < 2) return null; return { text: 'Überprüfe, ob in der Wertschöpfungskette Gentechnik möglich ist. Begründe mit zwei Aspekten.', hint: 'Erst das Ergebnis, dann zwei Zutaten mit Begründung.', need: 3, pts: ['Ergebnis: Der Einsatz von Gentechnik ist möglich', ...r.map(i => i.tier ? `${i.d}: Die Tiere könnten gentechnisch verändertes Futter bekommen haben` : `${i.d}: Kann mit veränderten Mikroorganismen hergestellt sein`)] }; },
+  werbung: p => { if (!p.claims.length) return null; const c = CLAIM[p.claims[0]]; return { text: `Bewerte das Werbeversprechen „${c.t}“.`, hint: 'Vergleiche die Aussage mit den Angaben auf der Rückseite.', need: 2, pts: ['Urteil: Die Aussage ist nur begrenzt aussagekräftig', c.r(p), 'Vergleich mit Zutaten, Preis oder einem anderen Produkt'] }; }
+};
+const WLEVEL = { leicht: ['zielgruppe', 'verpackung'], mittel: ['bewerten', 'gesund', 'alternative', 'nem'], schwer: ['gen', 'werbung', 'rezept'] };
+const WAREA = { alle: 'Gemischt', op: 'Operatoren', pkt: 'Punkte schätzen', bau: 'Antwort bauen', prod: 'Am Produkt' };
+const lvNum = l => ({ leicht: 1, mittel: 2, schwer: 3 })[l];
+function wProd(level) {
+  for (let i = 0; i < 40; i++) {
+    const key = pick(WLEVEL[level]);
+    if (key === 'rezept') {
+      const r = pick(RECIPES), d = pick([['Low-Carb-Diät', 'c'], ['vegane Ernährung', 'm']]), x = r.i.filter(z => z[1] === d[1]);
+      return { topic: 'schreiben', stim: `<p class="case"><b>Rezept: ${r.n}</b>Zutaten: ${shuffle(r.i).map(z => z[0]).join(', ')}</p>`, q: { k: 'recall', text: `Arbeite drei Zutaten heraus, die für die ${d[0]} ungeeignet sind, und entwickle dazu Alternativen.`, hint: 'Nenne jeweils Zutat und Alternative.', need: 3, pts: x.map(z => `${z[0]}: z. B. ${z[2]}`) }, tip: d[1] === 'c' ? 'Low-Carb: Achte auf Getreide, Kartoffeln, Reis und Mais.' : 'Vegan: Achte auf alles vom Tier.' };
+    }
+    const base = key === 'nem' ? pick(PRODUCTS.filter(p => p.nem)) : pick(PRODUCTS), p = makeProduct(base), w = WP[key](p); if (!w) continue;
+    return { topic: 'schreiben', stim: packHTML(p), q: Object.assign({ k: 'recall' }, w), tip: w.hint };
+  }
+}
+function genSchreiben(level) {
+  let a = APP.area.schreiben; if (a === 'alle') a = pick(Object.keys(WAREA).filter(k => k !== 'alle' && k !== APP.lastKey));
+  APP.lastKey = a; const n = lvNum(level);
+  if (a === 'pkt') {
+    const it = pick(PKT.filter(x => x.l === n)), o = []; for (let i = 0; i <= it.p; i++) o.push({ t: `${i} ${i === 1 ? 'Punkt' : 'Punkte'}`, ok: i === it.s ? 1 : 0 });
+    return { topic: 'schreiben', stim: `<p class="case"><b>Aufgabe (${it.p} ${it.p === 1 ? 'Punkt' : 'Punkte'})</b>${it.q}</p><p style="margin:10px 0 0"><b>Antwort:</b> ${it.a}</p>`, q: { k: 'one', text: 'Wie viele Punkte bekäme diese Antwort?', opts: o }, tip: 'Meist gibt es einen Punkt pro Aspekt. Was nur genannt ist, zählt bei „Erläutere“ höchstens halb.', e: it.w };
+  }
+  if (a === 'bau') {
+    const it = pick(BAU.filter(x => x.l === n));
+    return { topic: 'schreiben', q: { k: 'order', text: `Baue eine vollständige Antwort: ${it.q}`, items: it.f, extra: it.x }, tip: 'Erst die Aussage, dann die Begründung, dann das Beispiel. Ein Satzteil passt nicht.', e: 'So kannst du auch in der Prüfung vorgehen: Aussage, Begründung, Beispiel.' };
+  }
+  if (a === 'op') {
+    const c = pick(OPS);
+    if (n === 3) { const ks = ['n', 'b', 'e', 'w']; return { topic: 'schreiben', q: { k: 'assign', text: `Thema ${c.t}: Welcher Operator passt zu welcher Antwort?`, cats: ks.map(k => OPN[k]), rows: shuffle(ks.map((k, i) => ({ t: c[k], c: i }))) }, tip: 'Stichwort, sachliche Darstellung, Begründung oder eigenes Urteil?' }; }
+    const k = pick(['n', 'b', 'e', 'w']);
+    return { topic: 'schreiben', q: { k: 'one', text: `Thema ${c.t}: Welche Antwort passt am genauesten zum Operator „${OPN[k]}“?`, opts: shuffle(['n', 'b', 'e', 'w'].map(x => ({ t: c[x], ok: x === k ? 1 : 0 }))) }, tip: OPT[k], e: OPT[k] };
+  }
+  return wProd(level);
+}
+
 /* ---------- Sprint ---------- */
 const ROUND = 8;
 function cardToQ(c) {
@@ -620,11 +843,11 @@ function load() { try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'
 function save() { try { localStorage.setItem(KEY, JSON.stringify(DATA)); } catch (e) { } }
 
 /* ---------- App ---------- */
-const TABS = [['etikett', '🔎', 'Etiketten'], ['fall', '💶', 'Fälle'], ['grafik', '📊', 'Grafiken'], ['sprint', '⚡', 'Sprint'], ['stand', '🎯', 'Stand']];
+const TABS = [['etikett', '🔎', 'Etiketten'], ['fall', '💶', 'Fälle'], ['grafik', '📊', 'Grafiken'], ['sprint', '⚡', 'Sprint'], ['schreiben', '✍️', 'Schreiben']];
 const LEVELS = [['leicht', 'Lesen und rechnen'], ['mittel', 'Einordnen'], ['schwer', 'Bewerten']];
-const LEVELHINT = { fall: ['Ein Fall', 'Mehrere Fälle', 'Mit Fallen'], grafik: ['Ablesen', 'Kernaussage', 'Begründen'], sprint: ['Erkennen', 'Anwenden', 'Selbst formulieren'], etikett: LEVELS.map(l => l[1]) };
-const APP = { mode: 'etikett', level: 'leicht', area: { fall: 'alle', sprint: 'alle' }, task: null, sprint: null, lastKey: '' };
-const GEN = { etikett: genEtikett, fall: genFall, grafik: genGrafik, sprint: genSprint };
+const LEVELHINT = { fall: ['Ein Fall', 'Mehrere Fälle', 'Mit Fallen'], grafik: ['Ablesen', 'Kernaussage', 'Begründen'], sprint: ['Erkennen', 'Anwenden', 'Selbst formulieren'], schreiben: ['Grundlagen', 'Bewerten', 'Prüfungsniveau'], etikett: LEVELS.map(l => l[1]) };
+const APP = { mode: 'etikett', level: 'leicht', area: { fall: 'alle', sprint: 'alle', schreiben: 'alle' }, task: null, sprint: null, lastKey: '' };
+const GEN = { etikett: genEtikett, fall: genFall, grafik: genGrafik, sprint: genSprint, schreiben: genSchreiben };
 
 const LOCK_SECONDS = 10;
 let lockTimer = null;
@@ -673,10 +896,10 @@ function renderQ() {
     q.sel = q.rows.map(() => null);
     h += q.rows.map((r, i) => `<div class="row" data-r="${i}"><p>${r.t}</p><div class="seg">${q.cats.map((c, j) => `<button data-j="${j}">${c}</button>`).join('')}</div></div>`).join('');
   } else if (q.k === 'order') {
-    q.seq = []; q.mix = shuffle(q.items);
+    q.seq = []; q.mix = shuffle([...q.items, ...(q.extra || [])]);
     h += `<p class="sub">Tippe die Einträge der Reihe nach an.</p><div class="seq" id="seq"></div><div class="seg" id="pool">${q.mix.map((c, i) => `<button data-i="${i}">${c}</button>`).join('')}</div><div class="btns"><button class="btn sec" id="undo">Letzten Schritt zurück</button></div>`;
   } else {
-    h += `<p class="sub">${q.need} ${q.need === 1 ? 'Punkt' : 'Punkte'} sind gefragt. Formuliere zuerst selbst.</p><textarea id="free" placeholder="Deine Antwort in Stichworten"></textarea><div class="btns"><button class="btn sec" id="paper">Ich habe es auf Papier geschrieben</button></div><div id="pts"></div>`;
+    h += `<p class="sub">${q.hint ? q.hint + ' ' : ''}${q.need} ${q.need === 1 ? 'Punkt' : 'Punkte'} sind gefragt. Formuliere zuerst selbst.</p><textarea id="free" placeholder="Deine Antwort in Stichworten"></textarea><div class="btns"><button class="btn sec" id="paper">Ich habe es auf Papier geschrieben</button></div><div id="pts"></div>`;
   }
   qa.innerHTML = h;
   if (q.k === 'one') qa.querySelectorAll('.opt').forEach(b => b.onclick = () => { qa.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); q.pick = +b.dataset.i; });
@@ -685,7 +908,7 @@ function renderQ() {
   if (q.k === 'assign') qa.querySelectorAll('.row').forEach(r => { const i = +r.dataset.r; r.querySelectorAll('button').forEach(b => b.onclick = () => { r.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); q.sel[i] = +b.dataset.j; }); });
   if (q.k === 'order') {
     const draw = () => { $('#seq').innerHTML = q.seq.map((i, n) => `<span>${n + 1}. ${q.mix[i]}</span>`).join(''); $('#pool').querySelectorAll('button').forEach(b => { b.hidden = q.seq.includes(+b.dataset.i); }); };
-    $('#pool').querySelectorAll('button').forEach(b => b.onclick = () => { q.seq.push(+b.dataset.i); draw(); });
+    $('#pool').querySelectorAll('button').forEach(b => b.onclick = () => { if (q.seq.length < q.items.length) { q.seq.push(+b.dataset.i); draw(); } });
     $('#undo').onclick = () => { q.seq.pop(); draw(); }; q.draw = draw;
   }
   if (q.k === 'recall') $('#paper').onclick = () => reveal();
@@ -736,7 +959,7 @@ function check() {
   const n = q.set.size, ok = n >= q.need; count(ok);
   t.e = ''; if (ok) return finish(`Sehr gut: ${n} von ${q.need} geforderten Punkten.`);
   t.done = true; $('#check').disabled = true; $('#pts').querySelectorAll('.opt').forEach(b => { b.disabled = true; });
-  fb('tip', `Du hast ${n} von ${q.need} geforderten Punkten. Die Karte kommt bald wieder.`); $('#tip').disabled = true; $('#next').className = 'btn'; if (APP.mode === 'sprint' && APP.sprint.i >= ROUND) $('#next').textContent = 'Ergebnis ansehen';
+  fb('tip', `Du hast ${n} von ${q.need} geforderten Punkten. ${t.card ? 'Die Karte kommt bald wieder.' : 'Vergleiche deine Antwort mit den Punkten oben.'}`); $('#tip').disabled = true; $('#next').className = 'btn'; if (APP.mode === 'sprint' && APP.sprint.i >= ROUND) $('#next').textContent = 'Ergebnis ansehen';
 }
 function solve() {
   const t = APP.task, q = t.q; let s = '';
@@ -774,7 +997,7 @@ function drawLevels() {
   $('.levels').querySelectorAll('button').forEach(b => b.onclick = () => { APP.level = DATA.level = b.dataset.l; save(); APP.sprint = null; drawLevels(); newTask(); });
 }
 function drawChips() {
-  const c = $('#chips'), src = APP.mode === 'fall' ? AREA : APP.mode === 'sprint' ? Object.assign({ alle: 'Alle Themen' }, TOPIC) : null;
+  const c = $('#chips'), src = APP.mode === 'fall' ? AREA : APP.mode === 'schreiben' ? WAREA : APP.mode === 'sprint' ? Object.assign({ alle: 'Alle Themen' }, TOPIC) : null;
   c.hidden = !src; if (!src) return;
   c.innerHTML = Object.keys(src).map(k => `<button data-k="${k}" class="${APP.area[APP.mode] === k ? 'on' : ''}">${src[k]}</button>`).join('');
   c.querySelectorAll('button').forEach(b => b.onclick = () => { APP.area[APP.mode] = b.dataset.k; APP.sprint = null; drawChips(); newTask(); });
@@ -783,23 +1006,24 @@ const TERMS = {
   etikett: `<p><b>Pflichtangaben:</b> Bezeichnung, Zutatenliste mit Allergenen, Nährwerttabelle, Mindesthaltbarkeitsdatum, Nettofüllmenge, Hersteller mit Anschrift.</p><p><b>Grundpreis:</b> Preis pro Kilogramm oder Liter, damit man Packungen vergleichen kann.</p><p><b>Nutri-Score:</b> Bewertung von A bis E, gedacht für den Vergleich innerhalb einer Produktgruppe.</p>`,
   fall: `<p><b>Gesetzlich:</b> Kranken-, Pflege-, Renten-, Arbeitslosen- und Unfallversicherung.</p><p><b>Freiwillig:</b> Privathaftpflicht, Hausrat, Berufsunfähigkeit, private Unfallversicherung.</p><p><b>Warmmiete:</b> Kaltmiete plus Nebenkosten.</p>`,
   grafik: `<p><b>Kernaussage:</b> das Wichtigste der Grafik in einem Satz, möglichst mit einem Wert.</p><p><b>Zusammenhang:</b> Formuliere mit „je … desto“.</p><p><b>Begründung:</b> steht nicht in der Grafik, sondern kommt aus deinem Wissen.</p>`,
+  schreiben: `<p><b>Punkte:</b> Meist gibt es einen Punkt pro Aspekt. Was bei „Erläutere“ nur genannt ist, zählt in diesen Übungen höchstens halb. Echte Bewertungen können davon abweichen.</p><p><b>Antwort bauen:</b> Aussage, Begründung, Beispiel.</p><p><b>Am Produkt:</b> Schreibe zuerst selbst, am besten in ganzen Sätzen auf Papier. Hake danach ehrlich ab, was du hattest.</p>`,
   sprint: `<p>Eine Runde hat ${ROUND} Karten. Was du noch nicht sicher kannst, kommt häufiger wieder. Bei Karten zum Selbstformulieren hakst du deine Punkte selbst ab.</p>`
 };
 const FORMAT = `<h2 style="margin-top:12px">Prüfungsformat</h2><p>90 Minuten. Pflichtteil A: vier Aufgaben mit je 9 Punkten. Wahlteil B: eine von zwei Aufgaben mit 24 Punkten. Das sind rund 1,5 Minuten pro Punkt. Die Angaben gelten nach dem Stand der Ausführungsbestimmungen 2025/26.</p><h2>Operatoren</h2><table class="st"><tr><td><b>Nenne</b></td><td style="text-align:left;white-space:normal">Stichwort oder kurzer Satz, ohne Erklärung</td></tr><tr><td><b>Beschreibe</b></td><td style="text-align:left;white-space:normal">in ganzen Sätzen darstellen, wie etwas ist</td></tr><tr><td><b>Erkläre</b></td><td style="text-align:left;white-space:normal">Bedeutung oder Ursache verständlich machen</td></tr><tr><td><b>Erläutere</b></td><td style="text-align:left;white-space:normal">erklären und mit einem Beispiel oder Grund ergänzen</td></tr><tr><td><b>Begründe</b></td><td style="text-align:left;white-space:normal">Aussage mit Argumenten stützen</td></tr><tr><td><b>Bewerte</b></td><td style="text-align:left;white-space:normal">eigenes Urteil fällen und begründen</td></tr><tr><td><b>Arbeite heraus</b></td><td style="text-align:left;white-space:normal">Informationen aus Text, Tabelle oder Grafik entnehmen</td></tr></table><p class="small">Merke: Meist gibt es einen Punkt pro Aspekt. Zähle, wie viele Aspekte gefragt sind.</p>`;
 function setMode(m) {
   APP.mode = m;
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); $('#standbtn').classList.toggle('on', m === 'stand');
   const st = m === 'stand'; $('#train').hidden = st; $('#stand').hidden = !st;
   if (st) return drawStand();
   $('#terms').innerHTML = TERMS[m] + FORMAT; APP.lastKey = ''; APP.sprint = null; APP.summary = false;
   drawLevels(); drawChips(); newTask();
 }
-const LABEL = Object.assign({ etikett: 'Etiketten-Detektiv', fall: 'Fall-Trainer', grafik: 'Grafik-Check' }, TOPIC);
+const LABEL = Object.assign({ etikett: 'Etiketten-Detektiv', fall: 'Fall-Trainer', grafik: 'Grafik-Check', schreiben: 'Schreiben' }, TOPIC);
 function drawStand() {
   const row = k => { const s = DATA.stat[k]; if (!s || !s.n) return `<tr><td>${LABEL[k]}</td><td class="small">noch nichts geübt</td></tr>`; const p = Math.round(s.r / s.n * 100); return `<tr><td>${LABEL[k]}<div class="barmini"><i style="width:${p}%"></i></div></td><td>${s.r} von ${s.n}</td></tr>`; };
   const done = CARDS.filter(c => (DATA.box[c.id] || 0) >= 3).length;
   const weak = Object.keys(TOPIC).filter(k => DATA.stat[k] && DATA.stat[k].n >= 3).sort((a, b) => DATA.stat[a].r / DATA.stat[a].n - DATA.stat[b].r / DATA.stat[b].n)[0];
-  $('#stand').innerHTML = `<section class="card"><h2>Dein Stand</h2><p>${done} von ${CARDS.length} Karten sitzen schon gut.${weak ? ` Üben lohnt sich gerade bei <b>${TOPIC[weak]}</b>.` : ''}</p><table class="st"><tr><th>Bereich</th><th>Erster Versuch richtig</th></tr>${['etikett', 'fall', 'grafik'].map(row).join('')}</table><h2 style="margin-top:14px">Sprint nach Themen</h2><table class="st">${Object.keys(TOPIC).map(row).join('')}</table></section>
+  $('#stand').innerHTML = `<section class="card"><h2>Dein Stand</h2><p>${done} von ${CARDS.length} Karten sitzen schon gut.${weak ? ` Üben lohnt sich gerade bei <b>${TOPIC[weak]}</b>.` : ''}</p><table class="st"><tr><th>Bereich</th><th>Erster Versuch richtig</th></tr>${['etikett', 'fall', 'grafik', 'schreiben'].map(row).join('')}</table><h2 style="margin-top:14px">Sprint nach Themen</h2><table class="st">${Object.keys(TOPIC).map(row).join('')}</table></section>
   <section class="card"><h2>Auf ein anderes Gerät übertragen</h2><p class="small">Der Stand wird nur auf diesem Gerät gespeichert. Erzeuge hier einen Code und füge ihn auf dem anderen Gerät ein. Die beiden Stände werden zusammengeführt.</p><div class="btns"><button class="btn sec" id="exp">Code erzeugen und kopieren</button></div><textarea id="code" placeholder="Code hier einfügen" aria-label="Fortschrittscode" style="margin-top:8px"></textarea><div class="btns"><button class="btn sec" id="imp">Code übernehmen</button></div><div class="fb" id="sfb"></div></section>
   <section class="card"><h2>Als App installieren</h2><p class="small"><b>iPhone und iPad:</b> In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“. <b>Windows:</b> In Edge oder Chrome im Menü „App installieren“ wählen. Danach funktioniert der Trainer auch ohne Internet.</p></section>
   <section class="card"><details><summary>Stand zurücksetzen</summary><p class="small">Das löscht den gesamten Fortschritt auf diesem Gerät.</p><button class="btn warn" id="reset">Alles löschen</button></details></section>`;
@@ -814,6 +1038,7 @@ function drawStand() {
 load(); APP.level = DATA.level || 'leicht';
 $('nav.tabs').innerHTML = TABS.map(t => `<button data-m="${t[0]}"><b aria-hidden="true">${t[1]}</b>${t[2]}</button>`).join('');
 $('nav.tabs').querySelectorAll('button').forEach(b => b.onclick = () => setMode(b.dataset.m));
+$('#standbtn').onclick = () => setMode('stand');
 $('#check').onclick = check; $('#next').onclick = newTask; $('#solve').onclick = solve;
 $('#tip').onclick = () => { if (APP.task) fb('tip', APP.task.tip || 'Lies die Aufgabe noch einmal genau.'); };
 setMode('etikett');
