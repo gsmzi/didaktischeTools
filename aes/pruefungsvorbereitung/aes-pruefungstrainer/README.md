@@ -24,13 +24,14 @@
 - Die Siegel sind vereinfacht nachgezeichnet und dienen nur dem Erkennen beim Lernen. Es sind nicht die Originalzeichen, die Rechte daran liegen bei den Inhabern.
 - Ernährungsempfehlungen nach DGE „Gut essen und trinken“ (2024) und der BZfE-Ernährungspyramide.
 
-**Bewusste Abweichungen von alten Lösungen**
+**Bewusste Abweichungen von alten Lösungen und Relevanz 2027**
 
+Bei allen Aufgaben und Weiterentwicklungen wird strikt darauf geachtet, ob die Inhalte für die **Realschulabschlussprüfung 2027** in Baden-Württemberg (gemäß den Ausführungsbestimmungen des Kultusministeriums) relevant sind:
 - „10 Regeln der DGE“ fehlen, weil sie 2024 ersetzt wurden.
 - Bei Milch gelten 2 Portionen täglich (DGE und Darstellung der neuen Pyramide), nicht 3.
 - Bei Hackfleisch steht das Verbrauchsdatum, nicht das Mindesthaltbarkeitsdatum.
-- Funktionelle Lebensmittel fehlen, weil sie nicht mehr zu den Schwerpunkten gehören.
+- Funktionelle Lebensmittel, proteinreiche Ernährung, Tierwohlsiegel, Kreditaufnahme/Überschuldung, Stressmanagement, med. Sofortmaßnahmen, virtuelles Wasser, Recycling und Verbraucherschutzrechte fehlen bewusst, da sie 2027 nicht zu den Schwerpunkten gehören (teils erst ab 2028).
 
 Die Punktvergabe in „Schreiben“ ist ein Übungsmaßstab (ein Punkt pro Aspekt, nur Genanntes zählt bei „Erläutere“ höchstens halb) und keine amtliche Bewertung.
 
-Die Inhalte wurden aus den Prüfungsaufgaben 2021–2026 abgeleitet und sollten mit dem Unterricht abgeglichen werden. Das Logo der Fair Wear Foundation ist frei nachempfunden, weil es in den Unterlagen nicht abgebildet war.
+Die Inhalte wurden aus den Prüfungsaufgaben 2021–2026 abgeleitet und an die Schwerpunkte 2027 angepasst. Sie sollten stets mit dem aktuellen Unterricht abgeglichen werden. Das Logo der Fair Wear Foundation ist frei nachempfunden, weil es in den Unterlagen nicht abgebildet war.

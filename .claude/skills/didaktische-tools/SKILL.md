@@ -63,6 +63,31 @@ Das Tool richtet sich nach dem Unterricht und der Klassenarbeit, nicht nach der 
 - Texte auf Deutsch mit echten Umlauten, die Lernenden werden geduzt, Rückmeldungen sind sachlich und ermutigend.
 - Aufgaben werden nach Möglichkeit zufällig erzeugt. Antworten werden inhaltlich geprüft (alle Belegungen, Ausführen des Codes), nicht per Textvergleich. Gleichwertige Lösungen gelten als richtig.
 
+## AES-Prüfungstrainer: Relevanzprüfung für die Abschlussprüfung 2027
+
+Bei allen Aufgaben, Inhalten, Modulen und Erweiterungen des AES-Prüfungstrainers (`aes/pruefungsvorbereitung/aes-pruefungstrainer/`) muss zwingend beachtet werden, ob sie für die **Realschulabschlussprüfung 2027 in Baden-Württemberg** relevant sind (gemäß den amtlichen Ausführungsbestimmungen des Kultusministeriums Baden-Württemberg, Az. 33-6610-12/23/3):
+
+- **Keine ungeprüfte Übernahme alter Aufgaben:** Aufgaben aus den Prüfungen 2021–2026 dürfen nur herangezogen werden, wenn die Inhalte durch die Schwerpunkte 2027 abgedeckt sind.
+- **Verbindliche Schwerpunkte für 2027:**
+  - **Pflichtteil A:**
+    - *Ernährung & Gesundheit:* Aktuelle Produktionstechniken (Gentechnik); Labels (Bioland, demeter, EU-Biosiegel, Naturland, ohne Gentechnik, Fairtrade, Europäisches V-Label [vegan/vegetarisch], Nutri-Score); Werbeversprechen; Ernährungstrends (Nahrungsergänzungsmittel, vegetarische und vegane Ernährung); Consumer Citizenship.
+    - *Lebensgestaltung & Konsum:* Formen des Zusammenlebens; Zusammenhang von Lebensstil, Konsumverhalten und nachhaltiger Entwicklung (Ressourcenschonung, Flächennutzungskonkurrenz, Tauschbörsen); Finanzmanagement im privaten Haushalt; Finanzielle Absicherung von Risiken (gesetzliche Sozialversicherungen, freiwillige Individualversicherungen: Privathaftpflichtversicherung, Berufsunfähigkeitsversicherung, Hausratversicherung, private Unfallversicherung).
+  - **Wahlteil B:**
+    - *Lernen durch Engagement:* Bürgerschaftliches Engagement als aktive Teilhabe in einer Demokratie für Einzelne und Gesellschaft.
+    - *Ernährung:* Ernährungsbezogenes Wissen (bedarfsgerechte Ernährung, Energie- und Nährstoffträger); Ernährungsempfehlungen von BZfE und DGE (Stand 2024 / neue Ernährungspyramide mit 2 Milchportionen, „10 Regeln der DGE“ entfallen); Lebensmittelqualität beurteilen mit dem BZfE-Qualitätsfächer; alternative Ernährungsformen.
+    - *Gesundheit:* WHO-Definition Gesundheit; persönliche Gesundheitsressourcen und Steigerungsmöglichkeiten; Körper und Körpergestaltungen (temporäre und permanente Körpergestaltungen, Funktionen von Bekleidung).
+    - *Konsum:* Konsumentscheidungen, Marketing-/Verkaufsstrategien, Werbeversprechen; Qualitätsorientierung; Qualitätsinformationen und Produktkennzeichnungen (Grüner Knopf, Fair Wear Foundation [FWF], GOTS, Lebensmittelsiegel); Konsum in globalen Zusammenhängen (Wertschöpfungskette, ungleiche globale Handelsbeziehungen, Kinderarbeit, Billigprodukte, Umwelt); nachhaltiges Handeln (Ökologischer Fußabdruck).
+    - *Lebensbewältigung und Lebensgestaltung:* Haushalt und Familie (unterschiedliche Formen der Arbeit); bewusste Freizeitgestaltung (Funktionen von Freizeit: Work-Life-Balance).
+- **Themen, die für 2027 NICHT prüfungsrelevant sind (z. B. erst ab 2028 oder früher entfallen):**
+  - Funktionelle Lebensmittel, proteinreiche Ernährung (erst ab 2028).
+  - Tierwohlsiegel (erst ab 2028).
+  - Kreditaufnahme / Chancen und Risiken / Überschuldung (erst ab 2028).
+  - Medizinische Vorsorgemaßnahmen, Erste-Hilfe-/Sofortmaßnahmen (erst ab 2028).
+  - Stressoren, Stressreaktionen, Stressmanagement (erst ab 2028).
+  - Virtuelles Wasser, Recycling (erst ab 2028).
+  - Verbraucherrechte, Onlinegeschäfte, Verbraucherschutzinstitutionen (erst ab 2028).
+  - „10 Regeln der DGE“ (2024 durch neues DGE-Positionspapier/Lebensmittelkreis abgelöst).
+
 ## Technik und Ablage
 
 - Eine eigenständige `index.html` ohne Abhängigkeiten und ohne Build-Schritt; sie muss per Doppelklick und über GitHub Pages laufen. Keine gemeinsamen JS-Dateien zwischen Tools, wiederkehrende Muster werden kopiert. Bestehende Ausnahmen: Internet-Simulator (braucht Node), Zählschleife-Übungen (laden Processing.js von einem CDN, laufen also nicht offline).
