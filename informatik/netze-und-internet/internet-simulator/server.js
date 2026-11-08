@@ -31,7 +31,7 @@ const roleTasks = {
   'Backofenwächter': 'Frage den Geschirrspüler nach sauberen Kuchenformen und der Abholung der schmutzigen Formen.',
   'Tortenverzierer': 'Frage den Steuereintreiber nach den Farben seines Lieblingsfußballvereins.',
   'Teigmischer': 'Frage den Rechner, wie viel drei Achtel von 16 kg Mehl sind.',
-  'Teigkneter': 'Frage den Geldwäscher, wie seine Schwester heißt und ob er sie vorstellen kann.',
+  'Teigkneter': 'Frage den Geldwäscher, wann die Arbeitsschürzen wieder sauber sind.',
   'Abschmecker': 'Frage den Näher nach Stoff, einem neuen Gewand und dem Preis.',
   'Kartoffelschäler': 'Frage den Schrubber, wann er deine helle Hose waschen kann.',
   'Geschirrspüler': 'Frage den Teigkneter, ob er die schweren Teigschüsseln abholen kann.',
@@ -43,7 +43,7 @@ const roleTasks = {
   'Geldwäscher': 'Frage den Backofenwächter, ob er einen Korb Geld trocknen kann.',
   'Gelddrucker': 'Frage den Einkäufer, wann du ihn am Nachmittag abholen kannst.',
   'Vermesser': 'Frage den Abschmecker, wann du seine Maße nehmen kannst.',
-  'Näher': 'Frage den Klarspüler, ob er den Blutfleck auf dem Jagdgewand entfernen kann.',
+  'Näher': 'Frage den Klarspüler, ob er den Tintenfleck auf dem Festgewand entfernen kann.',
   'Knopfsucher': 'Frage den Zuschneider, ob du dir seine Schere leihen kannst.',
   'Fadenaufwickler': 'Frage den Aufhänger, ob auf seiner Wäscheleine Platz zum Trocknen ist.',
   'Zuschneider': 'Frage den Bügler, wann er die zerknitterten Stoffteile bügeln kann.',
@@ -67,16 +67,33 @@ function sendJson(res, status, data) {
 function visibleParticipants(session, viewer) {
   const participants = [...session.participants.values()];
   if (!viewer) return participants;
+  if (session.settings.stage !== 'addressed') return participants;
   if (viewer.isMediator) return participants.filter(participant => participant.router === viewer.router || participant.isMediator);
   return participants.filter(participant => participant.router === viewer.router);
 }
+function publicMessage(session, message, viewer = null) {
+  if (!message.classic) return message;
+  const holder = session.participants.get(message.currentHolderId);
+  const mayRead = !viewer || viewer.id === message.fromId || viewer.id === message.currentHolderId || message.history.some(step => step.participantId === viewer.id);
+  return {
+    ...message,
+    text: mayRead ? message.text : '',
+    noteFrom: mayRead ? message.noteFrom : '',
+    noteTo: mayRead ? message.noteTo : '',
+    holder: holder ? publicParticipant(holder) : null
+  };
+}
 function sessionView(session, viewer = null) {
   const participantAddresses = viewer ? new Set([viewer.address]) : null;
+  const currentMessages = session.messages.filter(message => message.stage === session.settings.stage);
+  const messages = session.settings.stage === 'addressed'
+    ? (viewer ? currentMessages.filter(message => participantAddresses.has(message.from) || participantAddresses.has(message.to)) : currentMessages)
+    : currentMessages;
   return {
     code: session.code,
     createdAt: session.createdAt,
     participants: visibleParticipants(session, viewer).map(publicParticipant),
-    messages: (viewer ? session.messages.filter(message => participantAddresses.has(message.from) || participantAddresses.has(message.to)) : session.messages).slice(-100),
+    messages: messages.slice(-100).map(message => publicMessage(session, message, viewer)),
     settings: session.settings
   };
 }
@@ -136,7 +153,7 @@ function removeParticipant(session, participant) {
 function nextId() { return crypto.randomBytes(8).toString('hex'); }
 function makeSession() {
   let code = makeCode(); while (sessions.has(code)) code = makeCode();
-  const session = { code, createdAt: new Date().toISOString(), participants: new Map(), messages: [], teacher: null, settings: { phase: 'open', encoding: 'ascii', showBinary: false, showTasks: true, studentHost: '' } };
+  const session = { code, createdAt: new Date().toISOString(), participants: new Map(), messages: [], teacher: null, settings: { stage: 'explore', phase: 'open', encoding: 'ascii', showBinary: false, showTasks: true, studentHost: '' } };
   sessions.set(code, session); activeSession = session; return session;
 }
 function getCurrentSession() { return activeSession || makeSession(); }
@@ -175,15 +192,73 @@ function parseBody(req) {
   return new Promise((resolve, reject) => { let body = ''; req.on('data', chunk => { body += chunk; if (body.length > 10000) req.destroy(); }); req.on('end', () => { try { resolve(JSON.parse(body || '{}')); } catch { reject(new Error('Ungültige JSON-Daten')); } }); req.on('error', reject); });
 }
 function routeMessage(session, sender, data) {
+  if (session.settings.phase === 'paused') return { error: 'Denkpause: Lies und beobachte. Senden ist nach der Freigabe wieder möglich.' };
+  if (session.settings.stage !== 'addressed') return { error: 'Adressierte Nachrichten sind erst in Spielphase 3 aktiv.' };
   const text = clean(data.text, 1200); const to = clean(data.to, 30);
   if (!text || !to) return { error: 'Bitte Zieladresse und Nachricht ausfüllen.' };
   const recipient = findParticipant(session, to);
   if (!recipient) return { error: `Die Adresse ${to} ist im Palastnetzwerk nicht angemeldet.` };
-  const message = { id: nextId(), from: sender.address, fromName: sender.name, to: recipient.address, toName: recipient.name, replyTo: clean(data.replyTo, 80) || null, text, sentAt: new Date().toISOString(), path: routePath(sender.router, recipient.router), encoding: data.encoding === 'binary' ? 'binary' : 'ascii' };
+  if (!clients.has(recipient.id)) return { error: 'Das Ziel ist gerade offline. Warte auf die erneute Verbindung.' };
+  const message = { id: nextId(), stage: 'addressed', from: sender.address, fromName: sender.name, to: recipient.address, toName: recipient.name, replyTo: clean(data.replyTo, 80) || null, text, sentAt: new Date().toISOString(), path: routePath(sender.router, recipient.router), encoding: data.encoding === 'binary' ? 'binary' : 'ascii' };
   session.messages.push(message); if (session.messages.length > 500) session.messages.shift();
   const recipientSocket = clients.get(recipient.id); if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'message', direction: 'received', message }));
   const senderSocket = clients.get(sender.id); if (senderSocket) senderSocket.send(JSON.stringify({ type: 'message', direction: 'sent', message }));
   if (session.teacher) session.teacher.send(JSON.stringify({ type: 'message', direction: 'monitor', message }));
+  return { ok: true, message };
+}
+
+function localMediator(session, router) {
+  return [...session.participants.values()].find(participant => participant.router === router && participant.isMediator);
+}
+function routersAreLinked(from, to) {
+  return links.some(edge => edge.includes(from) && edge.includes(to));
+}
+function sendClassicMessage(session, sender, data) {
+  if (session.settings.phase === 'paused') return { error: 'Denkpause: Lies und beobachte. Senden ist nach der Freigabe wieder möglich.' };
+  const stage = session.settings.stage;
+  if (!['explore', 'structured'].includes(stage)) return { error: 'Freie Briefe sind nur in Spielphase 1 und 2 aktiv.' };
+  if (sender.isMediator) return { error: 'Meister vermitteln die Briefe. Neue Aufträge schreiben die Mitarbeitenden.' };
+  const text = clean(data.text, 1200);
+  const noteTo = clean(data.noteTo, 80);
+  if (!text) return { error: 'Bitte schreibe etwas auf den Brief.' };
+  if (stage === 'structured' && !noteTo) return { error: 'Bitte trage einen Empfänger bei „An“ ein.' };
+  const mediator = localMediator(session, sender.router);
+  if (!mediator) return { error: `Der Meister in ${areas[sender.router].name} ist noch nicht im Netzwerk.` };
+  if (!clients.has(mediator.id)) return { error: 'Dein Meister ist gerade offline. Warte auf die erneute Verbindung.' };
+  const sentAt = new Date().toISOString();
+  const message = {
+    id: nextId(), classic: true, stage, fromId: sender.id, fromName: sender.name,
+    noteFrom: stage === 'structured' ? sender.name : '', noteTo: stage === 'structured' ? noteTo : '',
+    text, currentHolderId: mediator.id, status: 'waiting', sentAt,
+    history: [
+      { participantId: sender.id, name: sender.name, router: sender.router, at: sentAt },
+      { participantId: mediator.id, name: mediator.name, router: mediator.router, at: sentAt }
+    ]
+  };
+  session.messages.push(message); if (session.messages.length > 500) session.messages.shift();
+  broadcastState(session);
+  return { ok: true, message };
+}
+function forwardClassicMessage(session, holder, data) {
+  if (session.settings.phase === 'paused') return { error: 'Denkpause: Briefwege bleiben stehen. Nach der Freigabe kannst du weiterleiten.' };
+  if (!['explore', 'structured'].includes(session.settings.stage)) return { error: 'Manuelle Vermittlung ist in dieser Phase nicht aktiv.' };
+  const message = session.messages.find(entry => entry.id === clean(data.messageId, 80) && entry.classic && entry.stage === session.settings.stage);
+  if (!message) return { error: 'Der Brief wurde nicht gefunden.' };
+  if (message.currentHolderId !== holder.id) return { error: 'Dieser Brief liegt nicht mehr bei dir.' };
+  const target = session.participants.get(clean(data.targetId, 80));
+  if (!target || !clients.has(target.id)) return { error: 'Das gewählte Ziel ist nicht mehr online.' };
+  if (holder.isMediator) {
+    const localPerson = target.router === holder.router && !target.isMediator;
+    const linkedMediator = target.isMediator && target.router !== holder.router && routersAreLinked(holder.router, target.router);
+    if (!localPerson && !linkedMediator) return { error: 'Du kannst nur an Personen in deinem Raum oder direkt verbundene Meister weiterleiten.' };
+  } else {
+    const mediator = localMediator(session, holder.router);
+    if (!mediator || target.id !== mediator.id) return { error: 'Mitarbeitende können Briefe nur an ihren eigenen Meister weitergeben.' };
+  }
+  message.currentHolderId = target.id;
+  message.status = target.isMediator ? 'waiting' : 'with-person';
+  message.history.push({ participantId: target.id, name: target.name, router: target.router, at: new Date().toISOString() });
+  broadcastState(session);
   return { ok: true, message };
 }
 
@@ -241,7 +316,9 @@ function onSocketMessage(ws, data) {
     return ws.send(JSON.stringify({ type: 'participant-view', participant: publicParticipant(participant), state: sessionView(session, participant), areas, links, tasks: roleTasks, roleForms }));
   }
   if (data.type === 'send' && ws.participant) { const result = routeMessage(session, ws.participant, data); if (result.error) ws.send(JSON.stringify({ type: 'error', error: result.error })); return; }
-  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks !== false, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; broadcastState(session); return; }
+  if (data.type === 'send-classic' && ws.participant) { const result = sendClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief an den Meister übergeben.' })); return; }
+  if (data.type === 'forward-classic' && ws.participant) { const result = forwardClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief weitergeleitet.' })); return; }
+  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['explore', 'structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; broadcastState(session); return; }
   if (data.type === 'clear-log' && session.teacher === ws) { session.messages = []; broadcastState(session); return; }
   if (data.type === 'remove' && session.teacher === ws) { const p = session.participants.get(data.id); if (p) { const client = clients.get(p.id); if (client) { client.send(JSON.stringify({ type: 'error', error: 'Du wurdest aus dem Raum entfernt.' })); client.socket.end(); } session.participants.delete(p.id); clients.delete(p.id); broadcastState(session); } }
 }
