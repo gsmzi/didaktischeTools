@@ -67,11 +67,14 @@ async function join(code, router, role, gender = 'male') {
     const bakeryMaster = await join(code, 2, 'Bäckermeister'); clients.push(bakeryMaster);
     const buyer = await join(code, 2, 'Einkäufer'); clients.push(buyer);
 
-    cook.send({ type: 'send-classic', text: 'Für den Rechner: Wie viel Geld ist da?' });
+    cook.send({ type: 'send-classic', text: 'Ohne Empfänger' });
+    await cook.wait(message => message.type === 'error' && /Empfänger/.test(message.error));
+    cook.send({ type: 'send-classic', noteTo: 'Einkäufer', text: 'Wie viel Geld ist da?' });
     await cook.wait(message => message.type === 'action-ok');
     let view = await teacher.wait(message => message.type === 'state' && message.state.messages.length === 1);
     let letter = view.state.messages[0];
-    assert.equal(letter.stage, 'explore');
+    assert.equal(letter.stage, 'structured');
+    assert.equal(letter.noteFrom, cook.me.name);
     assert.equal(letter.currentHolderId, kitchenMaster.me.id);
 
     teacher.send({ type: 'settings', phase: 'paused', showTasks: false, encoding: 'binary' });
@@ -97,15 +100,18 @@ async function join(code, router, role, gender = 'male') {
     await bakeryMaster.wait(message => message.type === 'action-ok');
     view = await teacher.wait(message => message.type === 'state' && message.state.messages[0]?.currentHolderId === buyer.me.id);
     assert.equal(view.state.messages[0].status, 'with-person');
-    buyer.send({ type: 'forward-classic', messageId: letter.id, targetId: bakeryMaster.me.id });
+    kitchenMaster.send({ type: 'deliver-classic', messageId: letter.id });
+    await kitchenMaster.wait(message => message.type === 'error');
+    buyer.send({ type: 'deliver-classic', messageId: letter.id });
     await buyer.wait(message => message.type === 'action-ok');
+    view = await teacher.wait(message => message.type === 'state' && message.state.messages[0]?.status === 'delivered');
+    buyer.send({ type: 'forward-classic', messageId: letter.id, targetId: bakeryMaster.me.id });
+    await buyer.wait(message => message.type === 'error' && /nicht mehr bei dir/.test(message.error));
 
-    teacher.send({ type: 'settings', stage: 'structured' });
-    await teacher.wait(message => message.type === 'state' && message.state.settings.stage === 'structured');
-    cook.send({ type: 'send-classic', text: 'Strukturtest' });
-    await cook.wait(message => message.type === 'error' && /Empfänger/.test(message.error));
-    cook.send({ type: 'send-classic', noteTo: 'Einkäufer', text: 'Strukturtest' });
-    await cook.wait(message => message.type === 'action-ok');
+    teacher.send({ type: 'settings', stage: 'explore' });
+    await delay(150);
+    const stillStructured = await fetch(`${base}/api/session/${code}`).then(response => response.json());
+    assert.equal(stillStructured.settings.stage, 'structured', 'Die alte Phase explore gibt es nicht mehr.');
 
     teacher.send({ type: 'settings', stage: 'addressed' });
     await teacher.wait(message => message.type === 'state' && message.state.settings.stage === 'addressed');
@@ -125,7 +131,7 @@ async function join(code, router, role, gender = 'male') {
     cook.send({ type: 'send', to: buyer.me.address, text: 'Nach Freigabe' });
     await buyer.wait(message => message.type === 'message' && message.message.text === 'Nach Freigabe');
 
-    console.log('Smoke-Test erfolgreich: drei Spielphasen, Denkpause, Freigabe und unveränderte Einstellungen.');
+    console.log('Smoke-Test erfolgreich: zwei Phasen, Ablegen, Denkpause, Freigabe und unveränderte Einstellungen.');
   } finally {
     clients.forEach(client => client.close());
     server.kill();

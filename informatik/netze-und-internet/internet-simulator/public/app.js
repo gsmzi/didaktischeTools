@@ -116,7 +116,7 @@ function studentPicker(data) {
   mode = 'picker';
   show('setup');
   const taken = new Set(data.session.participants.filter(participant => participant.online !== false).map(participant => participant.roleKey || participant.role));
-  $('#setup').innerHTML = `<div class="panel picker-wrap"><div class="eyebrow">SCHÜLERSEITE · ${esc(data.serverIp)}</div><h1>Wähle deine Rolle.</h1><p class="sub">Wähle die gewünschte Rollenbezeichnung und dann die mit der Lehrkraft vereinbarte Rolle. Ihr könnt auch zu zweit an einem Gerät arbeiten.</p><fieldset class="gender-picker"><legend>Rollenbezeichnung</legend><label><input type="radio" name="gender" value="female" ${selectedGender === 'female' ? 'checked' : ''}><span>Weibliche Form</span></label><label><input type="radio" name="gender" value="male" ${selectedGender === 'male' ? 'checked' : ''}><span>Männliche Form</span></label></fieldset><div class="role-picker">${roleEntries().map(entry => `<button class="role-card ${entry.mediator ? 'mediator' : ''}" data-router="${entry.router}" data-role="${esc(entry.role)}" ${taken.has(entry.role) ? 'disabled' : ''}><span class="role-area">Router ${entry.router} · ${esc(entry.area.name)}</span><strong>${esc(roleLabel(entry.role, selectedGender))}</strong><small>${entry.mediator ? (selectedGender === 'female' ? 'Namensvermittlerin' : 'Namensvermittler') : (selectedGender === 'female' ? 'Mitarbeiterin' : 'Mitarbeiter')}${taken.has(entry.role) ? ' · bereits belegt' : ''}</small></button>`).join('')}</div><div class="picker-footer"><span>${taken.size} von ${roleEntries().length} Rollen belegt</span><button class="button small" id="refresh-roles">Liste aktualisieren</button></div></div>`;
+  $('#setup').innerHTML = `<div class="panel picker-wrap"><div class="eyebrow">SCHÜLERSEITE · ${esc(data.serverIp)}</div><h1>Wähle deine Rolle.</h1><fieldset class="gender-picker"><legend>Rollenbezeichnung</legend><label><input type="radio" name="gender" value="female" ${selectedGender === 'female' ? 'checked' : ''}><span>Weibliche Form</span></label><label><input type="radio" name="gender" value="male" ${selectedGender === 'male' ? 'checked' : ''}><span>Männliche Form</span></label></fieldset><div class="role-picker">${roleEntries().map(entry => `<button class="role-card ${entry.mediator ? 'mediator' : ''}" data-router="${entry.router}" data-role="${esc(entry.role)}" ${taken.has(entry.role) ? 'disabled' : ''}><span class="role-area">Router ${entry.router} · ${esc(entry.area.name)}</span><strong>${esc(roleLabel(entry.role, selectedGender))}</strong><small>${entry.mediator ? (selectedGender === 'female' ? 'Namensvermittlerin' : 'Namensvermittler') : (selectedGender === 'female' ? 'Mitarbeiterin' : 'Mitarbeiter')}${taken.has(entry.role) ? ' · bereits belegt' : ''}</small></button>`).join('')}</div><div class="picker-footer"><span>${taken.size} von ${roleEntries().length} Rollen belegt</span><button class="button small" id="refresh-roles">Liste aktualisieren</button></div></div>`;
   $('#setup .eyebrow').textContent = `SCHÜLERSEITE · ${data.studentUrl || data.serverIp}`;
   document.querySelectorAll('input[name="gender"]').forEach(input => input.onchange = () => { selectedGender = input.value; studentPicker(data); });
   document.querySelectorAll('.role-card:not([disabled])').forEach(button => button.onclick = () => joinStudent(data.session.code, button.dataset.router, button.dataset.role, selectedGender));
@@ -131,14 +131,6 @@ function topology() {
   const edges = links.map(([from, to]) => `<line x1="${positions[from][0]}" y1="${positions[from][1]}" x2="${positions[to][0]}" y2="${positions[to][1]}" />`).join('');
   const nodes = Object.entries(areas).map(([id, area]) => `<div class="router-node" style="left:${positions[id][0]}%;top:${positions[id][1]}%" title="${esc(area.name)}"><div><b>${id}</b><span>${esc(area.name)}</span></div></div>`).join('');
   return `<div class="topology"><div class="topology-map"><svg class="topology-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${nodes}</div></div>`;
-}
-function mediatorRoster() {
-  return `<div class="box mediator-box"><div class="box-head"><h2>Namensvermittler anderer Räume</h2><small>Meister · live</small></div><div class="mediator-grid">${Object.entries(areas).map(([router, area]) => { const mediator = state.participants.find(participant => participant.router === Number(router) && participant.isMediator); return `<div class="mediator-card ${mediator?.online ? 'online' : ''}"><span class="mediator-area">Router ${router} · ${esc(area.name)}</span><strong>${esc(area.mediator)} <em>(Namensvermittler)</em></strong><span class="mediator-state">${mediator?.online ? `● online · ${esc(mediator.address)}` : '○ wartet auf Beitritt'}</span></div>`; }).join('')}</div></div>`;
-}
-function localLanVisual() {
-  const area = areas[me.router];
-  const members = state.participants.filter(participant => participant.router === me.router);
-  return `<div class="local-lan-visual"><div class="local-router-node"><b>Router ${me.router}</b><strong>${esc(area.name)}</strong><span>dein Raum</span></div><div class="local-lan-members">${members.map(participant => `<div class="local-member ${participant.isMediator ? 'mediator' : ''}"><span>${participant.isMediator ? '◆' : '•'}</span><strong>${esc(participant.name)}</strong><code>${esc(participant.address)}</code></div>`).join('')}</div></div>`;
 }
 function participantList(showRemove = false) {
   if (!state.participants.length) return '<div class="empty">Noch niemand verbunden.</div>';
@@ -171,18 +163,16 @@ function studentMessageList(messages) {
 }
 function stageInfo(stage = state?.settings?.stage) {
   return {
-    explore: { number: '1', title: 'Freie Briefe', short: 'Regeln entdecken', instruction: 'Schreibe einen freien Zettel. Entscheide selbst, welche Angaben für die Zustellung nötig sind.' },
-    structured: { number: '2', title: 'Strukturierte Briefe', short: 'Von · An · Text', instruction: 'Nutze Absender, Empfänger und Text. Der Meister entscheidet weiterhin über jeden Schritt.' },
-    addressed: { number: '3', title: 'Adressen', short: 'Namensauflösung und Routing', instruction: 'Ermittle die Zieladresse und versende die Nachricht über das adressierte Netzwerk.' }
-  }[stage] || { number: '?', title: 'Spielphase', short: '', instruction: '' };
+    structured: { number: '1', title: 'Netzwerkspiel', short: 'Klasse 6 · Meister leiten weiter' },
+    addressed: { number: '2', title: 'Adressen', short: 'Klasse 8 · Namen, Adressen, Routing' }
+  }[stage] || { number: '?', title: 'Spielphase', short: '' };
 }
 function participantById(id) { return state.participants.find(participant => participant.id === id); }
 function classicMessages() { return state.messages.filter(message => message.classic); }
-function holderMessages(participantId) { return classicMessages().filter(message => message.currentHolderId === participantId); }
+function holderMessages(participantId) { return classicMessages().filter(message => message.currentHolderId === participantId && message.status !== 'delivered'); }
+function holderText(message) { return `${message.status === 'delivered' ? 'Angekommen bei' : 'Jetzt bei'} ${esc(message.holder?.name || 'unbekannt')}`; }
 function classicNote(message, compact = false) {
-  const hidden = !message.text;
-  if (hidden) return `<div class="classic-note hidden-note"><span>✉</span><p>Der Inhalt ist nur für bisher Beteiligte sichtbar.</p></div>`;
-  if (message.stage === 'explore') return `<div class="classic-note free-note"><span class="note-label">Freier Zettel</span><p>${esc(message.text)}</p></div>`;
+  if (!message.text) return `<div class="classic-note hidden-note"><span>✉</span><p>Den Inhalt sehen nur die, die den Brief in der Hand hatten.</p></div>`;
   return `<div class="classic-note structured-note ${compact ? 'compact' : ''}"><div><b>Von</b><span>${esc(message.noteFrom || '—')}</span></div><div><b>An</b><span>${esc(message.noteTo || '—')}</span></div><div class="note-text"><b>Text</b><span>${esc(message.text)}</span></div></div>`;
 }
 function classicRoute(message) {
@@ -198,7 +188,7 @@ function classicOverview() {
   }).join('');
   const rooms = Object.entries(areas).map(([id, area]) => {
     const members = state.participants.filter(participant => participant.router === Number(id));
-    return `<article class="overview-room" style="--room-color:${area.color}"><header><strong>${esc(area.name)}</strong><span>Raum ${id}</span></header><div class="overview-people">${members.map(participant => { const mail = holderMessages(participant.id).length; return `<span class="overview-person ${participant.isMediator ? 'mediator' : ''}">${participant.isMediator ? '◆' : '•'} ${esc(participant.name)}${mail ? `<b title="Briefe bei dieser Person">✉ ${mail}</b>` : ''}</span>`; }).join('') || '<span class="overview-empty">noch unbesetzt</span>'}</div></article>`;
+    return `<article class="overview-room" style="--room-color:${area.color}"><header><strong>${esc(area.name)}</strong></header><div class="overview-people">${members.map(participant => { const mail = holderMessages(participant.id).length; return `<span class="overview-person ${participant.isMediator ? 'mediator' : ''}">${participant.isMediator ? '◆' : '•'} ${esc(participant.name)}${mail ? `<b title="Briefe bei dieser Person">✉ ${mail}</b>` : ''}</span>`; }).join('') || '<span class="overview-empty">noch leer</span>'}</div></article>`;
   }).join('');
   return `<div class="classic-overview"><div class="topology overview-map"><div class="topology-map"><svg class="topology-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${nodes}</div></div><div class="overview-rooms">${rooms}</div></div>`;
 }
@@ -206,42 +196,57 @@ function forwardingTargets(message) {
   const localPeople = state.participants.filter(participant => participant.router === me.router && !participant.isMediator && participant.id !== me.id && participant.online);
   const linkedRouters = new Set(links.filter(edge => edge.includes(me.router)).flat().filter(router => router !== me.router));
   const linkedMediators = state.participants.filter(participant => participant.isMediator && linkedRouters.has(participant.router) && participant.online);
-  const button = (participant, kind) => `<button type="button" class="forward-target ${kind}" data-message-id="${esc(message.id)}" data-target-id="${esc(participant.id)}"><span>${kind === 'master' ? '◆' : '●'}</span><strong>${esc(participant.name)}</strong><small>${kind === 'master' ? areas[participant.router].name : 'im eigenen Raum'}</small></button>`;
-  return `<div class="forward-panel"><div><h4>Person im Raum</h4><div class="forward-buttons">${localPeople.map(person => button(person, 'person')).join('') || '<span class="no-targets">Keine Mitarbeitenden online</span>'}</div></div><div><h4>Verbundener Meister</h4><div class="forward-buttons">${linkedMediators.map(master => button(master, 'master')).join('') || '<span class="no-targets">Keine Nachbarmeister online</span>'}</div></div></div>`;
+  const button = (participant, kind) => `<button type="button" class="forward-target ${kind}" data-message-id="${esc(message.id)}" data-target-id="${esc(participant.id)}"><span>${kind === 'master' ? '◆' : '●'}</span><strong>${esc(participant.name)}</strong><small>${kind === 'master' ? areas[participant.router].name : 'dein Raum'}</small></button>`;
+  return `<div class="forward-panel"><div><h4>In deinem Raum</h4><div class="forward-buttons">${localPeople.map(person => button(person, 'person')).join('') || '<span class="no-targets">niemand online</span>'}</div></div><div><h4>Nachbarmeister</h4><div class="forward-buttons">${linkedMediators.map(master => button(master, 'master')).join('') || '<span class="no-targets">niemand online</span>'}</div></div></div>`;
 }
 function classicInbox() {
   const inbox = holderMessages(me.id);
-  if (!inbox.length) return '<div class="empty">Bei dir liegt gerade kein Brief.</div>';
-  return `<div class="classic-inbox">${inbox.map(message => `<article class="inbox-letter"><div class="inbox-letter-head"><span>Brief wartet bei dir</span><small>${message.history.length - 1} Weiterleitungen</small></div>${classicNote(message)}${classicRoute(message)}${me.isMediator ? forwardingTargets(message) : `<button class="button primary return-master" data-message-id="${esc(message.id)}">An meinen Meister weitergeben</button>`}</article>`).join('')}</div>`;
+  if (!inbox.length) return `<div class="empty">${me.isMediator ? 'Gerade wartet kein Brief.' : 'Bei dir liegt kein Brief.'}</div>`;
+  return `<div class="classic-inbox">${inbox.map(message => `<article class="inbox-letter">${classicNote(message)}${classicRoute(message)}${me.isMediator ? forwardingTargets(message) : `<div class="letter-actions"><button type="button" class="button primary reply-classic" data-message-id="${esc(message.id)}" data-from="${esc(message.noteFrom)}">Antworten</button><button type="button" class="button small deliver-classic" data-message-id="${esc(message.id)}">Ablegen</button><button type="button" class="button small return-master" data-message-id="${esc(message.id)}">Nicht für mich: zurück an Meister</button></div>`}</article>`).join('')}</div>`;
 }
 function classicActivity() {
   const relevant = classicMessages().filter(message => message.fromId === me.id || message.history.some(step => step.participantId === me.id));
-  if (!relevant.length) return '<div class="empty">Noch keine Briefe auf deinem Weg.</div>';
-  return `<div class="classic-activity">${[...relevant].reverse().map(message => `<article><div class="activity-head"><span>${message.currentHolderId === me.id ? 'Bei dir' : `Jetzt bei ${esc(message.holder?.name || 'unbekannt')}`}</span><small>${message.history.length - 1} Schritte</small></div>${classicNote(message, true)}${classicRoute(message)}</article>`).join('')}</div>`;
+  if (!relevant.length) return '<div class="empty">Noch keine Briefe.</div>';
+  return `<div class="classic-activity">${[...relevant].reverse().map(message => `<article><div class="activity-head"><span>${message.currentHolderId === me.id && message.status !== 'delivered' ? 'Bei dir' : holderText(message)}</span><small>${message.history.length - 1} Schritte</small></div>${classicNote(message, true)}${classicRoute(message)}</article>`).join('')}</div>`;
+}
+function studentHead(extra = '') {
+  const phase = stageInfo();
+  const rule = state.settings.phase === 'paused' ? '<p class="play-status paused" role="status">⏸ Pause: Senden und Weiterleiten sind gerade gesperrt.</p>' : state.settings.phase === 'quiet' ? '<p class="play-status" role="status">🤫 Nicht reden, nur über das Netzwerk.</p>' : '';
+  return `<div class="play-head"><div><span class="eyebrow">Phase ${phase.number} · ${esc(phase.title)}</span><h1>${esc(areas[me.router].name)} <span>/</span> ${esc(me.role)}</h1></div>${extra}</div>${rule}`;
+}
+function roleTask() {
+  if (me.isMediator) return '';
+  const task = tasks[me.roleKey || me.role];
+  return task ? `<p class="play-task"><b>Auftrag:</b> ${esc(task)}</p>` : '';
 }
 function renderClassicStudent() {
-  const phase = stageInfo();
-  const myTask = me.isMediator ? 'Vermittle wartende Briefe. Beobachte, welche Angaben du für deine Entscheidung brauchst.' : tasks[me.roleKey || me.role] || 'Warte auf einen Brief oder verfasse eine Nachricht.';
-  $('#student').innerHTML = `<div class="workspace-head"><div><div class="eyebrow">SPIELPHASE ${phase.number} · ${esc(phase.short)}</div><h1>${esc(areas[me.router].name)} <span style="color:#a5b4b3">/</span> ${esc(me.role)}</h1><p>${esc(phase.instruction)}</p></div><div class="workspace-head-actions"><span class="stage-chip">${phase.number}/3 · ${esc(phase.title)}</span><a class="button small" href="/anleitung" target="_blank">Anleitung</a></div></div><div class="phase-banner"><b>${phase.title}</b><span>${phase.instruction}</span></div><div class="box"><div class="box-head"><h2>Gesamtübersicht des Palastnetzes</h2><small>Briefe und Warteschlangen live</small></div>${classicOverview()}</div><div class="classic-work-grid"><div><div class="box"><div class="box-head"><h2>${me.isMediator ? 'Dein Vermittlungstisch' : 'Briefe bei dir'}</h2><small>${holderMessages(me.id).length} wartend</small></div>${classicInbox()}</div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Deine Aufgabe</h2><small>Rollenkarte</small></div><div class="task-card">${esc(myTask)}</div></div></div><div><div class="box"><div class="box-head"><h2>${me.isMediator ? 'Deine Rolle als Meister' : 'Brief an den Meister geben'}</h2><small>${me.isMediator ? 'Mit einem Klick weiterleiten' : phase.title}</small></div>${me.isMediator ? '<div class="mediator-callout"><b>Du entscheidest jeden Weg.</b><p>Öffne einen wartenden Brief und klicke direkt auf eine Person in deinem Raum oder einen verbundenen Meister.</p></div>' : `<form id="classic-send-form" class="classic-compose">${state.settings.stage === 'structured' ? `<label>Von<input value="${esc(me.name)}" disabled></label><label>An<input id="classic-to" maxlength="80" placeholder="z. B. Rechner" required></label>` : ''}<label class="compose-text">${state.settings.stage === 'explore' ? 'Freier Zettel' : 'Text'}<textarea id="classic-text" rows="5" maxlength="1200" placeholder="${state.settings.stage === 'explore' ? 'Was muss auf dem Zettel stehen?' : 'Schreibe deine Nachricht ...'}" required></textarea></label><button class="button primary" type="submit">An meinen Meister geben</button></form>`}</div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Von dir beobachtete Briefwege</h2><small>${classicMessages().length} im Netz</small></div>${classicActivity()}</div></div></div>`;
-  $('#classic-send-form')?.addEventListener('submit', event => { event.preventDefault(); submitMessage({ type: 'send-classic', noteTo: $('#classic-to')?.value || '', text: $('#classic-text').value }); });
+  const write = me.isMediator ? '' : `<section class="box play-write"><div class="box-head"><h2>Brief schreiben</h2><small>Von: ${esc(me.name)}</small></div><form id="classic-send-form" class="play-form">${roleTask()}<label>An<input id="classic-to" maxlength="80" placeholder="z. B. Rechner" autocomplete="off" required></label><label>Text<textarea id="classic-text" rows="3" maxlength="1200" placeholder="Deine Nachricht …" required></textarea></label><button class="button primary" type="submit">An meinen Meister geben</button></form></section>`;
+  const inboxCount = holderMessages(me.id).length;
+  if (inboxCount > (renderClassicStudent.lastCount ?? inboxCount)) toast(me.isMediator ? 'Ein Brief wartet auf dich.' : 'Ein Brief ist bei dir angekommen.');
+  renderClassicStudent.lastCount = inboxCount;
+  $('#student').innerHTML = `${studentHead()}<div class="play-grid classic ${inboxCount ? 'mail-first' : ''}">${write}<section class="box play-inbox ${inboxCount ? 'has-mail' : ''}"><div class="box-head"><h2>${me.isMediator ? 'Briefe weiterleiten' : 'Briefe bei dir'}</h2><small>${inboxCount} wartend</small></div>${classicInbox()}</section><section class="box play-net"><div class="box-head"><h2>Das Schlossnetz</h2><small>✉ = Brief wartet</small></div>${classicOverview()}</section><section class="box play-log"><div class="box-head"><h2>Deine Briefwege</h2></div>${classicActivity()}</section></div>`;
+  $('#classic-send-form')?.addEventListener('submit', event => { event.preventDefault(); submitMessage({ type: 'send-classic', noteTo: $('#classic-to').value, text: $('#classic-text').value }); });
   document.querySelectorAll('.forward-target').forEach(button => button.onclick = () => send({ type: 'forward-classic', messageId: button.dataset.messageId, targetId: button.dataset.targetId }));
+  document.querySelectorAll('.deliver-classic').forEach(button => button.onclick = () => send({ type: 'deliver-classic', messageId: button.dataset.messageId }));
+  document.querySelectorAll('.reply-classic').forEach(button => button.onclick = () => { $('#classic-to').value = button.dataset.from; send({ type: 'deliver-classic', messageId: button.dataset.messageId }); $('#classic-text').focus(); });
   document.querySelectorAll('.return-master').forEach(button => { const mediator = state.participants.find(participant => participant.router === me.router && participant.isMediator); button.disabled = !mediator?.online; button.onclick = () => mediator && send({ type: 'forward-classic', messageId: button.dataset.messageId, targetId: mediator.id }); });
+}
+function roomList() {
+  const members = state.participants.filter(participant => participant.router === me.router).sort((a, b) => (b.isMediator - a.isMediator) || a.address.localeCompare(b.address, 'de', { numeric: true }));
+  return `<ul class="room-list">${members.map(participant => `<li class="${participant.isMediator ? 'mediator' : ''} ${participant.id === me.id ? 'self' : ''}"><span>${participant.isMediator ? '◆' : '•'} ${esc(participant.name)}${participant.id === me.id ? ' (du)' : ''}</span><code>${esc(participant.address)}</code></li>`).join('')}</ul>`;
+}
+function mediatorList() {
+  return `<section class="box play-masters"><div class="box-head"><h2>Andere Namensvermittler</h2></div><ul class="room-list">${Object.entries(areas).filter(([router]) => Number(router) !== me.router).map(([router, area]) => { const mediator = state.participants.find(participant => participant.router === Number(router) && participant.isMediator); return `<li class="mediator ${mediator?.online ? '' : 'offline'}"><span>◆ ${esc(mediator?.name || area.mediator)} · ${esc(area.name)}</span><code>${mediator?.online ? esc(mediator.address) : 'offline'}</code></li>`; }).join('')}</ul></section>`;
 }
 function renderStudentContent() {
   mode = 'student'; show('student');
   if (state.settings.stage !== 'addressed') return renderClassicStudent();
-  const myTask = me.isMediator ? 'Beantworte Adressanfragen. Frage für fremde Räume den dortigen Namensvermittler.' : tasks[me.roleKey || me.role] || 'Warte auf eine Nachricht oder frage den Namensvermittler nach einer Adresse.';
-  $('#student').innerHTML = `<div class="workspace-head"><div><div class="eyebrow">DEIN PALASTNETZWERK · ROUTER ${me.router}</div><h1>${esc(areas[me.router].name)} <span style="color:#a5b4b3">/</span> ${esc(me.role)}</h1><p>Deine Adresse lautet <span class="room-chip" style="padding:3px 7px;font-size:11px">${esc(me.address)}</span></p></div><div class="workspace-head-actions"><a class="button small" href="/anleitung" target="_blank">Anleitung</a></div></div><div class="workspace-grid"><div><div class="box"><div class="box-head"><h2>Netzwerkübersicht</h2><small>Dein Router ist verbunden</small></div>${topology()}<div class="phase ${state.settings.phase === 'quiet' ? 'quiet' : ''}">${state.settings.phase === 'quiet' ? '🤫 Ruhephase: Nachrichten werden nur über das Netzwerk ausgetauscht.' : state.settings.phase === 'paused' ? '⏸ Die Simulation ist pausiert.' : '● Testphase: Verbinde dich und probiere das Netzwerk aus.'}</div></div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Deine Aufgabe</h2><small>Rollenkarte</small></div><div style="padding:18px;font-size:14px;line-height:1.6">${esc(myTask)}</div></div></div><div><div class="box"><div class="box-head"><h2>Router ${me.router} · ${esc(areas[me.router].name)}</h2><small>${state.participants.filter(participant => participant.router === me.router).length} verbunden</small></div>${participantList()}</div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Nachricht senden</h2><small>Adressiert</small></div><div class="send-box"><form id="send-form"><div class="send-grid"><label>An <input id="to-address" placeholder="z. B. 3.2" required /></label><label>Nachricht <textarea id="message-text" rows="2" maxlength="1200" placeholder="Schreibe deine Nachricht ..." required></textarea></label><button class="button primary" type="submit">Senden</button></div><p id="reply-context" class="reply-context hidden"></p><p class="hint">Tipp: Frage den Namensvermittler nach der Adresse.</p></form></div></div></div></div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Dein Nachrichtenlog</h2><small>${state.messages.length} Nachrichten für dich</small></div>${studentMessageList(state.messages.filter(message => message.to === me.address || message.from === me.address))}</div>`;
-  const localBox = $('#student .workspace-grid > div > .box');
-  localBox.querySelector('.box-head h2').textContent = 'Dein Raum';
-  localBox.querySelector('.box-head small').textContent = `Router ${me.router} · ${areas[me.router].name}`;
-  localBox.querySelector('.topology').outerHTML = localLanVisual();
-  localBox.querySelector('.phase')?.remove();
-  const messageBox = $('#send-form').closest('.box');
-  messageBox.classList.add('student-message-box');
-  $('#student .workspace-grid').appendChild(messageBox);
-  if (me.isMediator) $('#student .workspace-head').insertAdjacentHTML('afterend', mediatorRoster());
-  document.querySelectorAll('.reply-message').forEach(button => button.onclick = () => { markMessageRead(button.dataset.messageId); replyTargetId = button.dataset.messageId; $('#to-address').value = button.dataset.address; $('#reply-context').textContent = `Antwort an ${button.dataset.name || button.dataset.address} wird vorbereitet.`; $('#reply-context').classList.remove('hidden'); $('#message-text').focus(); });
+  const task = me.isMediator ? '<p class="play-task"><b>Auftrag:</b> Beantworte Adressanfragen. Für andere Räume fragst du dort den Namensvermittler.</p>' : roleTask();
+  const mine = state.messages.filter(message => message.to === me.address || message.from === me.address);
+  const read = storedMessageIds('read');
+  const unread = mine.some(message => message.to === me.address && !read.has(message.id));
+  $('#student').innerHTML = `${studentHead(`<div class="my-address"><small>Deine Adresse</small><b>${esc(me.address)}</b></div>`)}<div class="play-grid addressed ${unread ? 'mail-first' : ''}"><section class="box play-write"><div class="box-head"><h2>Nachricht senden</h2><small>Von: ${esc(me.address)}</small></div><form id="send-form" class="play-form">${task}<label>An (Adresse)<input id="to-address" placeholder="z. B. 3.2" autocomplete="off" required /></label><label>Nachricht<textarea id="message-text" rows="3" maxlength="1200" placeholder="Deine Nachricht …" required></textarea></label><p id="reply-context" class="reply-context ${replyTargetId ? '' : 'hidden'}">Du antwortest auf eine Nachricht.</p><button class="button primary" type="submit">Senden</button></form></section><div class="play-side"><section class="box play-room"><div class="box-head"><h2>Dein Raum</h2><small>Router ${me.router}</small></div>${roomList()}</section>${me.isMediator ? mediatorList() : ''}</div><section class="box play-log"><div class="box-head"><h2>Deine Nachrichten</h2><small>${mine.length}</small></div>${studentMessageList(mine)}</section></div>`;
+  document.querySelectorAll('.reply-message').forEach(button => button.onclick = () => { markMessageRead(button.dataset.messageId); replyTargetId = button.dataset.messageId; $('#to-address').value = button.dataset.address; $('#reply-context').classList.remove('hidden'); $('#message-text').focus(); });
   document.querySelectorAll('.student-messages .incoming').forEach(card => card.onclick = event => { if (!event.target.closest('button')) markMessageRead(card.dataset.messageId); });
   $('#send-form').onsubmit = event => { event.preventDefault(); submitMessage({ type: 'send', to: $('#to-address').value, text: $('#message-text').value, encoding: state.settings.encoding, replyTo: replyTargetId }); };
 }
@@ -260,25 +265,25 @@ function closeParticipantView() {
 }
 function teacherStageControl() {
   const current = state.settings.stage;
-  return `<section class="stage-control"><div><span class="eyebrow">SPIELABLAUF</span><strong>Drei aufeinander aufbauende Phasen</strong></div><div class="stage-buttons">${['explore', 'structured', 'addressed'].map(stage => { const phase = stageInfo(stage); return `<button class="stage-button ${current === stage ? 'active' : ''}" data-stage="${stage}" aria-pressed="${current === stage}"><b>${phase.number}</b><span>${esc(phase.title)}</span><small>${esc(phase.short)}</small></button>`; }).join('')}</div></section>`;
+  return `<section class="stage-control"><div><span class="eyebrow">SPIELABLAUF</span><strong>Zwei Phasen, gleiche Rollen</strong></div><div class="stage-buttons">${['structured', 'addressed'].map(stage => { const phase = stageInfo(stage); return `<button class="stage-button ${current === stage ? 'active' : ''}" data-stage="${stage}" aria-pressed="${current === stage}"><b>${phase.number}</b><span>${esc(phase.title)}</span><small>${esc(phase.short)}</small></button>`; }).join('')}</div></section>`;
 }
 function bindTeacherStageControl() {
   document.querySelectorAll('.stage-button').forEach(button => button.onclick = () => {
     if (button.dataset.stage === state.settings.stage) return;
     send({ type: 'settings', stage: button.dataset.stage });
-    toast(`Spielphase ${stageInfo(button.dataset.stage).number} wird geöffnet.`);
+    toast(`Phase ${stageInfo(button.dataset.stage).number} wird geöffnet.`);
   });
 }
 function teacherClassicLog() {
   const messages = classicMessages();
   if (!messages.length) return '<div class="empty">In dieser Phase wurden noch keine Briefe geschrieben.</div>';
-  return `<div class="teacher-classic-log">${[...messages].reverse().map(message => `<article><div class="activity-head"><span>Jetzt bei ${esc(message.holder?.name || 'unbekannt')}</span><small>${message.history.length - 1} Schritte</small></div>${classicNote(message, true)}${classicRoute(message)}</article>`).join('')}</div>`;
+  return `<div class="teacher-classic-log">${[...messages].reverse().map(message => `<article><div class="activity-head"><span>${holderText(message)}</span><small>${message.history.length - 1} Schritte</small></div>${classicNote(message, true)}${classicRoute(message)}</article>`).join('')}</div>`;
 }
 function renderClassicTeacher() {
   const phase = stageInfo();
   const online = state.participants.filter(participant => participant.online).length;
   const waiting = classicMessages().filter(message => participantById(message.currentHolderId)?.isMediator).length;
-  $('#teacher').innerHTML = `<div class="workspace-head"><div><div class="eyebrow">LEHRERANSICHT · SPIELPHASE ${phase.number}</div><h1>Palastnetzwerk <span style="color:#a5b4b3">/</span> ${esc(phase.title)}</h1><p>Die Schülergeräte öffnen <a href="${esc(info.studentUrl)}" target="_blank">${esc(info.studentUrl)}</a>.</p></div><div class="workspace-head-actions"><a class="button small" href="${esc(info.guideUrl)}" target="_blank">Schüler-Anleitung</a><button class="button small" id="copy-student-link">Link kopieren</button><button class="button small" id="new-round">Neue Runde</button></div></div>${teacherStageControl()}<div class="teacher-link-box"><div><span class="eyebrow">LINK FÜR DIE KLASSE</span><strong>${esc(info.studentUrl)}</strong><small>Alle Geräte treten derselben Unterrichtsrunde bei.</small></div><button class="button primary" id="copy-student-link-2">Link kopieren</button></div><div class="box"><div class="box-head"><h2>Beobachtbare Netzaktivität</h2><small>Keine Route wird vorgegeben</small></div>${classicOverview()}<div class="stat-row"><div class="stat"><b>${online}</b><span>online</span></div><div class="stat"><b>${classicMessages().length}</b><span>Briefe</span></div><div class="stat"><b>${waiting}</b><span>bei Meistern</span></div></div></div><div class="teacher-grid" style="margin-top:20px"><div class="box"><div class="box-head"><h2>Teilnehmende</h2><small>${online} online</small></div>${participantList(true)}</div><div class="box"><div class="box-head"><h2>Briefwege dieser Phase</h2><small>${classicMessages().length} sichtbar</small></div>${teacherClassicLog()}</div></div>`;
+  $('#teacher').innerHTML = `<div class="workspace-head"><div><div class="eyebrow">LEHRERANSICHT · PHASE ${phase.number}</div><h1>Palastnetzwerk <span style="color:#a5b4b3">/</span> ${esc(phase.title)}</h1><p>Die Schülergeräte öffnen <a href="${esc(info.studentUrl)}" target="_blank">${esc(info.studentUrl)}</a>.</p></div><div class="workspace-head-actions"><a class="button small" href="${esc(info.guideUrl)}" target="_blank">Schüler-Anleitung</a><button class="button small" id="copy-student-link">Link kopieren</button><button class="button small" id="new-round">Neue Runde</button></div></div>${teacherStageControl()}<div class="teacher-link-box"><div><span class="eyebrow">LINK FÜR DIE KLASSE</span><strong>${esc(info.studentUrl)}</strong><small>Alle Geräte treten derselben Unterrichtsrunde bei.</small></div><button class="button primary" id="copy-student-link-2">Link kopieren</button></div><div class="box"><div class="box-head"><h2>Beobachtbare Netzaktivität</h2><small>Keine Route wird vorgegeben</small></div>${classicOverview()}<div class="stat-row"><div class="stat"><b>${online}</b><span>online</span></div><div class="stat"><b>${classicMessages().length}</b><span>Briefe</span></div><div class="stat"><b>${waiting}</b><span>bei Meistern</span></div></div></div><div class="teacher-grid" style="margin-top:20px"><div class="box"><div class="box-head"><h2>Teilnehmende</h2><small>${online} online</small></div>${participantList(true)}</div><div class="box"><div class="box-head"><h2>Briefwege dieser Phase</h2><small>${classicMessages().length} sichtbar</small></div>${teacherClassicLog()}</div></div>`;
   const linkEditor = document.querySelector('.teacher-link-box > div');
   linkEditor.insertAdjacentHTML('afterbegin', `<label>LAN-IP oder Rechnername<select id="student-host">${hostOptions()}</select></label>`);
   linkEditor.insertAdjacentHTML('beforeend', `<small>Automatisch gefunden: ${esc((info.serverIps || []).map(item => `${item.address} (${item.name})`).join(' · ') || 'keine LAN-Adresse')}</small>`);
@@ -298,7 +303,7 @@ function renderParticipantView(data) {
   const previewLog = viewState.settings.stage === 'addressed' ? messageList(viewState.messages) : `<div class="teacher-classic-log">${viewState.messages.map(message => `<article>${classicNote(message)}${classicRoute(message)}</article>`).join('') || '<div class="empty">Noch keine Briefe.</div>'}</div>`;
   const phaseText = viewState.settings.phase === 'quiet' ? 'Ruhephase: Nachrichten werden nur über das Netzwerk ausgetauscht.' : viewState.settings.phase === 'paused' ? 'Die Simulation ist pausiert.' : 'Testphase: Verbinde dich und probiere das Netzwerk aus.';
   $('#participant-screen-modal')?.remove();
-  document.body.insertAdjacentHTML('beforeend', `<div class="participant-screen-modal" id="participant-screen-modal"><div class="participant-screen-backdrop"></div><section class="participant-screen-dialog" role="dialog" aria-modal="true" aria-labelledby="participant-screen-title"><div class="participant-screen-head"><div><div class="eyebrow">SCHÜLERANSICHT · NUR LESEN</div><h2 id="participant-screen-title">${esc(area.name)} <span>/</span> ${esc(participant.role)}</h2><p>${esc(participant.name)} · Adresse <span class="room-chip" style="padding:3px 7px;font-size:11px">${esc(participant.address)}</span></p></div><button class="button small" id="close-participant-screen">Schließen</button></div><div class="participant-screen-content">${learningPanel(participant, viewState.settings.stage)}<div class="participant-screen-grid"><div><div class="box"><div class="box-head"><h2>Dein Raum</h2><small>Router ${participant.router} · ${esc(area.name)}</small></div>${participantLocalLanVisual(participant, viewState)}<div class="phase">${phaseText}</div></div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Deine Aufgabe</h2><small>Rollenkarte</small></div><div style="padding:18px;font-size:14px;line-height:1.6">${esc(myTask)}</div></div></div><div class="box"><div class="box-head"><h2>Teilnehmende</h2><small>${viewState.participants.length} sichtbar</small></div>${readOnlyParticipantList(viewState.participants)}</div></div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Nachrichtenlog</h2><small>${viewState.messages.length} Nachrichten</small></div>${previewLog}</div></div></section></div>`);
+  document.body.insertAdjacentHTML('beforeend', `<div class="participant-screen-modal" id="participant-screen-modal"><div class="participant-screen-backdrop"></div><section class="participant-screen-dialog" role="dialog" aria-modal="true" aria-labelledby="participant-screen-title"><div class="participant-screen-head"><div><div class="eyebrow">SCHÜLERANSICHT · NUR LESEN</div><h2 id="participant-screen-title">${esc(area.name)} <span>/</span> ${esc(participant.role)}</h2><p>${esc(participant.name)} · Adresse <span class="room-chip" style="padding:3px 7px;font-size:11px">${esc(participant.address)}</span></p></div><button class="button small" id="close-participant-screen">Schließen</button></div><div class="participant-screen-content"><div class="participant-screen-grid"><div><div class="box"><div class="box-head"><h2>Dein Raum</h2><small>Router ${participant.router} · ${esc(area.name)}</small></div>${participantLocalLanVisual(participant, viewState)}<div class="phase">${phaseText}</div></div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Deine Aufgabe</h2><small>Rollenkarte</small></div><div style="padding:18px;font-size:14px;line-height:1.6">${esc(myTask)}</div></div></div><div class="box"><div class="box-head"><h2>Teilnehmende</h2><small>${viewState.participants.length} sichtbar</small></div>${readOnlyParticipantList(viewState.participants)}</div></div><div class="box" style="margin-top:20px"><div class="box-head"><h2>Nachrichtenlog</h2><small>${viewState.messages.length} Nachrichten</small></div>${previewLog}</div></div></section></div>`);
   $('#close-participant-screen').onclick = closeParticipantView;
   $('.participant-screen-backdrop').onclick = closeParticipantView;
 }
@@ -357,7 +362,12 @@ function finishSend() {
   const textId = sent.stage === 'addressed' ? 'message-text' : 'classic-text';
   if (drafts[sent.stage]?.fields[textId] === sent.text) drafts[sent.stage].fields[textId] = '';
   const field = document.getElementById(textId);
-  if (state.settings.stage === sent.stage && field?.value === sent.text) field.value = '';
+  if (state.settings.stage === sent.stage && field?.value === sent.text) {
+    field.value = '';
+    const to = document.getElementById(sent.stage === 'addressed' ? 'to-address' : 'classic-to');
+    if (to) to.value = '';
+    if (drafts[sent.stage]?.fields) drafts[sent.stage].fields[to?.id] = '';
+  }
   if (sent.stage === 'addressed') replyTargetId = null;
   if (mode === 'student') renderStudent();
 }
@@ -367,21 +377,10 @@ function renderStudent() {
   if (previousStage) drafts[previousStage] = captureView(root);
   renderStudentContent();
   root.dataset.stage = state.settings.stage;
-  root.querySelector('.phase-banner')?.remove();
-  root.querySelectorAll('.box-head h2').forEach(heading => { if (heading.textContent === 'Deine Aufgabe') heading.closest('.box').remove(); });
-  if (me.isMediator) root.querySelector('.workspace-head p').textContent = state.settings.stage === 'addressed' ? `Deine Adresse: ${me.address}. Du beantwortest Adressanfragen.` : 'Du vermittelst Briefe und entscheidest über jeden nächsten Schritt.';
   const phase = state.settings.phase;
-  const status = phase === 'paused' ? 'Denkpause: Lies deine Nachrichten und bearbeite den Denkstopp. Senden und Weiterleiten sind bis zur Freigabe gesperrt.' : phase === 'quiet' ? 'Netzwerkphase: Tauscht Informationen nur über den Simulator aus. So werden die Nachrichtenwege sichtbar.' : 'Erkundungsphase: Probiert das Netz aus und besprecht eure Beobachtungen.';
-  root.querySelector('.workspace-head').insertAdjacentHTML('afterend', `<div class="lesson-status ${phase === 'paused' ? 'paused' : ''}" role="status">${status}</div>${learningPanel(me, state.settings.stage)}`);
-  root.insertAdjacentHTML('beforeend', modelNotes());
   restoreView(root, drafts[state.settings.stage] || {});
-  if (replyTargetId && $('#reply-context')) {
-    $('#reply-context').textContent = 'Du bereitest eine Antwort vor.';
-    $('#reply-context').classList.remove('hidden');
-  }
   root.querySelectorAll('form button[type="submit"]').forEach(button => { button.disabled = phase === 'paused' || Boolean(pendingSend); });
-  if (phase === 'paused') root.querySelectorAll('.forward-target, .return-master, .reply-message').forEach(button => { button.disabled = true; });
-  if (state.settings.showBinary) root.insertAdjacentHTML('beforeend', '<p class="encoding-note">Text: UTF-8, 8 Bit pro Byte. Modelladresse: zwei Gruppen zu je 4 Bit. Mehr dazu unter „Begriffe und Modellgrenzen“.</p>');
+  if (phase === 'paused') root.querySelectorAll('.forward-target, .return-master').forEach(button => { button.disabled = true; });
 }
 function readinessNotes() {
   const online = state.participants.filter(participant => participant.online);
@@ -397,9 +396,8 @@ function renderTeacher() {
   const root = $('#teacher');
   const view = captureView(root);
   renderTeacherContent();
-  const plan = learningPlan[state.settings.stage];
-  root.querySelector('.stage-control').insertAdjacentHTML('afterend', `<div class="lesson-controls" aria-label="Kommunikationsregel">${[['open', 'Erkunden'], ['quiet', 'Nur im Netzwerk'], ['paused', 'Denkpause']].map(([phase, label]) => `<button class="button ${phase === state.settings.phase ? 'active' : ''}" data-phase="${phase}" aria-pressed="${phase === state.settings.phase}">${label}</button>`).join('')}</div><details class="teacher-notes" data-learning="teacher"><summary>Unterrichtshilfe · Klasse 8</summary><p><strong>${esc(plan.teacher)}</strong></p><p>Gesprächsimpuls: ${esc(plan.discussion)}</p><p>Lernziel: ${esc(plan.goal)}</p><p>Für eine 45-Minuten-Stunde: 5 Minuten Einstieg und Rollen, 8 + 8 + 12 Minuten Spielphasen, 8 Minuten Sicherung, 4 Minuten Puffer. Bei 90 Minuten Beobachtungen ausführlicher vergleichen und Zusatzaufträge nutzen.</p>${readinessNotes()}<p>Abschluss im Heft: Erkläre Namensauflösung und Routing an deinem Nachrichtenweg und nenne eine Grenze des Modells. Daran lässt sich erkennen, ob die Fachbegriffe verstanden wurden.</p></details>`);
-  root.insertAdjacentHTML('beforeend', modelNotes());
+  const impulse = state.settings.stage === 'addressed' ? 'Wie wurde aus dem Namen eine Adresse (Namensvermittlung)? Wie kam die Nachricht danach ans Ziel (Routing)? Modellgrenze: Adressen wie 2.3 sind keine echten IP-Adressen, Briefe werden nicht in Pakete geteilt.' : 'Welche Angaben braucht ein Meister, um einen Brief weiterzuleiten? Wo entstehen Umwege oder Wartezeiten? Was fehlt noch, damit jeder Brief sicher ankommt?';
+  root.querySelector('.stage-control').insertAdjacentHTML('afterend', `<div class="lesson-controls" aria-label="Kommunikationsregel">${[['open', 'Reden erlaubt'], ['quiet', 'Nur im Netzwerk'], ['paused', 'Pause']].map(([phase, label]) => `<button class="button ${phase === state.settings.phase ? 'active' : ''}" data-phase="${phase}" aria-pressed="${phase === state.settings.phase}">${label}</button>`).join('')}</div><details class="teacher-notes" data-learning="teacher"><summary>Unterrichtshilfe</summary><p>Gesprächsimpuls: ${esc(impulse)}</p>${readinessNotes()}</details>`);
   if (state.settings.showBinary) root.insertAdjacentHTML('beforeend', '<p class="encoding-note">Binär-Zusatz: Der Text wird in UTF-8 codiert, nicht allgemein in ASCII. Modelladressen sind keine echten IP-Adressen.</p>');
   root.querySelectorAll('[data-phase]').forEach(button => { button.onclick = () => send({ type: 'settings', phase: button.dataset.phase }); });
   restoreView(root, view);

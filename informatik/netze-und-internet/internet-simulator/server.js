@@ -153,7 +153,7 @@ function removeParticipant(session, participant) {
 function nextId() { return crypto.randomBytes(8).toString('hex'); }
 function makeSession() {
   let code = makeCode(); while (sessions.has(code)) code = makeCode();
-  const session = { code, createdAt: new Date().toISOString(), participants: new Map(), messages: [], teacher: null, settings: { stage: 'explore', phase: 'open', encoding: 'ascii', showBinary: false, showTasks: true, studentHost: '' } };
+  const session = { code, createdAt: new Date().toISOString(), participants: new Map(), messages: [], teacher: null, settings: { stage: 'structured', phase: 'open', encoding: 'ascii', showBinary: false, showTasks: true, studentHost: '' } };
   sessions.set(code, session); activeSession = session; return session;
 }
 function getCurrentSession() { return activeSession || makeSession(); }
@@ -193,7 +193,7 @@ function parseBody(req) {
 }
 function routeMessage(session, sender, data) {
   if (session.settings.phase === 'paused') return { error: 'Denkpause: Lies und beobachte. Senden ist nach der Freigabe wieder möglich.' };
-  if (session.settings.stage !== 'addressed') return { error: 'Adressierte Nachrichten sind erst in Spielphase 3 aktiv.' };
+  if (session.settings.stage !== 'addressed') return { error: 'Adressierte Nachrichten gibt es erst in Phase 2.' };
   const text = clean(data.text, 1200); const to = clean(data.to, 30);
   if (!text || !to) return { error: 'Bitte Zieladresse und Nachricht ausfüllen.' };
   const recipient = findParticipant(session, to);
@@ -216,19 +216,19 @@ function routersAreLinked(from, to) {
 function sendClassicMessage(session, sender, data) {
   if (session.settings.phase === 'paused') return { error: 'Denkpause: Lies und beobachte. Senden ist nach der Freigabe wieder möglich.' };
   const stage = session.settings.stage;
-  if (!['explore', 'structured'].includes(stage)) return { error: 'Freie Briefe sind nur in Spielphase 1 und 2 aktiv.' };
+  if (stage !== 'structured') return { error: 'Briefe über die Meister gibt es nur in Phase 1.' };
   if (sender.isMediator) return { error: 'Meister vermitteln die Briefe. Neue Aufträge schreiben die Mitarbeitenden.' };
   const text = clean(data.text, 1200);
   const noteTo = clean(data.noteTo, 80);
   if (!text) return { error: 'Bitte schreibe etwas auf den Brief.' };
-  if (stage === 'structured' && !noteTo) return { error: 'Bitte trage einen Empfänger bei „An“ ein.' };
+  if (!noteTo) return { error: 'Bitte trage einen Empfänger bei „An“ ein.' };
   const mediator = localMediator(session, sender.router);
   if (!mediator) return { error: `Der Meister in ${areas[sender.router].name} ist noch nicht im Netzwerk.` };
   if (!clients.has(mediator.id)) return { error: 'Dein Meister ist gerade offline. Warte auf die erneute Verbindung.' };
   const sentAt = new Date().toISOString();
   const message = {
     id: nextId(), classic: true, stage, fromId: sender.id, fromName: sender.name,
-    noteFrom: stage === 'structured' ? sender.name : '', noteTo: stage === 'structured' ? noteTo : '',
+    noteFrom: sender.name, noteTo,
     text, currentHolderId: mediator.id, status: 'waiting', sentAt,
     history: [
       { participantId: sender.id, name: sender.name, router: sender.router, at: sentAt },
@@ -241,10 +241,10 @@ function sendClassicMessage(session, sender, data) {
 }
 function forwardClassicMessage(session, holder, data) {
   if (session.settings.phase === 'paused') return { error: 'Denkpause: Briefwege bleiben stehen. Nach der Freigabe kannst du weiterleiten.' };
-  if (!['explore', 'structured'].includes(session.settings.stage)) return { error: 'Manuelle Vermittlung ist in dieser Phase nicht aktiv.' };
+  if (session.settings.stage !== 'structured') return { error: 'Manuelle Vermittlung gibt es nur in Phase 1.' };
   const message = session.messages.find(entry => entry.id === clean(data.messageId, 80) && entry.classic && entry.stage === session.settings.stage);
   if (!message) return { error: 'Der Brief wurde nicht gefunden.' };
-  if (message.currentHolderId !== holder.id) return { error: 'Dieser Brief liegt nicht mehr bei dir.' };
+  if (message.currentHolderId !== holder.id || message.status === 'delivered') return { error: 'Dieser Brief liegt nicht mehr bei dir.' };
   const target = session.participants.get(clean(data.targetId, 80));
   if (!target || !clients.has(target.id)) return { error: 'Das gewählte Ziel ist nicht mehr online.' };
   if (holder.isMediator) {
@@ -258,6 +258,13 @@ function forwardClassicMessage(session, holder, data) {
   message.currentHolderId = target.id;
   message.status = target.isMediator ? 'waiting' : 'with-person';
   message.history.push({ participantId: target.id, name: target.name, router: target.router, at: new Date().toISOString() });
+  broadcastState(session);
+  return { ok: true, message };
+}
+function deliverClassicMessage(session, holder, data) {
+  const message = session.messages.find(entry => entry.id === clean(data.messageId, 80) && entry.classic);
+  if (!message || message.currentHolderId !== holder.id || holder.isMediator) return { error: 'Dieser Brief liegt nicht bei dir.' };
+  message.status = 'delivered';
   broadcastState(session);
   return { ok: true, message };
 }
@@ -318,7 +325,8 @@ function onSocketMessage(ws, data) {
   if (data.type === 'send' && ws.participant) { const result = routeMessage(session, ws.participant, data); if (result.error) ws.send(JSON.stringify({ type: 'error', error: result.error })); return; }
   if (data.type === 'send-classic' && ws.participant) { const result = sendClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief an den Meister übergeben.' })); return; }
   if (data.type === 'forward-classic' && ws.participant) { const result = forwardClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief weitergeleitet.' })); return; }
-  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['explore', 'structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; broadcastState(session); return; }
+  if (data.type === 'deliver-classic' && ws.participant) { const result = deliverClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief abgelegt.' })); return; }
+  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; broadcastState(session); return; }
   if (data.type === 'clear-log' && session.teacher === ws) { session.messages = []; broadcastState(session); return; }
   if (data.type === 'remove' && session.teacher === ws) { const p = session.participants.get(data.id); if (p) { const client = clients.get(p.id); if (client) { client.send(JSON.stringify({ type: 'error', error: 'Du wurdest aus dem Raum entfernt.' })); client.socket.end(); } session.participants.delete(p.id); clients.delete(p.id); broadcastState(session); } }
 }

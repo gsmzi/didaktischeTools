@@ -1,48 +1,24 @@
 # Palastnetzwerk · Internetsimulator
 
-Eine lokale Client-Server-Simulation zum Rollenspiel „Netzwerk“ für den Informatik-Anfangsunterricht in Klasse 8. Die Anwendung bildet die fünf Bereiche, Namensvermittler, Router-Adressen und die Nachrichtenwege aus dem Arbeitsauftrag ab.
+Digitale Fortsetzung des Rollenspiels „Netzwerk“ (Schlossnetzwerk): gleiche fünf Bereiche, gleiche Rollen, gleiche Verbindungen zwischen den Meistern. Alle Geräte der Klasse verbinden sich mit einem kleinen Server auf dem Lehrerrechner.
 
 > **Hinweis:** Anders als die übrigen Tools in dieser Sammlung braucht der Simulator einen kleinen Node.js-Server auf dem Lehrerrechner. Er läuft deshalb nicht über GitHub Pages. Diesen Ordner herunterladen und wie unten beschrieben mit `npm start` starten.
 
-## Einsatz in Klasse 8
+## Zwei Phasen
 
-Die drei Phasen führen vom Entdecken eines Kommunikationsproblems über einen gemeinsamen Nachrichtenaufbau zur Namensauflösung und zum Routing. Jede Phase zeigt einen kurzen Lernauftrag mit Lernziel, Rollenauftrag, aufklappbarem Tipp, Denkstopp und Zusatzauftrag. Meister erhalten eigene Arbeitsschritte. Reflexionen werden im Heft festgehalten; der Simulator sammelt keine Antworten oder Bewertungen.
-
-### Vorschlag für 45 Minuten
-
-| Zeit | Unterrichtsschritt | Sicherung |
+| Phase | Klasse | Was passiert |
 | --- | --- | --- |
-| 5 Min. | Einstieg: „Wie findet eine Nachricht ihr Ziel?“ Rollen verteilen. | Zuerst alle fünf Meisterrollen besetzen. |
-| 8 Min. | Phase 1: zunächst einen freien Brief pro Team verschicken. | Ein beobachtetes Problem und eine mögliche Regel nennen. |
-| 8 Min. | Phase 2: denselben Auftrag mit Von, An und Text wiederholen. | Wirkung der Struktur vergleichen; verbleibende Probleme benennen. |
-| 12 Min. | Phase 3: Zieladresse durch Nachrichten erfragen, dann eigentliche Frage senden und beantworten. | Namensauflösung und Routerweg getrennt erklären. |
-| 8 Min. | Gemeinsame Auswertung und kurzer Heftauftrag. | Drei Fachbegriffe mit einem konkreten Beispiel erklären; eine Modellgrenze nennen. |
-| 4 Min. | Puffer für Verbindungsaufbau oder Rückfragen. | |
+| 1 · Netzwerkspiel | 6 | Das Netzwerkspiel in digital: Briefe mit Von · An · Text gehen an den eigenen Meister, Meister leiten jeden Brief von Hand an eine Person im Raum oder einen verbundenen Meister weiter. |
+| 2 · Adressen | 8 | Jede Rolle hat eine Adresse `Router.Teilnehmer` (z. B. `2.3`). Die Meister sind Namensvermittler (wie DNS); die Weiterleitung übernimmt der Simulator (Routing). |
 
-Für 90 Minuten können Briefwege systematisch verglichen, die Rollen in einer weiteren Runde gewechselt und die Zusatzaufträge besprochen werden. Die Binärdarstellung eignet sich als Erweiterung, sobald Adressierung und Vermittlung verstanden sind.
+Die Schülerseite zeigt nur das Nötigste, Erklärungen kommen von der Lehrkraft vorab: oben Rolle und (in Phase 2) die eigene Adresse, darunter direkt „Brief schreiben“ bzw. „Nachricht senden“ mit dem Rollenauftrag, die wartenden Briefe, das Netz bzw. der eigene Raum und die eigenen Briefwege. Empfangene Briefe kann man in Phase 1 beantworten, ablegen oder an den Meister zurückgeben.
 
-### Steuerung und Klassenorganisation
+### Steuerung
 
-- **Erkunden:** Ausprobieren und miteinander sprechen.
-- **Nur im Netzwerk:** Informationen nur über den Simulator austauschen. Diese Gesprächsregel wird pädagogisch vereinbart.
-- **Denkpause:** Senden und Weiterleiten werden auf dem Server gesperrt; Lesen und Beobachten bleiben möglich. So können laufende Briefwege gemeinsam ausgewertet werden. Die Pause bleibt beim Wechsel der Spielphase bestehen und muss bewusst aufgehoben werden.
-- Unter **Unterrichtshilfe · Klasse 8** stehen Gesprächsimpulse, Zeitvorschlag und Hinweise auf fehlende Meister sowie unbesetzte Auftragsziele. Bei kleineren Klassen Ziele gemeinsam anpassen; bei größeren Klassen Zweierteams bilden.
-- Passende Antworten auf Rollenfragen dürfen erfunden werden. Persönliche Angaben sind nicht erforderlich.
-- Texteingaben, Cursorposition und aufgeklappte Hilfen bleiben bei Live-Aktualisierungen erhalten. Entwürfe werden pro Phase im geöffneten Tab gehalten; Neuladen oder Schließen des Tabs verwirft sie. Das Textfeld wird erst nach erfolgreicher Sendebestätigung geleert. Eine neue Runde erfordert einen Bestätigungsklick.
-
-### Fachliche Einordnung und erwartbare Antworten
-
-- **Protokoll:** Vereinbarte Regeln, beispielsweise ein gemeinsamer Aufbau mit Absender, Empfänger und Inhalt. Der Aufbau erleichtert das Lesen, legt aber noch keinen Weiterleitungsweg fest.
-- **Namensauflösung:** Ein Name wird einer Adresse zugeordnet. Im Modell erledigen das die Meister durch Rückfragen; im Internet übernimmt DNS unter anderem die Zuordnung von Domainnamen zu IP-Adressen.
-- **Routing:** Nachrichten werden zwischen Netzen weitergeleitet. In Phase 3 übernimmt das der Server automatisch; die Namensvermittler transportieren die eigentlichen Nachrichten dann nicht mehr.
-- **Modellgrenzen:** Adressen wie `2.3` sind keine echten IPv4-Adressen. Ganze Briefe werden sofort auf einem kürzesten Routerweg übertragen. Paketaufteilung, Übertragungsdauer, Verluste und erneutes Senden fehlen. Echte Netze treffen Entscheidungen anhand ihrer Routingtabellen.
-- **Binär-Zusatz:** Text wird mit UTF-8 codiert (8 Bit pro Byte; Umlaute können mehrere Bytes beanspruchen). Modelladressen werden separat in zwei Gruppen zu je 4 Bit dargestellt. Diese Anzeige bildet kein echtes IP-Paketformat ab.
-
-Die Lernenden finden die Einordnung unter **Vom Palast zum Internet: Begriffe und Modellgrenzen**. Sie ist aufklappbar, damit die freie Erkundung zunächst ohne vorweggenommene Erklärung erfolgen kann.
-
-### Überprüfung
-
-`npm test` prüft die drei Spielphasen einschließlich manueller Weiterleitung und adressierter Zustellung sowie die serverseitige Denkpause, die Freigabe danach und den Erhalt anderer Einstellungen. Der Test benötigt Node.js 22 oder neuer wegen des eingebauten WebSocket-Clients; für den Server genügt weiterhin Node.js 18.
+- Die Lehrkraft schaltet die Phase für alle Geräte gleichzeitig um. Rollen bleiben erhalten.
+- **Reden erlaubt / Nur im Netzwerk / Pause:** In der Pause sind Senden und Weiterleiten auf dem Server gesperrt, Lesen bleibt möglich.
+- Die aufklappbare **Unterrichtshilfe** zeigt einen Gesprächsimpuls und fehlende Meister bzw. unbesetzte Auftragsziele.
+- `npm test` prüft beide Phasen, Weiterleiten, Ablegen, adressierte Zustellung und die Pause (Node.js 22 oder neuer).
 
 ## Was ist npm?
 
@@ -85,13 +61,8 @@ Falls die Windows-Firewall beim ersten Start fragt, muss der Zugriff im privaten
 ## Unterrichtsablauf
 
 1. Lehrkraft: `http://localhost` öffnen und den angezeigten Schüler-Link weitergeben.
-2. Schülerinnen und Schüler klicken ihre Rollenkarte an und behalten diese Rolle in allen drei Phasen.
-3. In Phase 1 schreiben Mitarbeitende freie Zettel. Meister vermitteln jeden Brief von Hand.
-4. In Phase 2 erhalten die Briefe die feste Struktur `Von · An · Text`; die Vermittlung bleibt manuell.
-5. In Phase 3 werden Adressen und Namensvermittlung verwendet. Diese Phase entspricht der bisherigen Simulation.
+2. Schülerinnen und Schüler klicken ihre Rollenkarte an. Zuerst die fünf Meisterrollen besetzen.
+3. Phase 1 (Kl. 6): Mitarbeitende schreiben Briefe an ihren Meister, Meister leiten von Hand weiter. Alle sehen das ganze Netz mit wartenden Briefen, aber nicht, welcher Weg richtig wäre.
+4. Phase 2 (Kl. 8): Mitarbeitende fragen ihren Namensvermittler nach der Zieladresse und senden dann an diese Adresse. Sie sehen nur ihren eigenen Raum; Namensvermittler sehen zusätzlich die anderen Namensvermittler mit Adresse.
 
-Die Lehrkraft schaltet die Phase für alle Geräte gleichzeitig um. In Phase 1 und 2 können Meister einen wartenden Brief mit einem Klick an eine Person im eigenen Raum oder einen direkt verbundenen Meister weitergeben. Alle Teilnehmenden sehen eine gemeinsame Übersicht mit aktuellen Briefhaltern, Warteschlangen und bisherigen Wegen. Die Oberfläche zeigt dabei nicht, welche Weiterleitung richtig wäre.
-
-In Phase 1 und 2 sehen alle die beobachtbare Gesamtübersicht. In Phase 3 zeigt die Schüleransicht ausschließlich den eigenen Raum. Namensvermittler sehen dann zusätzlich die Namensvermittler der anderen Räume und deren Adressen, sobald diese online sind. Die vollständige Router-Topologie der Adressphase ist nur in der Lehreransicht sichtbar.
-
-Adressen werden pro Router automatisch als `Router.Teilnehmer` vergeben, z. B. `2.3`. Nachrichten werden serverseitig über die im Rollenspiel vorgegebene Router-Topologie protokolliert. Der Server speichert nur die aktuelle Runde im Arbeitsspeicher; beim Neustart ist sie leer.
+Der Server speichert nur die aktuelle Runde im Arbeitsspeicher; beim Neustart ist sie leer.

@@ -1,0 +1,45 @@
+/* Schülerseite: Handeln zuerst, wenig Text */
+#student{min-width:0}
+.play-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:-28px 0 16px}
+.play-head h1{font-size:28px;letter-spacing:-.05em;margin:6px 0 0;line-height:1.1;overflow-wrap:anywhere}
+.play-head h1 span{color:#a5b4b3}
+.my-address{text-align:right;flex:0 0 auto}.my-address small{display:block;color:var(--muted);font:500 10px 'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em}.my-address b{display:inline-block;margin-top:4px;padding:6px 12px;border-radius:10px;background:var(--teal-dark);color:#fff;font:700 22px 'DM Mono',monospace}
+.play-status{margin:0 0 16px;padding:10px 14px;border-radius:10px;background:#edf7f3;border:1px solid #c8ded8;font-size:14px}.play-status.paused{background:#fff4d7;border-color:#d8b45d;color:#624d16}
+.play-grid{display:grid;gap:16px;min-width:0}
+.play-grid>*{min-width:0}
+.play-grid.classic{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"write net" "inbox net" "log log";align-items:start}
+.play-grid.classic:not(:has(.play-write)){grid-template-areas:"inbox net" "log log"}
+.play-grid.classic.mail-first:has(.play-write){grid-template-areas:"inbox net" "write net" "log log"}
+.play-grid.addressed{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"write side" "log side";align-items:start}
+.play-write{grid-area:write}.play-inbox{grid-area:inbox}.play-net{grid-area:net}.play-log{grid-area:log}.play-side{grid-area:side;display:grid;gap:16px;min-width:0}
+.play-inbox.has-mail{border-color:#e1af45;box-shadow:0 0 0 3px #f5d88a55}
+.play-form{display:grid;gap:12px;padding:16px 18px}
+.play-form textarea{resize:vertical;min-height:80px}
+.play-form .button{justify-self:start;min-height:44px}
+.play-task{margin:0;padding:10px 12px;border-radius:9px;background:#fff8e8;border:1px solid #eddcae;font-size:14px;line-height:1.45}
+.letter-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.room-list{list-style:none;margin:0;padding:8px 0}
+.room-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 18px;font-size:14px;min-width:0}
+.room-list li span{min-width:0;overflow-wrap:anywhere}
+.room-list li code{flex:0 0 auto;font:600 14px 'DM Mono',monospace;color:var(--teal-dark);background:#eef6f4;border-radius:7px;padding:3px 8px}
+.room-list li.mediator span{font-weight:700}
+.room-list li.self{background:#f1f8f6}
+.room-list li.offline{color:var(--muted)}.room-list li.offline code{color:var(--muted);background:#f1f3f3;font-size:11px}
+.play-log .messages{max-height:none}
+@media(max-width:800px){
+  .play-head{margin-top:-14px;align-items:flex-start}
+  .play-head h1{font-size:23px}
+  .my-address b{font-size:18px}
+  .play-grid.classic{grid-template-columns:minmax(0,1fr);grid-template-areas:"write" "inbox" "net" "log"}
+  .play-grid.classic:not(:has(.play-write)){grid-template-areas:"inbox" "net" "log"}
+  .play-grid.classic.mail-first:has(.play-write){grid-template-areas:"inbox" "write" "net" "log"}
+  .play-grid.addressed{grid-template-columns:minmax(0,1fr);grid-template-areas:"write" "side" "log"}
+  .play-form .button{justify-self:stretch}
+  .overview-rooms{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .forward-panel{grid-template-columns:minmax(0,1fr)}
+}
+.stage-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
+.play-grid.addressed.mail-first{grid-template-areas:"log side" "write side"}
+.room-list li.offline{background:none}
+@media(max-width:800px){.play-grid.addressed.mail-first{grid-template-areas:"log" "write" "side"}}
+@media(max-width:700px){.message-packet .message-line{grid-template-columns:44px 46px 46px minmax(0,1fr)}.message-packet .message-line>b{padding:7px 4px;font-size:8px;letter-spacing:0;overflow-wrap:normal}.message-packet .message-line>span{padding:7px 5px}.play-log .messages .message-card{margin-left:10px;margin-right:10px}}
