@@ -26,33 +26,99 @@ const roleForms = {
   'Schneidermeister': 'Schneidermeisterin', 'Vermesser': 'Vermesserin', 'Näher': 'Näherin', 'Knopfsucher': 'Knopfsucherin', 'Fadenaufwickler': 'Fadenaufwicklerin', 'Zuschneider': 'Zuschneiderin'
 };
 const links = [[1, 2], [1, 3], [1, 5], [2, 4], [4, 5]];
-const roleTasks = {
-  'Einkäufer': 'Frage den Gelddrucker, wann du ihn am Nachmittag abholen kannst.',
-  'Backofenwächter': 'Frage den Geschirrspüler nach sauberen Kuchenformen und der Abholung der schmutzigen Formen.',
-  'Tortenverzierer': 'Frage den Steuereintreiber nach den Farben seines Lieblingsfußballvereins.',
-  'Teigmischer': 'Frage den Rechner, wie viel drei Achtel von 16 kg Mehl sind.',
-  'Teigkneter': 'Frage den Geldwäscher, wann die Arbeitsschürzen wieder sauber sind.',
-  'Abschmecker': 'Frage den Näher nach Stoff, einem neuen Gewand und dem Preis.',
-  'Kartoffelschäler': 'Frage den Schrubber, wann er deine helle Hose waschen kann.',
-  'Geschirrspüler': 'Frage den Teigkneter, ob er die schweren Teigschüsseln abholen kann.',
-  'Koch': 'Frage den Geldzähler, wie viel Geld für den Einkauf zur Verfügung steht.',
-  'Chefkoch': 'Frage den Gelddrucker, welche Summe er bis 17 Uhr drucken kann.',
-  'Geldzähler': 'Frage den Teigmischer, ob deine Münzen in seine Teigschüssel gefallen sind.',
-  'Steuereintreiber': 'Frage den Tortenverzierer, wann er heute mit der Arbeit fertig ist.',
-  'Rechner': 'Frage den Koch, ob er am Nachmittag eine halbe Stunde Zeit hat.',
-  'Geldwäscher': 'Frage den Backofenwächter, ob er einen Korb Geld trocknen kann.',
-  'Gelddrucker': 'Frage den Einkäufer, wann du ihn am Nachmittag abholen kannst.',
-  'Vermesser': 'Frage den Abschmecker, wann du seine Maße nehmen kannst.',
-  'Näher': 'Frage den Klarspüler, ob er den Tintenfleck auf dem Festgewand entfernen kann.',
-  'Knopfsucher': 'Frage den Zuschneider, ob du dir seine Schere leihen kannst.',
-  'Fadenaufwickler': 'Frage den Aufhänger, ob auf seiner Wäscheleine Platz zum Trocknen ist.',
-  'Zuschneider': 'Frage den Bügler, wann er die zerknitterten Stoffteile bügeln kann.',
-  'Klarspüler': 'Frage den Vermesser, ob er einen Messbecher besitzt.',
-  'Bügler': 'Frage den Knopfsucher nach Ersatzknöpfen.',
-  'Wassererhitzer': 'Frage den Kartoffelschäler, ob er ein paar Kartoffeln beiseitelegen kann.',
-  'Schrubber': 'Frage den Wassererhitzer, wann das heiße Wasser fertig ist.',
-  'Aufhänger': 'Frage den Fadenaufwickler, ob er ein paar Minuten vorbeikommen möchte.'
+// Auftragsgenerator: Heute Abend feiert der König Geburtstag. Nebenbei ist sein goldener Löffel verschwunden.
+// Die Texte hängen vom Bereich des Empfängers ab. {ziel} wird zu „den Koch“ bzw. „die Köchin“.
+const taskTemplates = {
+  1: [
+    'Frage {ziel}, ob die Suppe für das Geburtstagsfest schon gesalzen ist – und wie oft.',
+    'Frage {ziel}, wie viele Kartoffeln man für 200 Festgäste schälen muss.',
+    'Frage {ziel}, ob vom Probeessen noch etwas übrig ist. Du hast nämlich Hunger.',
+    'Frage {ziel}, warum es in der Küche so verdächtig nach angebranntem Pudding riecht.',
+    'Frage {ziel}, ob in der Küche jemand den goldenen Löffel des Königs gesehen hat.',
+    'Frage {ziel}, welches Gericht der König am liebsten isst und welches er gar nicht mag.',
+    'Bitte {ziel}, dir das geheime Rezept für die Festsoße zu verraten.',
+    'Frage {ziel}, ob es in der Küche einen Topf gibt, in den ein ganzes Wildschwein passt.'
+  ],
+  2: [
+    'Frage {ziel}, wie viele Stockwerke die Geburtstagstorte des Königs bekommt.',
+    'Frage {ziel}, ob die Brezeln heute wieder so hart sind wie letzte Woche.',
+    'Frage {ziel}, ob du altes Brot für die Pferde des Königs abholen darfst.',
+    'Bitte {ziel}, deinen Namen mit Zuckerguss auf ein Plätzchen zu schreiben.',
+    'Frage {ziel}, ob in einem Brotteig zufällig ein goldener Löffel aufgetaucht ist.',
+    'Frage {ziel}, wann der Ofen heiß genug für die Festbrote ist.',
+    'Frage {ziel}, wie viele Kerzen auf die Geburtstagstorte passen, ohne dass sie schmilzt.',
+    'Frage {ziel}, ob man Mehl als Schnee für die Festdekoration nehmen kann.'
+  ],
+  3: [
+    'Frage {ziel}, wie viele Goldmünzen das Geburtstagsfest heute Abend kostet.',
+    'Frage {ziel}, ob du einen Vorschuss für neue Festschuhe bekommen kannst.',
+    'Frage {ziel}, wie viel 17 mal 12 Taler sind.',
+    'Frage {ziel}, ob in der Schatzkammer seit gestern ein goldener Löffel fehlt.',
+    'Bitte {ziel}, nachzuzählen, ob im Festsäckchen wirklich 100 Taler sind.',
+    'Frage {ziel}, ob genug Geld für das Geschenk an den König in der Gemeinschaftskasse ist.',
+    'Frage {ziel}, warum die frisch gewaschenen Münzen noch tropfen.',
+    'Frage {ziel}, wie viel Trinkgeld die Musikanten heute Abend bekommen.'
+  ],
+  4: [
+    'Frage {ziel}, ob der Festmantel des Königs bis heute Abend trocken ist.',
+    'Frage {ziel}, ob man einen Soßenfleck aus einer weißen Tischdecke herausbekommt.',
+    'Frage {ziel}, warum alle Socken des Königs plötzlich rosa sind.',
+    'Frage {ziel}, ob beim Waschen ein goldener Löffel in einer Hosentasche gefunden wurde.',
+    'Bitte {ziel}, deine Festschürze bis heute Abend zu bügeln.',
+    'Frage {ziel}, wie heiß das Wasser für 300 Festservietten sein muss.',
+    'Frage {ziel}, ob auf der Wäscheleine noch Platz für die Festfahnen ist.',
+    'Frage {ziel}, wie lange man ein Paar Stinkestiefel einweichen muss.'
+  ],
+  5: [
+    'Frage {ziel}, ob dein Festgewand bis heute Abend fertig wird.',
+    'Frage {ziel}, wie viel Stoff man für einen Geburtstagsumhang mit Schleppe braucht.',
+    'Frage {ziel}, ob noch goldene Knöpfe für die Festkleidung da sind.',
+    'Frage {ziel}, wann du zum Maßnehmen für eine neue Mütze vorbeikommen kannst.',
+    'Frage {ziel}, ob in einem Nähkästchen ein goldener Löffel aufgetaucht ist.',
+    'Frage {ziel}, welche Farbe die Fahnen für das Geburtstagsfest bekommen.',
+    'Frage {ziel}, wie der Riss in der Hose des Königs entstanden ist.',
+    'Frage {ziel}, ob man aus alten Vorhängen noch Festkleider nähen kann.'
+  ]
 };
+function shuffle(list) { const copy = [...list]; for (let i = copy.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [copy[i], copy[j]] = [copy[j], copy[i]]; } return copy; }
+function onlineWorkers(session) { return [...session.participants.values()].filter(p => !p.isMediator && clients.has(p.id)); }
+function mediatorOnline(session, router) { return [...session.participants.values()].some(p => p.isMediator && p.router === router && clients.has(p.id)); }
+// Phase 1: Der Brief braucht eine Kette von online-Meistern. Phase 2: Beide Namensvermittler müssen online sein, den Weg übernimmt das Routing.
+function reachable(session, from, to) {
+  if (!mediatorOnline(session, from) || !mediatorOnline(session, to)) return false;
+  if (session.settings.stage === 'addressed' || from === to) return true;
+  const seen = new Set([from]); const queue = [from];
+  while (queue.length) {
+    const router = queue.shift();
+    for (const [a, b] of links) {
+      const next = a === router ? b : b === router ? a : null;
+      if (next === null || seen.has(next) || !mediatorOnline(session, next)) continue;
+      if (next === to) return true;
+      seen.add(next); queue.push(next);
+    }
+  }
+  return false;
+}
+function taskValid(session, p) {
+  const target = p.task && session.participants.get(p.task.targetId);
+  return Boolean(target && clients.has(target.id) && reachable(session, p.router, target.router));
+}
+function assignTask(session, p, avoidTargetId = null) {
+  const load = id => onlineWorkers(session).filter(other => other.id !== p.id && other.task?.targetId === id).length;
+  const candidates = onlineWorkers(session).filter(other => other.id !== p.id && reachable(session, p.router, other.router));
+  if (!candidates.length) { p.task = null; return; }
+  const ranked = shuffle(candidates).sort((a, b) => (a.id === avoidTargetId) - (b.id === avoidTargetId) || load(a.id) - load(b.id) || (a.router === p.router) - (b.router === p.router));
+  const target = ranked[0];
+  p.usedTasks = p.usedTasks || [];
+  const fresh = taskTemplates[target.router].filter(text => !p.usedTasks.includes(text));
+  const template = shuffle(fresh.length ? fresh : taskTemplates[target.router])[0];
+  p.usedTasks = [...p.usedTasks, template].slice(-12);
+  p.task = { targetId: target.id, text: template.replace('{ziel}', `${target.gender === 'male' ? 'den' : 'die'} ${target.name}`) };
+}
+// Ergänzt fehlende und ersetzt ungültig gewordene Aufträge (Ziel weg, Meister weg, Phasenwechsel).
+function refreshTasks(session) { for (const p of onlineWorkers(session)) if (!taskValid(session, p)) assignTask(session, p); }
+// Lehrerknopf: alle Aufträge gleichmäßig neu verteilen, z. B. wenn alle angemeldet sind.
+function redistributeTasks(session) { const workers = shuffle(onlineWorkers(session)); workers.forEach(p => { p.task = null; }); workers.forEach(p => assignTask(session, p)); }
 
 function clean(value, max = 240) {
   return String(value ?? '').trim().replace(/[<>]/g, '').slice(0, max);
@@ -94,7 +160,8 @@ function sessionView(session, viewer = null) {
     createdAt: session.createdAt,
     participants: visibleParticipants(session, viewer).map(publicParticipant),
     messages: messages.slice(-100).map(message => publicMessage(session, message, viewer)),
-    settings: session.settings
+    settings: session.settings,
+    ...(viewer ? { myTask: viewer.task?.text || null } : { workersWithoutTask: onlineWorkers(session).filter(p => !p.task).length })
   };
 }
 function pickerView(session) {
@@ -147,6 +214,7 @@ function removeParticipant(session, participant) {
   if (current !== participant) return false;
   session.participants.delete(participant.id);
   clients.delete(participant.id);
+  refreshTasks(session);
   broadcastState(session);
   return true;
 }
@@ -186,7 +254,7 @@ function serverInfo(req) {
   const addresses = localAddresses();
   const selectedHost = session.settings.studentHost || addresses[0]?.address || '127.0.0.1';
   const studentUrl = configuredBaseUrl(selectedHost);
-  return { isTeacherRequest: requestIsLocal(req), serverIp: selectedHost, serverIps: addresses, teacherUrl: baseUrl('localhost'), studentUrl, guideUrl: `${studentUrl}/anleitung`, port: activePort, session: requestIsLocal(req) ? sessionView(session) : pickerView(session), areas, links, tasks: roleTasks, roleForms };
+  return { isTeacherRequest: requestIsLocal(req), serverIp: selectedHost, serverIps: addresses, teacherUrl: baseUrl('localhost'), studentUrl, guideUrl: `${studentUrl}/anleitung`, port: activePort, session: requestIsLocal(req) ? sessionView(session) : pickerView(session), areas, links, roleForms };
 }
 function parseBody(req) {
   return new Promise((resolve, reject) => { let body = ''; req.on('data', chunk => { body += chunk; if (body.length > 10000) req.destroy(); }); req.on('end', () => { try { resolve(JSON.parse(body || '{}')); } catch { reject(new Error('Ungültige JSON-Daten')); } }); req.on('error', reject); });
@@ -273,7 +341,7 @@ function handleHttp(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (req.method === 'GET' && url.pathname === '/api/info') return sendJson(res, 200, serverInfo(req));
   if (req.method === 'GET' && url.pathname === '/api/session/current') return sendJson(res, 200, pickerView(getCurrentSession()));
-  if (req.method === 'GET' && url.pathname === '/api/areas') return sendJson(res, 200, { areas, links, tasks: roleTasks, roleForms });
+  if (req.method === 'GET' && url.pathname === '/api/areas') return sendJson(res, 200, { areas, links, roleForms });
   if (req.method === 'POST' && url.pathname === '/api/session') { const session = makeSession(); return sendJson(res, 201, { code: session.code, info: serverInfo(req) }); }
   if (req.method === 'GET' && url.pathname.startsWith('/api/session/')) { const code = url.pathname.split('/').pop().toUpperCase(); const session = sessions.get(code); return session ? sendJson(res, 200, requestIsLocal(req) ? sessionView(session) : pickerView(session)) : sendJson(res, 404, { error: 'Raum nicht gefunden.' }); }
   let file = url.pathname === '/' ? '/index.html' : url.pathname === '/anleitung' ? '/guide.html' : url.pathname;
@@ -313,22 +381,24 @@ function onSocketMessage(ws, data) {
     if (offlineParticipant) removeParticipant(session, offlineParticipant);
     if ([...session.participants.values()].some(p => p.role.toLowerCase() === role.toLowerCase())) return ws.send(JSON.stringify({ type: 'error', error: 'Diese Rolle ist bereits vergeben. Bitte wähle eine andere.' }));
     const participant = { id: nextId(), name: name || roleLabel(role, gender), role, gender, router, address: assignAddress(session, router), isMediator: role === area.mediator, joinedAt: new Date().toISOString() };
-    session.participants.set(participant.id, participant); ws.session = session; ws.participant = participant; clients.set(participant.id, ws); ws.send(JSON.stringify({ type: 'joined', me: publicParticipant(participant), state: sessionView(session, participant), areas, links, tasks: roleTasks, roleForms })); broadcastState(session); return;
+    session.participants.set(participant.id, participant); ws.session = session; ws.participant = participant; clients.set(participant.id, ws); refreshTasks(session); ws.send(JSON.stringify({ type: 'joined', me: publicParticipant(participant), state: sessionView(session, participant), areas, links, roleForms })); broadcastState(session); return;
   }
-  if (data.type === 'teacher') { const session = sessions.get(clean(data.code, 10).toUpperCase()); if (!session) return ws.send(JSON.stringify({ type: 'error', error: 'Raum nicht gefunden.' })); ws.session = session; session.teacher = ws; return ws.send(JSON.stringify({ type: 'teacher-ready', state: sessionView(session), areas, links, tasks: roleTasks, roleForms })); }
+  if (data.type === 'teacher') { const session = sessions.get(clean(data.code, 10).toUpperCase()); if (!session) return ws.send(JSON.stringify({ type: 'error', error: 'Raum nicht gefunden.' })); ws.session = session; session.teacher = ws; return ws.send(JSON.stringify({ type: 'teacher-ready', state: sessionView(session), areas, links, roleForms })); }
   const session = ws.session; if (!session) return ws.send(JSON.stringify({ type: 'error', error: 'Noch keinem Raum beigetreten.' }));
   if (data.type === 'participant-view' && session.teacher === ws) {
     const participant = session.participants.get(data.id);
     if (!participant) return ws.send(JSON.stringify({ type: 'error', error: 'Teilnehmender nicht gefunden.' }));
-    return ws.send(JSON.stringify({ type: 'participant-view', participant: publicParticipant(participant), state: sessionView(session, participant), areas, links, tasks: roleTasks, roleForms }));
+    return ws.send(JSON.stringify({ type: 'participant-view', participant: publicParticipant(participant), state: sessionView(session, participant), areas, links, roleForms }));
   }
   if (data.type === 'send' && ws.participant) { const result = routeMessage(session, ws.participant, data); if (result.error) ws.send(JSON.stringify({ type: 'error', error: result.error })); return; }
   if (data.type === 'send-classic' && ws.participant) { const result = sendClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief an den Meister übergeben.' })); return; }
   if (data.type === 'forward-classic' && ws.participant) { const result = forwardClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief weitergeleitet.' })); return; }
   if (data.type === 'deliver-classic' && ws.participant) { const result = deliverClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief abgelegt.' })); return; }
-  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; broadcastState(session); return; }
+  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; refreshTasks(session); broadcastState(session); return; }
+  if (data.type === 'new-task' && ws.participant && !ws.participant.isMediator) { assignTask(session, ws.participant, ws.participant.task?.targetId); broadcastState(session); return; }
+  if (data.type === 'redistribute-tasks' && session.teacher === ws) { redistributeTasks(session); broadcastState(session); return ws.send(JSON.stringify({ type: 'action-ok', message: 'Aufträge neu verteilt.' })); }
   if (data.type === 'clear-log' && session.teacher === ws) { session.messages = []; broadcastState(session); return; }
-  if (data.type === 'remove' && session.teacher === ws) { const p = session.participants.get(data.id); if (p) { const client = clients.get(p.id); if (client) { client.send(JSON.stringify({ type: 'error', error: 'Du wurdest aus dem Raum entfernt.' })); client.socket.end(); } session.participants.delete(p.id); clients.delete(p.id); broadcastState(session); } }
+  if (data.type === 'remove' && session.teacher === ws) { const p = session.participants.get(data.id); if (p) { const client = clients.get(p.id); if (client) { client.send(JSON.stringify({ type: 'error', error: 'Du wurdest aus dem Raum entfernt.' })); client.socket.end(); } session.participants.delete(p.id); clients.delete(p.id); refreshTasks(session); broadcastState(session); } }
 }
 
 function startServer(port) {

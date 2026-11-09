@@ -4,7 +4,7 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '
 let pendingSend = null;
 const drafts = {};
 
-let ws, info, areas = {}, links = [], tasks = {}, roleForms = {}, me = null, state = null, mode = null, replyTargetId = null, viewedParticipantId = null, selectedGender = 'female';
+let ws, info, areas = {}, links = [], roleForms = {}, me = null, state = null, mode = null, replyTargetId = null, viewedParticipantId = null, selectedGender = 'female';
 
 function toast(message, error = false) {
   const element = $('#toast');
@@ -54,8 +54,8 @@ function markMessageRead(messageId) {
 function handle(data) {
   if (data.type === 'error') { pendingSend = null; if (mode === 'student') renderStudent(); return toast(data.error, true); }
   if (data.type === 'action-ok') { if (data.message === 'Brief an den Meister übergeben.') finishSend(); return toast(data.message || 'Erledigt.'); }
-  if (data.type === 'joined') { me = data.me; state = data.state; areas = data.areas; links = data.links; tasks = data.tasks; roleForms = data.roleForms || roleForms; renderStudent(); return; }
-  if (data.type === 'teacher-ready') { state = data.state; areas = data.areas; links = data.links; tasks = data.tasks; roleForms = data.roleForms || roleForms; renderTeacher(); return; }
+  if (data.type === 'joined') { me = data.me; state = data.state; areas = data.areas; links = data.links; roleForms = data.roleForms || roleForms; renderStudent(); return; }
+  if (data.type === 'teacher-ready') { state = data.state; areas = data.areas; links = data.links; roleForms = data.roleForms || roleForms; renderTeacher(); return; }
   if (data.type === 'participant-view') { viewedParticipantId = data.participant.id; renderParticipantView(data); return; }
   if (data.type === 'state') { state = data.state; if (mode === 'student') renderStudent(); if (mode === 'teacher') { renderTeacher(); if (viewedParticipantId) send({ type: 'participant-view', id: viewedParticipantId }); } return; }
   if (data.type === 'message') {
@@ -89,7 +89,7 @@ function applyStudentHost(value) {
 }
 function bootstrap() {
   api('/api/info').then(data => {
-    info = data; areas = data.areas; links = data.links; tasks = data.tasks; roleForms = data.roleForms || {}; state = data.session;
+    info = data; areas = data.areas; links = data.links; roleForms = data.roleForms || {}; state = data.session;
     if (data.isTeacherRequest) teacherHome(data); else studentPicker(data);
   }).catch(error => toast(error.message, true));
 }
@@ -216,15 +216,17 @@ function studentHead(extra = '') {
 }
 function roleTask() {
   if (me.isMediator) return '';
-  const task = tasks[me.roleKey || me.role];
-  return task ? `<p class="play-task"><b>Auftrag:</b> ${esc(task)}</p>` : '';
+  const task = state.myTask;
+  return `<div class="play-task"><p><b>Auftrag:</b> ${task ? esc(task) : 'Gerade ist niemand erreichbar. Dein Auftrag kommt, sobald mehr Leute im Netz sind.'}</p>${task ? '<button type="button" class="button small" id="new-task">Neuer Auftrag</button>' : ''}</div>`;
 }
+function bindNewTask() { const button = $('#new-task'); if (button) button.onclick = () => { send({ type: 'new-task' }); toast('Neuer Auftrag wird geholt.'); }; }
 function renderClassicStudent() {
   const write = me.isMediator ? '' : `<section class="box play-write"><div class="box-head"><h2>Brief schreiben</h2><small>Von: ${esc(me.name)}</small></div><form id="classic-send-form" class="play-form">${roleTask()}<label>An<input id="classic-to" maxlength="80" placeholder="z. B. Rechner" autocomplete="off" required></label><label>Text<textarea id="classic-text" rows="3" maxlength="1200" placeholder="Deine Nachricht …" required></textarea></label><button class="button primary" type="submit">An meinen Meister geben</button></form></section>`;
   const inboxCount = holderMessages(me.id).length;
   if (inboxCount > (renderClassicStudent.lastCount ?? inboxCount)) toast(me.isMediator ? 'Ein Brief wartet auf dich.' : 'Ein Brief ist bei dir angekommen.');
   renderClassicStudent.lastCount = inboxCount;
   $('#student').innerHTML = `${studentHead()}<div class="play-grid classic ${inboxCount ? 'mail-first' : ''}">${write}<section class="box play-inbox ${inboxCount ? 'has-mail' : ''}"><div class="box-head"><h2>${me.isMediator ? 'Briefe weiterleiten' : 'Briefe bei dir'}</h2><small>${inboxCount} wartend</small></div>${classicInbox()}</section><section class="box play-net"><div class="box-head"><h2>Das Schlossnetz</h2><small>✉ = Brief wartet</small></div>${classicOverview()}</section><section class="box play-log"><div class="box-head"><h2>Deine Briefwege</h2></div>${classicActivity()}</section></div>`;
+  bindNewTask();
   $('#classic-send-form')?.addEventListener('submit', event => { event.preventDefault(); submitMessage({ type: 'send-classic', noteTo: $('#classic-to').value, text: $('#classic-text').value }); });
   document.querySelectorAll('.forward-target').forEach(button => button.onclick = () => send({ type: 'forward-classic', messageId: button.dataset.messageId, targetId: button.dataset.targetId }));
   document.querySelectorAll('.deliver-classic').forEach(button => button.onclick = () => send({ type: 'deliver-classic', messageId: button.dataset.messageId }));
@@ -241,13 +243,14 @@ function mediatorList() {
 function renderStudentContent() {
   mode = 'student'; show('student');
   if (state.settings.stage !== 'addressed') return renderClassicStudent();
-  const task = me.isMediator ? '<p class="play-task"><b>Auftrag:</b> Beantworte Adressanfragen. Für andere Räume fragst du dort den Namensvermittler.</p>' : roleTask();
+  const task = me.isMediator ? '<div class="play-task"><p><b>Auftrag:</b> Beantworte Adressanfragen. Für andere Räume fragst du dort den Namensvermittler.</p></div>' : roleTask();
   const mine = state.messages.filter(message => message.to === me.address || message.from === me.address);
   const read = storedMessageIds('read');
   const unread = mine.some(message => message.to === me.address && !read.has(message.id));
   $('#student').innerHTML = `${studentHead(`<div class="my-address"><small>Deine Adresse</small><b>${esc(me.address)}</b></div>`)}<div class="play-grid addressed ${unread ? 'mail-first' : ''}"><section class="box play-write"><div class="box-head"><h2>Nachricht senden</h2><small>Von: ${esc(me.address)}</small></div><form id="send-form" class="play-form">${task}<label>An (Adresse)<input id="to-address" placeholder="z. B. 3.2" autocomplete="off" required /></label><label>Nachricht<textarea id="message-text" rows="3" maxlength="1200" placeholder="Deine Nachricht …" required></textarea></label><p id="reply-context" class="reply-context ${replyTargetId ? '' : 'hidden'}">Du antwortest auf eine Nachricht.</p><button class="button primary" type="submit">Senden</button></form></section><div class="play-side"><section class="box play-room"><div class="box-head"><h2>Dein Raum</h2><small>Router ${me.router}</small></div>${roomList()}</section>${me.isMediator ? mediatorList() : ''}</div><section class="box play-log"><div class="box-head"><h2>Deine Nachrichten</h2><small>${mine.length}</small></div>${studentMessageList(mine)}</section></div>`;
   document.querySelectorAll('.reply-message').forEach(button => button.onclick = () => { markMessageRead(button.dataset.messageId); replyTargetId = button.dataset.messageId; $('#to-address').value = button.dataset.address; $('#reply-context').classList.remove('hidden'); $('#message-text').focus(); });
   document.querySelectorAll('.student-messages .incoming').forEach(card => card.onclick = event => { if (!event.target.closest('button')) markMessageRead(card.dataset.messageId); });
+  bindNewTask();
   $('#send-form').onsubmit = event => { event.preventDefault(); submitMessage({ type: 'send', to: $('#to-address').value, text: $('#message-text').value, encoding: state.settings.encoding, replyTo: replyTargetId }); };
 }
 function readOnlyParticipantList(participants) {
@@ -299,7 +302,7 @@ function renderParticipantView(data) {
   const participant = data.participant;
   const viewState = data.state;
   const area = areas[participant.router];
-  const myTask = participant.isMediator ? 'Beantworte Adressanfragen und frage bei Bedarf in anderen Räumen nach.' : tasks[participant.roleKey || participant.role] || 'Vereinbare mit der Lehrkraft ein Nachrichtenziel.';
+  const myTask = participant.isMediator ? 'Beantworte Adressanfragen und frage bei Bedarf in anderen Räumen nach.' : viewState.myTask || 'Noch kein Auftrag.';
   const previewLog = viewState.settings.stage === 'addressed' ? messageList(viewState.messages) : `<div class="teacher-classic-log">${viewState.messages.map(message => `<article>${classicNote(message)}${classicRoute(message)}</article>`).join('') || '<div class="empty">Noch keine Briefe.</div>'}</div>`;
   const phaseText = viewState.settings.phase === 'quiet' ? 'Ruhephase: Nachrichten werden nur über das Netzwerk ausgetauscht.' : viewState.settings.phase === 'paused' ? 'Die Simulation ist pausiert.' : 'Testphase: Verbinde dich und probiere das Netzwerk aus.';
   $('#participant-screen-modal')?.remove();
@@ -384,20 +387,17 @@ function renderStudent() {
 }
 function readinessNotes() {
   const online = state.participants.filter(participant => participant.online);
-  const missingMasters = Object.entries(areas).filter(([router]) => !online.some(participant => participant.router === Number(router) && participant.isMediator)).map(([, area]) => area.name);
-  const allRoles = Object.values(areas).flatMap(area => area.roles);
-  const missingTargets = [...new Set(online.filter(participant => !participant.isMediator).map(participant => {
-    const task = tasks[participant.roleKey || participant.role] || '';
-    return allRoles.find(role => task.startsWith(`Frage den ${role},`) || task.startsWith(`Frage den ${role} `));
-  }).filter(role => role && !online.some(participant => participant.roleKey === role)))];
-  return `<ul class="readiness"><li>${missingMasters.length ? `Noch ohne Meister: ${esc(missingMasters.join(', '))}. Besetze möglichst alle fünf Meisterrollen, damit jeder Raum erreichbar ist.` : 'Alle fünf Meisterrollen sind online.'}</li><li>${missingTargets.length ? `Auftragsziele fehlen: ${esc(missingTargets.join(', '))}. Besetze diese Rollen oder vereinbare für die betroffenen Teams ein anderes Ziel.` : 'Die Ziele der aktuell besetzten Rollenaufträge sind online.'}</li><li>Weniger als 30 Personen? Rollen gezielt auswählen; bei mehr Personen zu zweit an einem Gerät arbeiten. Die Meisterrollen zuerst besetzen.</li></ul>`;
+  const missingMasters = Object.entries(areas).filter(([router]) => online.some(participant => participant.router === Number(router)) && !online.some(participant => participant.router === Number(router) && participant.isMediator)).map(([, area]) => area.name);
+  const waiting = state.workersWithoutTask || 0;
+  return `<ul class="readiness"><li>${missingMasters.length ? `Ohne Meister: ${esc(missingMasters.join(', '))}. Mitarbeitende dort sind nicht erreichbar und bekommen keinen Auftrag.` : 'Jeder besetzte Bereich hat einen Meister.'}</li><li>${waiting ? `${waiting} Mitarbeitende warten noch auf einen Auftrag, weil niemand für sie erreichbar ist.` : 'Alle Mitarbeitenden haben einen Auftrag mit erreichbarem Empfänger.'}</li><li>Die Aufträge entstehen automatisch aus den angemeldeten Rollen. Wenn alle angemeldet sind, einmal „Aufträge neu verteilen“ drücken, damit die Empfänger gleichmäßig verteilt sind.</li></ul>`;
 }
 function renderTeacher() {
   const root = $('#teacher');
   const view = captureView(root);
   renderTeacherContent();
   const impulse = state.settings.stage === 'addressed' ? 'Wie wurde aus dem Namen eine Adresse (Namensvermittlung)? Wie kam die Nachricht danach ans Ziel (Routing)? Modellgrenze: Adressen wie 2.3 sind keine echten IP-Adressen, Briefe werden nicht in Pakete geteilt.' : 'Welche Angaben braucht ein Meister, um einen Brief weiterzuleiten? Wo entstehen Umwege oder Wartezeiten? Was fehlt noch, damit jeder Brief sicher ankommt?';
-  root.querySelector('.stage-control').insertAdjacentHTML('afterend', `<div class="lesson-controls" aria-label="Kommunikationsregel">${[['open', 'Reden erlaubt'], ['quiet', 'Nur im Netzwerk'], ['paused', 'Pause']].map(([phase, label]) => `<button class="button ${phase === state.settings.phase ? 'active' : ''}" data-phase="${phase}" aria-pressed="${phase === state.settings.phase}">${label}</button>`).join('')}</div><details class="teacher-notes" data-learning="teacher"><summary>Unterrichtshilfe</summary><p>Gesprächsimpuls: ${esc(impulse)}</p>${readinessNotes()}</details>`);
+  root.querySelector('.stage-control').insertAdjacentHTML('afterend', `<div class="lesson-controls" aria-label="Kommunikationsregel">${[['open', 'Reden erlaubt'], ['quiet', 'Nur im Netzwerk'], ['paused', 'Pause']].map(([phase, label]) => `<button class="button ${phase === state.settings.phase ? 'active' : ''}" data-phase="${phase}" aria-pressed="${phase === state.settings.phase}">${label}</button>`).join('')}<button class="button" id="redistribute-tasks">Aufträge neu verteilen</button></div><details class="teacher-notes" data-learning="teacher"><summary>Unterrichtshilfe</summary><p>Rahmengeschichte zum Vorlesen: Heute Abend feiert der König Geburtstag, alle bereiten das Fest vor. Und irgendwo im Schloss ist sein goldener Löffel verschwunden … Einige Aufträge fragen danach; am Ende kann die Klasse sammeln, wo er überall gesucht wurde.</p><p>Gesprächsimpuls: ${esc(impulse)}</p>${readinessNotes()}</details>`);
+  $('#redistribute-tasks').onclick = () => { if (confirm('Alle Aufträge neu verteilen? Angefangene Aufträge werden ersetzt.')) send({ type: 'redistribute-tasks' }); };
   if (state.settings.showBinary) root.insertAdjacentHTML('beforeend', '<p class="encoding-note">Binär-Zusatz: Der Text wird in UTF-8 codiert, nicht allgemein in ASCII. Modelladressen sind keine echten IP-Adressen.</p>');
   root.querySelectorAll('[data-phase]').forEach(button => { button.onclick = () => send({ type: 'settings', phase: button.dataset.phase }); });
   restoreView(root, view);

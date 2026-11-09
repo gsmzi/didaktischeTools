@@ -67,6 +67,21 @@ async function join(code, router, role, gender = 'male') {
     const bakeryMaster = await join(code, 2, 'Bäckermeister'); clients.push(bakeryMaster);
     const buyer = await join(code, 2, 'Einkäufer'); clients.push(buyer);
 
+    // Auftragsgenerator: Ziel ist eine erreichbare Person, nie man selbst, nie ein Meister.
+    let cookState = await cook.wait(message => message.type === 'state' && message.state.myTask);
+    assert.match(cookState.state.myTask, /den Einkäufer/);
+    cook.send({ type: 'new-task' });
+    cookState = await cook.wait(message => message.type === 'state' && message.state.myTask);
+    assert.match(cookState.state.myTask, /den Einkäufer/, 'Ist nur ein Ziel erreichbar, bleibt es dieses Ziel.');
+    const calculator = await join(code, 3, 'Rechner', 'female'); clients.push(calculator);
+    assert.equal((await fetch(`${base}/api/session/${code}`).then(r => r.json())).participants.length, 5);
+    calculator.discard(() => true);
+    const treasuryMaster = await join(code, 3, 'Kämmereimeister'); clients.push(treasuryMaster);
+    const calcState = await calculator.wait(message => message.type === 'state' && message.state.myTask);
+    assert.match(calcState.state.myTask, /den (Koch|Einkäufer)/, 'Erst mit eigenem Meister gibt es einen Auftrag.');
+    const buyerState = await buyer.wait(message => message.type === 'state' && message.state.myTask);
+    assert.ok(/den Koch|die Rechnerin/.test(buyerState.state.myTask));
+
     cook.send({ type: 'send-classic', text: 'Ohne Empfänger' });
     await cook.wait(message => message.type === 'error' && /Empfänger/.test(message.error));
     cook.send({ type: 'send-classic', noteTo: 'Einkäufer', text: 'Wie viel Geld ist da?' });

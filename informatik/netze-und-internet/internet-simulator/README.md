@@ -13,6 +13,15 @@ Digitale Fortsetzung des Rollenspiels „Netzwerk“ (Schlossnetzwerk): gleiche 
 
 Die Schülerseite zeigt nur das Nötigste, Erklärungen kommen von der Lehrkraft vorab: oben Rolle und (in Phase 2) die eigene Adresse, darunter direkt „Brief schreiben“ bzw. „Nachricht senden“ mit dem Rollenauftrag, die wartenden Briefe, das Netz bzw. der eigene Raum und die eigenen Briefwege. Empfangene Briefe kann man in Phase 1 beantworten, ablegen oder an den Meister zurückgeben.
 
+### Aufträge
+
+Jede Mitarbeiterin und jeder Mitarbeiter bekommt automatisch einen Auftrag mit einem Empfänger, der gerade online und erreichbar ist (Phase 1: über eine Kette von Meistern, Phase 2: beide Namensvermittler online). Bevorzugt werden Empfänger in anderen Räumen, und die Empfänger werden gleichmäßig verteilt. Damit entfällt die Rollenauswahl nach Klassengröße; nur die Meister sollten zuerst besetzt werden.
+
+- **Neuer Auftrag:** Schülerinnen und Schüler holen sich per Klick den nächsten Auftrag.
+- **Aufträge neu verteilen (Lehrkraft):** Sobald alle angemeldet sind, einmal drücken. Dann ist jede Person etwa gleich oft Empfänger.
+- Fällt ein Empfänger oder ein Meister weg, bekommen die Betroffenen automatisch einen neuen Auftrag.
+- **Rahmengeschichte:** Heute Abend feiert der König Geburtstag, alle Aufträge drehen sich um die Vorbereitung. In jedem Bereich gibt es außerdem einen Auftrag zum verschwundenen goldenen Löffel des Königs. Am Ende kann die Klasse sammeln, wo überall gesucht wurde. Antworten dürfen erfunden werden.
+
 ### Steuerung
 
 - Die Lehrkraft schaltet die Phase für alle Geräte gleichzeitig um. Rollen bleiben erhalten.

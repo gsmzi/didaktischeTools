@@ -43,3 +43,4 @@
 .room-list li.offline{background:none}
 @media(max-width:800px){.play-grid.addressed.mail-first{grid-template-areas:"log" "write" "side"}}
 @media(max-width:700px){.message-packet .message-line{grid-template-columns:44px 46px 46px minmax(0,1fr)}.message-packet .message-line>b{padding:7px 4px;font-size:8px;letter-spacing:0;overflow-wrap:normal}.message-packet .message-line>span{padding:7px 5px}.play-log .messages .message-card{margin-left:10px;margin-right:10px}}
+.play-task{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}.play-task p{margin:0;flex:1 1 220px}.play-task .button{flex:0 0 auto}
