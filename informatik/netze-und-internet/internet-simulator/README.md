@@ -17,7 +17,7 @@ Die Schülerseite zeigt nur das Nötigste, Erklärungen kommen von der Lehrkraft
 
 Jede Mitarbeiterin und jeder Mitarbeiter bekommt automatisch einen Auftrag mit einem Empfänger, der gerade online und erreichbar ist (Phase 1: über eine Kette von Meistern, Phase 2: beide Namensvermittler online). Bevorzugt werden Empfänger in anderen Räumen, und die Empfänger werden gleichmäßig verteilt. Damit entfällt die Rollenauswahl nach Klassengröße; nur die Meister sollten zuerst besetzt werden.
 
-- **Neuer Auftrag:** Schülerinnen und Schüler holen sich per Klick den nächsten Auftrag.
+- **Neuer Auftrag:** Schülerinnen und Schüler holen sich per Klick den nächsten Auftrag. Nach jedem neuen Auftrag ist der Knopf 60 s gesperrt (Countdown auf dem Knopf), damit niemand Aufträge durchklickt. Die Sperre prüft der Server; Neuladen hilft nicht.
 - **Aufträge neu verteilen (Lehrkraft):** Sobald alle angemeldet sind, einmal drücken. Dann ist jede Person etwa gleich oft Empfänger.
 - Fällt ein Empfänger oder ein Meister weg, bekommen die Betroffenen automatisch einen neuen Auftrag.
 - **Rahmengeschichte:** Heute Abend feiert der König Geburtstag, alle Aufträge drehen sich um die Vorbereitung. In jedem Bereich gibt es außerdem einen Auftrag zum verschwundenen goldenen Löffel des Königs. Am Ende kann die Klasse sammeln, wo überall gesucht wurde. Antworten dürfen erfunden werden.

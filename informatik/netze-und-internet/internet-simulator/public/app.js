@@ -2,6 +2,7 @@ const $ = (selector) => document.querySelector(selector);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
 
 let pendingSend = null;
+let taskReadyAt = 0, taskTimer = null;
 const drafts = {};
 
 let ws, info, areas = {}, links = [], roleForms = {}, me = null, state = null, mode = null, replyTargetId = null, viewedParticipantId = null, selectedGender = 'female';
@@ -54,6 +55,7 @@ function markMessageRead(messageId) {
 function handle(data) {
   if (data.type === 'error') { pendingSend = null; if (mode === 'student') renderStudent(); return toast(data.error, true); }
   if (data.type === 'action-ok') { if (data.message === 'Brief an den Meister übergeben.') finishSend(); return toast(data.message || 'Erledigt.'); }
+  if (data.state?.myTaskWait != null) taskReadyAt = Date.now() + data.state.myTaskWait;
   if (data.type === 'joined') { me = data.me; state = data.state; areas = data.areas; links = data.links; roleForms = data.roleForms || roleForms; renderStudent(); return; }
   if (data.type === 'teacher-ready') { state = data.state; areas = data.areas; links = data.links; roleForms = data.roleForms || roleForms; renderTeacher(); return; }
   if (data.type === 'participant-view') { viewedParticipantId = data.participant.id; renderParticipantView(data); return; }
@@ -219,7 +221,13 @@ function roleTask() {
   const task = state.myTask;
   return `<div class="play-task"><p><b>Auftrag:</b> ${task ? esc(task) : 'Gerade ist niemand erreichbar. Dein Auftrag kommt, sobald mehr Leute im Netz sind.'}</p>${task ? '<button type="button" class="button small" id="new-task">Neuer Auftrag</button>' : ''}</div>`;
 }
-function bindNewTask() { const button = $('#new-task'); if (button) button.onclick = () => { send({ type: 'new-task' }); toast('Neuer Auftrag wird geholt.'); }; }
+function bindNewTask() {
+  clearInterval(taskTimer);
+  const button = $('#new-task'); if (!button) return;
+  const update = () => { const left = Math.ceil((taskReadyAt - Date.now()) / 1000); button.disabled = left > 0; button.textContent = left > 0 ? `Neuer Auftrag (${left} s)` : 'Neuer Auftrag'; button.title = left > 0 ? 'Bearbeite zuerst deinen Auftrag.' : ''; if (left <= 0) clearInterval(taskTimer); };
+  update(); taskTimer = setInterval(update, 1000);
+  button.onclick = () => { send({ type: 'new-task' }); };
+}
 function renderClassicStudent() {
   const write = me.isMediator ? '' : `<section class="box play-write"><div class="box-head"><h2>Brief schreiben</h2><small>Von: ${esc(me.name)}</small></div><form id="classic-send-form" class="play-form">${roleTask()}<label>An<input id="classic-to" maxlength="80" placeholder="z. B. Rechner" autocomplete="off" required></label><label>Text<textarea id="classic-text" rows="3" maxlength="1200" placeholder="Deine Nachricht …" required></textarea></label><button class="button primary" type="submit">An meinen Meister geben</button></form></section>`;
   const inboxCount = holderMessages(me.id).length;

@@ -26,6 +26,7 @@ const roleForms = {
   'Schneidermeister': 'Schneidermeisterin', 'Vermesser': 'Vermesserin', 'Näher': 'Näherin', 'Knopfsucher': 'Knopfsucherin', 'Fadenaufwickler': 'Fadenaufwicklerin', 'Zuschneider': 'Zuschneiderin'
 };
 const links = [[1, 2], [1, 3], [1, 5], [2, 4], [4, 5]];
+const TASK_WAIT_MS = Number(process.env.TASK_WAIT_MS || 60 * 1000); // Nach jedem neuen Auftrag 60 s Sperre für „Neuer Auftrag“, damit niemand Aufträge durchklickt.
 // Auftragsgenerator: Heute Abend feiert der König Geburtstag. Nebenbei ist sein goldener Löffel verschwunden.
 // Die Texte hängen vom Bereich des Empfängers ab. {ziel} wird zu „den Koch“ bzw. „die Köchin“.
 const taskTemplates = {
@@ -113,6 +114,7 @@ function assignTask(session, p, avoidTargetId = null) {
   const fresh = taskTemplates[target.router].filter(text => !p.usedTasks.includes(text));
   const template = shuffle(fresh.length ? fresh : taskTemplates[target.router])[0];
   p.usedTasks = [...p.usedTasks, template].slice(-12);
+  p.nextTaskAt = Date.now() + TASK_WAIT_MS;
   p.task = { targetId: target.id, text: template.replace('{ziel}', `${target.gender === 'male' ? 'den' : 'die'} ${target.name}`) };
 }
 // Ergänzt fehlende und ersetzt ungültig gewordene Aufträge (Ziel weg, Meister weg, Phasenwechsel).
@@ -161,7 +163,7 @@ function sessionView(session, viewer = null) {
     participants: visibleParticipants(session, viewer).map(publicParticipant),
     messages: messages.slice(-100).map(message => publicMessage(session, message, viewer)),
     settings: session.settings,
-    ...(viewer ? { myTask: viewer.task?.text || null } : { workersWithoutTask: onlineWorkers(session).filter(p => !p.task).length })
+    ...(viewer ? { myTask: viewer.task?.text || null, myTaskWait: Math.max(0, (viewer.nextTaskAt || 0) - Date.now()) } : { workersWithoutTask: onlineWorkers(session).filter(p => !p.task).length })
   };
 }
 function pickerView(session) {
@@ -395,7 +397,7 @@ function onSocketMessage(ws, data) {
   if (data.type === 'forward-classic' && ws.participant) { const result = forwardClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief weitergeleitet.' })); return; }
   if (data.type === 'deliver-classic' && ws.participant) { const result = deliverClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief abgelegt.' })); return; }
   if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; refreshTasks(session); broadcastState(session); return; }
-  if (data.type === 'new-task' && ws.participant && !ws.participant.isMediator) { assignTask(session, ws.participant, ws.participant.task?.targetId); broadcastState(session); return; }
+  if (data.type === 'new-task' && ws.participant && !ws.participant.isMediator) { const wait = Math.ceil(((ws.participant.nextTaskAt || 0) - Date.now()) / 1000); if (wait > 0) return ws.send(JSON.stringify({ type: 'error', error: `Einen neuen Auftrag gibt es erst in ${wait} s. Bearbeite zuerst diesen.` })); assignTask(session, ws.participant, ws.participant.task?.targetId); broadcastState(session); return; }
   if (data.type === 'redistribute-tasks' && session.teacher === ws) { redistributeTasks(session); broadcastState(session); return ws.send(JSON.stringify({ type: 'action-ok', message: 'Aufträge neu verteilt.' })); }
   if (data.type === 'clear-log' && session.teacher === ws) { session.messages = []; broadcastState(session); return; }
   if (data.type === 'remove' && session.teacher === ws) { const p = session.participants.get(data.id); if (p) { const client = clients.get(p.id); if (client) { client.send(JSON.stringify({ type: 'error', error: 'Du wurdest aus dem Raum entfernt.' })); client.socket.end(); } session.participants.delete(p.id); clients.delete(p.id); refreshTasks(session); broadcastState(session); } }

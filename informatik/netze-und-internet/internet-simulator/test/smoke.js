@@ -5,7 +5,7 @@ const port = 8091;
 const base = `http://127.0.0.1:${port}`;
 const server = spawn(process.execPath, ['server.js'], {
   cwd: require('path').join(__dirname, '..'),
-  env: { PORT: String(port) },
+  env: { PORT: String(port), TASK_WAIT_MS: '1500' },
   stdio: ['ignore', 'pipe', 'pipe']
 });
 
@@ -70,6 +70,11 @@ async function join(code, router, role, gender = 'male') {
     // Auftragsgenerator: Ziel ist eine erreichbare Person, nie man selbst, nie ein Meister.
     let cookState = await cook.wait(message => message.type === 'state' && message.state.myTask);
     assert.match(cookState.state.myTask, /den Einkäufer/);
+    assert.ok(cookState.state.myTaskWait > 0, 'Nach einem neuen Auftrag läuft die Wartezeit.');
+    cook.send({ type: 'new-task' });
+    await cook.wait(message => message.type === 'error' && /erst in/.test(message.error));
+    await delay(1600);
+    cook.discard(() => true);
     cook.send({ type: 'new-task' });
     cookState = await cook.wait(message => message.type === 'state' && message.state.myTask);
     assert.match(cookState.state.myTask, /den Einkäufer/, 'Ist nur ein Ziel erreichbar, bleibt es dieses Ziel.');
