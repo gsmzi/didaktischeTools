@@ -5,6 +5,7 @@
 .play-head h1 span{color:#a5b4b3}
 .my-address{text-align:right;flex:0 0 auto}.my-address small{display:block;color:var(--muted);font:500 10px 'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em}.my-address b{display:inline-block;margin-top:4px;padding:6px 12px;border-radius:10px;background:var(--teal-dark);color:#fff;font:700 22px 'DM Mono',monospace}
 .play-status{margin:0 0 16px;padding:10px 14px;border-radius:10px;background:#edf7f3;border:1px solid #c8ded8;font-size:14px}.play-status.paused{background:#fff4d7;border-color:#d8b45d;color:#624d16}
+.play-story-hint{margin:0 0 16px}
 .play-grid{display:grid;gap:16px;min-width:0}
 .play-grid>*{min-width:0}
 .play-grid.classic{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"write net" "inbox net" "log log";align-items:start}

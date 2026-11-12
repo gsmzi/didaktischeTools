@@ -84,6 +84,13 @@ async function join(code, router, role, gender = 'male') {
     const treasuryMaster = await join(code, 3, 'Kämmereimeister'); clients.push(treasuryMaster);
     const calcState = await calculator.wait(message => message.type === 'state' && message.state.myTask);
     assert.match(calcState.state.myTask, /den (Koch|Einkäufer)/, 'Erst mit eigenem Meister gibt es einen Auftrag.');
+    const initialAddresses = new Map(clients.filter(client => client.me).map(client => [client.me.id, client.me.address]));
+    assert.equal(new Set(initialAddresses.values()).size, initialAddresses.size, 'Alle vollständigen Adressen sind eindeutig.');
+    for (const client of clients.filter(client => client.me)) {
+      const [router, slot] = client.me.address.split('.').map(Number);
+      assert.equal(router, client.me.router, 'Die erste Zahl bezeichnet weiterhin den Raum.');
+      assert.ok(Number.isInteger(slot) && slot >= 0 && slot <= 100, 'Teilnehmer und Meister haben Nummern von 0 bis 100.');
+    }
     const buyerState = await buyer.wait(message => message.type === 'state' && message.state.myTask);
     assert.ok(/den Koch|die Rechnerin/.test(buyerState.state.myTask));
 
@@ -134,7 +141,8 @@ async function join(code, router, role, gender = 'male') {
     assert.equal(stillStructured.settings.stage, 'structured', 'Die alte Phase explore gibt es nicht mehr.');
 
     teacher.send({ type: 'settings', stage: 'addressed' });
-    await teacher.wait(message => message.type === 'state' && message.state.settings.stage === 'addressed');
+    const addressedState = await teacher.wait(message => message.type === 'state' && message.state.settings.stage === 'addressed');
+    for (const participant of addressedState.state.participants) assert.equal(participant.address, initialAddresses.get(participant.id), 'Der Phasenwechsel ändert keine Adresse.');
     cook.send({ type: 'send', to: buyer.me.address, text: 'Adressierte Testnachricht' });
     const delivered = await buyer.wait(message => message.type === 'message' && message.direction === 'received');
     assert.equal(delivered.message.stage, 'addressed');
@@ -146,8 +154,8 @@ async function join(code, router, role, gender = 'male') {
     await cook.wait(message => message.type === 'error' && /Denkpause/.test(message.error));
     const addressedPause = await fetch(`${base}/api/session/${code}`).then(response => response.json());
     assert.equal(addressedPause.messages.length, 1);
-    teacher.send({ type: 'settings', phase: 'quiet' });
-    await teacher.wait(message => message.type === 'state' && message.state.settings.phase === 'quiet');
+    teacher.send({ type: 'settings', phase: 'open' });
+    await teacher.wait(message => message.type === 'state' && message.state.settings.phase === 'open');
     cook.send({ type: 'send', to: buyer.me.address, text: 'Nach Freigabe' });
     await buyer.wait(message => message.type === 'message' && message.message.text === 'Nach Freigabe');
 

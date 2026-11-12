@@ -27,58 +27,59 @@ const roleForms = {
 };
 const links = [[1, 2], [1, 3], [1, 5], [2, 4], [4, 5]];
 const TASK_WAIT_MS = Number(process.env.TASK_WAIT_MS || 60 * 1000); // Nach jedem neuen Auftrag 60 s Sperre für „Neuer Auftrag“, damit niemand Aufträge durchklickt.
-// Auftragsgenerator: Heute Abend feiert der König Geburtstag. Nebenbei ist sein goldener Löffel verschwunden.
+// Auftragsgenerator: kurze, frei erfundene Festgeschichten. Pro Nachricht genügt ein Satz.
+// Einige Aufträge führen nach der Antwort zu einer kurzen Rückmeldung; der Löffel bleibt ein gemeinsames Gerücht.
 // Die Texte hängen vom Bereich des Empfängers ab. {ziel} wird zu „den Koch“ bzw. „die Köchin“.
 const taskTemplates = {
   1: [
-    'Frage {ziel}, ob die Suppe für das Geburtstagsfest schon gesalzen ist – und wie oft.',
-    'Frage {ziel}, wie viele Kartoffeln man für 200 Festgäste schälen muss.',
-    'Frage {ziel}, ob vom Probeessen noch etwas übrig ist. Du hast nämlich Hunger.',
-    'Frage {ziel}, warum es in der Küche so verdächtig nach angebranntem Pudding riecht.',
-    'Frage {ziel}, ob in der Küche jemand den goldenen Löffel des Königs gesehen hat.',
-    'Frage {ziel}, welches Gericht der König am liebsten isst und welches er gar nicht mag.',
-    'Bitte {ziel}, dir das geheime Rezept für die Festsoße zu verraten.',
-    'Frage {ziel}, ob es in der Küche einen Topf gibt, in den ein ganzes Wildschwein passt.'
+    'Die Geburtstagssuppe schmeckt nach Badewasser. Bitte {ziel} um eine Rettungsidee.',
+    'Der König wünscht sich eckige Kartoffeln. Frage {ziel}, wie das gehen soll.',
+    'Du hast das Probeessen ganz aufgegessen. Bitte {ziel} um eine gute Ausrede für den König.',
+    'Der Pudding raucht verdächtig. Frage {ziel}, ob er noch auf die Festtafel darf. Antworte danach kurz, ob du dich traust, ihn zu probieren.',
+    'Der goldene Löffel ist weg. Frage {ziel} nach einem verdächtigen Fund in der Küche.',
+    'Für das Fest fehlt ein Nachtisch. Bitte {ziel} um einen verrückten Vorschlag. Schreibe zurück, ob du ihn bestellst.',
+    'Die Festsoße glitzert im Dunkeln. Frage {ziel} nach der geheimen Zutat.',
+    'Der König will Suppe mit der Gabel essen. Bitte {ziel} um einen Tipp. Antworte danach kurz, ob du ihn ausprobierst.'
   ],
   2: [
-    'Frage {ziel}, wie viele Stockwerke die Geburtstagstorte des Königs bekommt.',
-    'Frage {ziel}, ob die Brezeln heute wieder so hart sind wie letzte Woche.',
-    'Frage {ziel}, ob du altes Brot für die Pferde des Königs abholen darfst.',
-    'Bitte {ziel}, deinen Namen mit Zuckerguss auf ein Plätzchen zu schreiben.',
-    'Frage {ziel}, ob in einem Brotteig zufällig ein goldener Löffel aufgetaucht ist.',
-    'Frage {ziel}, wann der Ofen heiß genug für die Festbrote ist.',
-    'Frage {ziel}, wie viele Kerzen auf die Geburtstagstorte passen, ohne dass sie schmilzt.',
-    'Frage {ziel}, ob man Mehl als Schnee für die Festdekoration nehmen kann.'
+    'Die Geburtstagstorte passt nicht durch die Tür. Bitte {ziel} um einen Plan. Die Tür muss heil bleiben.',
+    'Die Festbrezeln sind hart wie Ziegelsteine. Frage {ziel}, wofür man sie noch gebrauchen kann.',
+    'Das königliche Pferd will auch ein Stück Torte. Frage {ziel} nach einer passenden Geschmacksrichtung.',
+    'Bitte {ziel} um ein Plätzchen mit einem lustigen Spruch für den König.',
+    'Der goldene Löffel ist weg. Frage {ziel}, ob etwas Goldenes aus dem Brotteig ragt.',
+    'Du brauchst eine Torte in Drachenform. Frage {ziel}, ob das klappt. Antworte auf den Bescheid mit einem Dank oder einem Ersatzwunsch.',
+    'Auf der Torte ist nur Platz für eine Kerze. Bitte {ziel} um eine Lösung. Schreibe zurück, ob der König damit zufrieden wäre.',
+    'Du willst es beim Fest Mehl schneien lassen. Frage {ziel} nach einer besseren Idee. Schreibe zurück, ob du sie nimmst.'
   ],
   3: [
-    'Frage {ziel}, wie viele Goldmünzen das Geburtstagsfest heute Abend kostet.',
-    'Frage {ziel}, ob du einen Vorschuss für neue Festschuhe bekommen kannst.',
-    'Frage {ziel}, wie viel 17 mal 12 Taler sind.',
-    'Frage {ziel}, ob in der Schatzkammer seit gestern ein goldener Löffel fehlt.',
-    'Bitte {ziel}, nachzuzählen, ob im Festsäckchen wirklich 100 Taler sind.',
-    'Frage {ziel}, ob genug Geld für das Geschenk an den König in der Gemeinschaftskasse ist.',
-    'Frage {ziel}, warum die frisch gewaschenen Münzen noch tropfen.',
-    'Frage {ziel}, wie viel Trinkgeld die Musikanten heute Abend bekommen.'
+    'Du willst dem König eine goldene Kartoffel schenken. Bitte {ziel} mit einer kurzen Begründung um zwölf Taler.',
+    'Deine Festschuhe quietschen bei jedem Schritt. Frage {ziel}, ob die Kasse neue bezahlt. Antworte danach mit einem Dank oder einem Gegenvorschlag.',
+    'Ein Gast möchte mit Schokomünzen bezahlen. Frage {ziel}, ob das beim Fest erlaubt ist.',
+    'Der goldene Löffel ist weg. Frage {ziel}, ob jemand versucht hat, ihn gegen Kleingeld zu tauschen.',
+    'Im Geldsäckchen klappert nur ein Knopf. Bitte {ziel} um eine Erklärung.',
+    'Das Geld reicht nur für Musik oder Nachtisch. Frage {ziel} nach einer Empfehlung. Schreibe zurück, wofür du dich entscheidest.',
+    'Die frisch gewaschenen Münzen tropfen noch. Frage {ziel}, wo man sie zum Trocknen aufhängen darf.',
+    'Die Musikanten wollen als Lohn Kuchen. Bitte {ziel} um ein Angebot in Kuchenstücken. Schreibe zurück, ob du es fair findest.'
   ],
   4: [
-    'Frage {ziel}, ob der Festmantel des Königs bis heute Abend trocken ist.',
-    'Frage {ziel}, ob man einen Soßenfleck aus einer weißen Tischdecke herausbekommt.',
-    'Frage {ziel}, warum alle Socken des Königs plötzlich rosa sind.',
-    'Frage {ziel}, ob beim Waschen ein goldener Löffel in einer Hosentasche gefunden wurde.',
-    'Bitte {ziel}, deine Festschürze bis heute Abend zu bügeln.',
-    'Frage {ziel}, wie heiß das Wasser für 300 Festservietten sein muss.',
-    'Frage {ziel}, ob auf der Wäscheleine noch Platz für die Festfahnen ist.',
-    'Frage {ziel}, wie lange man ein Paar Stinkestiefel einweichen muss.'
+    'Der Festmantel ist nach der Wäsche puppengroß. Bitte {ziel} um Hilfe. Der König weiß noch nichts.',
+    'Der Soßenfleck auf der Tischdecke sieht aus wie der König. Frage {ziel}, ob er wegmuss oder als Deko bleiben darf.',
+    'Alle Königssocken sind plötzlich rosa. Bitte {ziel} um eine Ausrede. Schreibe zurück, ob du sie dem König erzählen würdest.',
+    'Der goldene Löffel ist weg. Frage {ziel}, ob beim Waschen etwas Verdächtiges in einer Hosentasche war.',
+    'Deine Festschürze steht vor lauter Stärke von allein. Frage {ziel}, wie du wieder hineinkommst.',
+    'Die Servietten riechen nach Zwiebelsuppe. Bitte {ziel} um einen Rettungsvorschlag. Schreibe zurück, ob du ihn ausprobieren willst.',
+    'Auf der Wäscheleine hängen nur linke Socken. Frage {ziel}, wohin die rechten verschwunden sind.',
+    'Die Stinkestiefel des Königs dürfen nicht in den Festsaal. Bitte {ziel} um eine Idee. Schreibe zurück, ob du sie nimmst.'
   ],
   5: [
-    'Frage {ziel}, ob dein Festgewand bis heute Abend fertig wird.',
-    'Frage {ziel}, wie viel Stoff man für einen Geburtstagsumhang mit Schleppe braucht.',
-    'Frage {ziel}, ob noch goldene Knöpfe für die Festkleidung da sind.',
-    'Frage {ziel}, wann du zum Maßnehmen für eine neue Mütze vorbeikommen kannst.',
-    'Frage {ziel}, ob in einem Nähkästchen ein goldener Löffel aufgetaucht ist.',
-    'Frage {ziel}, welche Farbe die Fahnen für das Geburtstagsfest bekommen.',
-    'Frage {ziel}, wie der Riss in der Hose des Königs entstanden ist.',
-    'Frage {ziel}, ob man aus alten Vorhängen noch Festkleider nähen kann.'
+    'Du brauchst eine Festhose mit Geheimtasche für drei Brötchen. Frage {ziel}, ob das unauffällig geht.',
+    'Die Schleppe des Königs ist länger als der Festsaal. Bitte {ziel} um eine Lösung, bei der niemand stolpert.',
+    'Die goldenen Knöpfe sind alle weg. Bitte {ziel} um einen lustigen Ersatz. Schreibe zurück, ob du ihn annähen lässt.',
+    'Deine Festmütze rutscht dir bis zum Kinn. Frage {ziel}, wie sie oben bleibt.',
+    'Der goldene Löffel ist weg. Frage {ziel}, ob er versehentlich in ein Festgewand eingenäht wurde.',
+    'Für deinen Umhang gibt es nur Rosa oder Erbsengrün. Frage {ziel} nach einer Empfehlung. Schreibe zurück, welche Farbe du nimmst.',
+    'Die Festhose des Königs ist hinten gerissen. Bitte {ziel} um eine unauffällige Lösung. Schreibe zurück, ob du dem Plan vertraust.',
+    'Du willst aus dem alten Thronvorhang ein Festgewand machen lassen. Bitte {ziel} mit einer kurzen Begründung darum.'
   ]
 };
 function shuffle(list) { const copy = [...list]; for (let i = copy.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [copy[i], copy[j]] = [copy[j], copy[i]]; } return copy; }
@@ -207,7 +208,9 @@ function routePath(from, to) {
 }
 function assignAddress(session, router) {
   const used = new Set([...session.participants.values()].filter(p => p.router === router).map(p => Number(p.address.split('.')[1])));
-  let slot = 1; while (used.has(slot)) slot += 1;
+  const available = Array.from({ length: 101 }, (_, slot) => slot).filter(slot => !used.has(slot));
+  if (!available.length) throw new Error('In diesem Raum ist keine Teilnehmernummer mehr frei.');
+  const slot = available[crypto.randomInt(available.length)];
   return `${router}.${slot}`;
 }
 function removeParticipant(session, participant) {
@@ -396,7 +399,7 @@ function onSocketMessage(ws, data) {
   if (data.type === 'send-classic' && ws.participant) { const result = sendClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief an den Meister übergeben.' })); return; }
   if (data.type === 'forward-classic' && ws.participant) { const result = forwardClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief weitergeleitet.' })); return; }
   if (data.type === 'deliver-classic' && ws.participant) { const result = deliverClassicMessage(session, ws.participant, data); ws.send(JSON.stringify(result.error ? { type: 'error', error: result.error } : { type: 'action-ok', message: 'Brief abgelegt.' })); return; }
-  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'quiet', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; refreshTasks(session); broadcastState(session); return; }
+  if (data.type === 'settings' && session.teacher === ws) { session.settings = { ...session.settings, stage: ['structured', 'addressed'].includes(data.stage) ? data.stage : session.settings.stage, phase: ['open', 'paused'].includes(data.phase) ? data.phase : session.settings.phase, encoding: data.encoding === undefined ? session.settings.encoding : data.encoding === 'binary' ? 'binary' : 'ascii', showBinary: data.showBinary === undefined ? session.settings.showBinary : data.showBinary === true, showTasks: data.showTasks === undefined ? session.settings.showTasks : data.showTasks === true, studentHost: data.studentHost === undefined ? session.settings.studentHost : clean(data.studentHost, 120) }; refreshTasks(session); broadcastState(session); return; }
   if (data.type === 'new-task' && ws.participant && !ws.participant.isMediator) { const wait = Math.ceil(((ws.participant.nextTaskAt || 0) - Date.now()) / 1000); if (wait > 0) return ws.send(JSON.stringify({ type: 'error', error: `Einen neuen Auftrag gibt es erst in ${wait} s. Bearbeite zuerst diesen.` })); assignTask(session, ws.participant, ws.participant.task?.targetId); broadcastState(session); return; }
   if (data.type === 'redistribute-tasks' && session.teacher === ws) { redistributeTasks(session); broadcastState(session); return ws.send(JSON.stringify({ type: 'action-ok', message: 'Aufträge neu verteilt.' })); }
   if (data.type === 'clear-log' && session.teacher === ws) { session.messages = []; broadcastState(session); return; }

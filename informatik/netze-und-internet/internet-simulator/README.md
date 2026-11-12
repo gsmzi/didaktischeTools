@@ -9,7 +9,11 @@ Digitale Fortsetzung des Rollenspiels „Netzwerk“ (Schlossnetzwerk): gleiche 
 | Phase | Klasse | Was passiert |
 | --- | --- | --- |
 | 1 · Netzwerkspiel | 6 | Das Netzwerkspiel in digital: Briefe mit Von · An · Text gehen an den eigenen Meister, Meister leiten jeden Brief von Hand an eine Person im Raum oder einen verbundenen Meister weiter. |
-| 2 · Adressen | 8 | Jede Rolle hat eine Adresse `Router.Teilnehmer` (z. B. `2.3`). Die Meister sind Namensvermittler (wie DNS); die Weiterleitung übernimmt der Simulator (Routing). |
+| 2 · Adressen | 8 | Jede Rolle hat eine Adresse `Router.Teilnehmer` (z. B. `2.74`). Die Meister sind Namensvermittler (wie DNS); die Weiterleitung übernimmt der Simulator (Routing). |
+
+Die Teilnehmernummer wird beim Beitritt zufällig von **0 bis 100** vergeben und ist innerhalb des Raums eindeutig. Das gilt auch für die Meister: Namensvermittler haben keine feste Endnummer. Die Raumnummer vor dem Punkt bleibt erhalten. Beim Phasenwechsel bleibt die Adresse gleich; bei einem erneuten Beitritt wird sie neu ausgelost. Diese vereinfachten Modelladressen sind keine echten IP-Adressen.
+
+Rollenkarten und Hinweise am Meistersymbol nennen die Rolle in Phase 1 „Meister“ bzw. „Meisterin“, erst in Phase 2 „Namensvermittler“ bzw. „Namensvermittlerin“. Auch der Rollenauftrag in der Lehrervorschau richtet sich nach der aktuellen Phase.
 
 Die Schülerseite zeigt nur das Nötigste, Erklärungen kommen von der Lehrkraft vorab: oben Rolle und (in Phase 2) die eigene Adresse, darunter direkt „Brief schreiben“ bzw. „Nachricht senden“ mit dem Rollenauftrag, die wartenden Briefe, das Netz bzw. der eigene Raum und die eigenen Briefwege. Empfangene Briefe kann man in Phase 1 beantworten, ablegen oder an den Meister zurückgeben.
 
@@ -20,12 +24,14 @@ Jede Mitarbeiterin und jeder Mitarbeiter bekommt automatisch einen Auftrag mit e
 - **Neuer Auftrag:** Schülerinnen und Schüler holen sich per Klick den nächsten Auftrag. Nach jedem neuen Auftrag ist der Knopf 60 s gesperrt (Countdown auf dem Knopf), damit niemand Aufträge durchklickt. Die Sperre prüft der Server; Neuladen hilft nicht.
 - **Aufträge neu verteilen (Lehrkraft):** Sobald alle angemeldet sind, einmal drücken. Dann ist jede Person etwa gleich oft Empfänger.
 - Fällt ein Empfänger oder ein Meister weg, bekommen die Betroffenen automatisch einen neuen Auftrag.
-- **Rahmengeschichte:** Heute Abend feiert der König Geburtstag, alle Aufträge drehen sich um die Vorbereitung. In jedem Bereich gibt es außerdem einen Auftrag zum verschwundenen goldenen Löffel des Königs. Am Ende kann die Klasse sammeln, wo überall gesucht wurde. Antworten dürfen erfunden werden.
+- **Rahmengeschichte:** Heute Abend feiert der König Geburtstag. Die Aufträge drehen sich um kleine Pannen, verrückte Wünsche und Entscheidungen bei der Vorbereitung. Ein kurzer Satz pro Nachricht genügt; Antworten zur Festgeschichte dürfen erfunden werden. Dieser Hinweis steht in beiden Phasen direkt auf der Schülerseite. Adressen werden weiterhin korrekt bei den Namensvermittlern erfragt.
+- **Kurzer Austausch:** Je drei der acht Aufträge pro Bereich bitten ausdrücklich darum, die Antwort abzuwarten und darauf kurz zu reagieren, etwa mit einer Entscheidung, einem Dank oder einem Ersatzwunsch. Auch dabei genügt pro Nachricht ein Satz.
+- **Goldener Löffel:** In jedem Bereich gibt es einen Auftrag zum verschwundenen goldenen Löffel des Königs. Am Ende kann die Klasse die erfundenen Fundmeldungen und Gerüchte sammeln; es gibt keine vorgegebene Krimi-Lösung.
 
 ### Steuerung
 
 - Die Lehrkraft schaltet die Phase für alle Geräte gleichzeitig um. Rollen bleiben erhalten.
-- **Reden erlaubt / Nur im Netzwerk / Pause:** In der Pause sind Senden und Weiterleiten auf dem Server gesperrt, Lesen bleibt möglich.
+- **Pause / Fortsetzen:** In der Pause sind Senden und Weiterleiten auf dem Server gesperrt, Lesen bleibt möglich. Mit „Fortsetzen“ wird die Simulation wieder freigegeben. Ob gesprochen werden darf, regelt die Lehrkraft mündlich.
 - Die aufklappbare **Unterrichtshilfe** zeigt einen Gesprächsimpuls und fehlende Meister bzw. unbesetzte Auftragsziele.
 - `npm test` prüft beide Phasen, Weiterleiten, Ablegen, adressierte Zustellung und die Pause (Node.js 22 oder neuer).
 
