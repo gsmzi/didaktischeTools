@@ -5,7 +5,7 @@
 **Module**
 
 1. **Etiketten-Detektiv** – zufällig erzeugte erfundene Packungen mit Vorderseite und Rückseite: Grundpreis, Zucker pro Packung, Allergene, fehlende Pflichtangabe, Pyramide, Werbeversprechen, Siegel, Qualitätsfächer, Gentechnik, Nutri-Score, Nahrungsergänzungsmittel.
-2. **Fall-Trainer** – Versicherungen zuordnen (schwer mit Fallen wie eigenem Schaden oder Absicht), Budget, Ratenkauf, Wohnen, Schulden.
+2. **Fall-Trainer** – Versicherungen zuordnen (schwer mit Fallen wie eigenem Schaden oder Absicht), Budget und Haushaltsbuch, Wohnen.
 3. **Grafik-Check** – zufällige Kreis-, Balken- und Liniendiagramme: ablesen, Kernaussage, Zusammenhang, begründen und prüfen, was die Grafik nicht belegt.
 4. **Wissens-Sprint** – Runden mit 8 Karten zu 12 Themen, auch zum Siegel-Erkennen mit verdecktem Schriftzug. Unsichere Karten kommen öfter (Lernkartei). Rund ein Drittel der Karten verlangt eigenes Formulieren, die Punkte hakt man danach ehrlich ab.
 5. **Schreiben** – Operator-Coach und Schreibaufgaben: Operatoren unterscheiden, Punkte für Beispielantworten schätzen, Antworten aus Satzteilen bauen und am erfundenen Produkt selbst formulieren (Bewerten, Zielgruppen, Alternativen, Gentechnik, Zutaten ersetzen). Erwartungspunkte entstehen aus den Produktdaten.
@@ -31,6 +31,7 @@ Bei allen Aufgaben und Weiterentwicklungen wird strikt darauf geachtet, ob die I
 - Bei Milch gelten 2 Portionen täglich (DGE und Darstellung der neuen Pyramide), nicht 3.
 - Bei Hackfleisch steht das Verbrauchsdatum, nicht das Mindesthaltbarkeitsdatum.
 - Funktionelle Lebensmittel, proteinreiche Ernährung, Tierwohlsiegel, Kreditaufnahme/Überschuldung, Stressmanagement, med. Sofortmaßnahmen, virtuelles Wasser, Recycling und Verbraucherschutzrechte fehlen bewusst, da sie 2027 nicht zu den Schwerpunkten gehören (teils erst ab 2028).
+- Prüfungsformat 2027: 90 Minuten, 50 Punkte (Pflichtteil 4 × 8 Punkte, Wahlteil 18 Punkte). Ältere Prüfungen haben 60 oder 69 Punkte.
 
 Die Punktvergabe in „Schreiben“ ist ein Übungsmaßstab (ein Punkt pro Aspekt, nur Genanntes zählt bei „Erläutere“ höchstens halb) und keine amtliche Bewertung.
 
