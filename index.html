@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Lernwerkzeuge – Weiterleitung</title>
+  <script>
+    // Alte Adresse /didaktischeTools/<pfad> → neue Adresse /lernwerkzeuge/<pfad>, Pfad, Parameter und Anker bleiben erhalten.
+    (function () {
+      var p = location.pathname.replace(/^\/didaktischeTools(?=\/|$)/i, '/lernwerkzeuge');
+      if (p === location.pathname) p = '/lernwerkzeuge/';
+      location.replace(p + location.search + location.hash);
+    })();
+  </script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 16px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Die Lernwerkzeuge sind umgezogen</h1>
+  <p>Die neue Adresse lautet <a href="https://gsmzi.github.io/lernwerkzeuge/">gsmzi.github.io/lernwerkzeuge</a>. Du wirst automatisch weitergeleitet.</p>
+  <p>Bitte aktualisiere deine Lesezeichen. Hast du den AES-Prüfungstrainer installiert, installiere ihn von der neuen Adresse aus neu; dein Fortschritt bleibt erhalten.</p>
+</body>
+</html>
